@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const response = await authApi.getUserInfo();
+      const response = await authApi.user();
       if (response.status === 200) {
         setUser(response.data);
       } else {
