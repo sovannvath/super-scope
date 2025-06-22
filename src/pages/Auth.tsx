@@ -1,295 +1,331 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { authApi, saveToken } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 
-export const Auth: React.FC = () => {
+const Auth: React.FC = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { login, register } = useAuth();
-  const navigate = useNavigate();
 
-  const [loginData, setLoginData] = useState({
+  // Login form state
+  const [loginForm, setLoginForm] = useState({
     email: "",
     password: "",
   });
 
-  const [registerData, setRegisterData] = useState({
+  // Register form state
+  const [registerForm, setRegisterForm] = useState({
     name: "",
     email: "",
     password: "",
-    passwordConfirmation: "",
+    password_confirmation: "",
   });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const success = await login(loginData.email, loginData.password);
-    if (success) {
-      navigate("/dashboard");
-    }
+    try {
+      const response = await authApi.login(loginForm);
 
-    setIsLoading(false);
+      if (response.status === 200) {
+        const { user, token } = response.data;
+        saveToken(token);
+        login(user);
+
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${user.name}!`,
+        });
+
+        // Redirect based on role
+        switch (user.role) {
+          case "admin":
+            navigate("/dashboard/admin");
+            break;
+          case "staff":
+            navigate("/dashboard/staff");
+            break;
+          case "warehouse":
+            navigate("/dashboard/warehouse");
+            break;
+          default:
+            navigate("/dashboard/customer");
+        }
+      } else {
+        toast({
+          title: "Login Failed",
+          description: response.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: "Failed to connect to authentication service",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    const success = await register(
-      registerData.name,
-      registerData.email,
-      registerData.password,
-      registerData.passwordConfirmation,
-    );
-    if (success) {
-      navigate("/dashboard");
+    if (registerForm.password !== registerForm.password_confirmation) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
     }
 
-    setIsLoading(false);
+    setIsLoading(true);
+
+    try {
+      const response = await authApi.register(registerForm);
+
+      if (response.status === 201 || response.status === 200) {
+        const { user, token } = response.data;
+        saveToken(token);
+        login(user);
+
+        toast({
+          title: "Registration Successful",
+          description: `Welcome to EcommerceHub, ${user.name}!`,
+        });
+
+        navigate("/dashboard/customer");
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: response.message || "Failed to create account",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Registration Error",
+        description: "Failed to connect to authentication service",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-metallic-background via-white to-metallic-light flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo and Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-metallic-primary to-metallic-secondary rounded-full mb-4 shadow-lg">
-            <span className="text-white font-bold text-xl">EC</span>
+    <div className="min-h-screen bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center p-6">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-metallic-primary to-metallic-secondary rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold">EC</span>
+            </div>
+            <span className="text-2xl font-bold text-metallic-primary">
+              EcommerceHub
+            </span>
           </div>
-          <h1 className="text-3xl font-bold text-metallic-primary mb-2">
-            EcommerceHub
-          </h1>
-          <p className="text-metallic-tertiary">
-            Inventory & Sales Management Platform
-          </p>
-        </div>
+        </CardHeader>
 
-        <Card className="shadow-xl border-metallic-light/20">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-metallic-primary">
-              Welcome
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-metallic-light/20">
-                <TabsTrigger
-                  value="login"
-                  className="data-[state=active]:bg-metallic-primary data-[state=active]:text-white"
-                >
+        <CardContent>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <CardTitle className="text-center flex items-center justify-center">
+                  <LogIn className="mr-2 h-5 w-5" />
                   Sign In
-                </TabsTrigger>
-                <TabsTrigger
-                  value="register"
-                  className="data-[state=active]:bg-metallic-primary data-[state=active]:text-white"
+                </CardTitle>
+
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={loginForm.email}
+                    onChange={(e) =>
+                      setLoginForm({ ...loginForm, email: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={loginForm.password}
+                      onChange={(e) =>
+                        setLoginForm({ ...loginForm, password: e.target.value })
+                      }
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-metallic-primary hover:bg-metallic-primary/90"
+                  disabled={isLoading}
                 >
-                  Sign Up
-                </TabsTrigger>
-              </TabsList>
+                  {isLoading ? "Signing In..." : "Sign In"}
+                </Button>
+              </form>
+            </TabsContent>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={loginData.email}
-                      onChange={(e) =>
-                        setLoginData({ ...loginData, email: e.target.value })
-                      }
-                      required
-                      className="border-metallic-light focus:border-metallic-primary"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="login-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        value={loginData.password}
-                        onChange={(e) =>
-                          setLoginData({
-                            ...loginData,
-                            password: e.target.value,
-                          })
-                        }
-                        required
-                        className="border-metallic-light focus:border-metallic-primary pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-metallic-tertiary" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-metallic-tertiary" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-metallic-primary hover:bg-metallic-primary/90 text-white"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing In...
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
+            <TabsContent value="register">
+              <form onSubmit={handleRegister} className="space-y-4">
+                <CardTitle className="text-center flex items-center justify-center">
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  Create Account
+                </CardTitle>
 
-              <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="register-name">Full Name</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="register-name">Full Name</Label>
+                  <Input
+                    id="register-name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={registerForm.name}
+                    onChange={(e) =>
+                      setRegisterForm({ ...registerForm, name: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="register-email">Email</Label>
+                  <Input
+                    id="register-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={registerForm.email}
+                    onChange={(e) =>
+                      setRegisterForm({
+                        ...registerForm,
+                        email: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="register-password">Password</Label>
+                  <div className="relative">
                     <Input
-                      id="register-name"
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={registerData.name}
+                      id="register-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a password"
+                      value={registerForm.password}
                       onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          name: e.target.value,
+                        setRegisterForm({
+                          ...registerForm,
+                          password: e.target.value,
                         })
                       }
                       required
-                      className="border-metallic-light focus:border-metallic-primary"
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email">Email</Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="register-confirm-password">
+                    Confirm Password
+                  </Label>
+                  <div className="relative">
                     <Input
-                      id="register-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={registerData.email}
+                      id="register-confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={registerForm.password_confirmation}
                       onChange={(e) =>
-                        setRegisterData({
-                          ...registerData,
-                          email: e.target.value,
+                        setRegisterForm({
+                          ...registerForm,
+                          password_confirmation: e.target.value,
                         })
                       }
                       required
-                      className="border-metallic-light focus:border-metallic-primary"
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="register-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Create a password"
-                        value={registerData.password}
-                        onChange={(e) =>
-                          setRegisterData({
-                            ...registerData,
-                            password: e.target.value,
-                          })
-                        }
-                        required
-                        className="border-metallic-light focus:border-metallic-primary pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-metallic-tertiary" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-metallic-tertiary" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password-confirmation">
-                      Confirm Password
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="register-password-confirmation"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
-                        value={registerData.passwordConfirmation}
-                        onChange={(e) =>
-                          setRegisterData({
-                            ...registerData,
-                            passwordConfirmation: e.target.value,
-                          })
-                        }
-                        required
-                        className="border-metallic-light focus:border-metallic-primary pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4 text-metallic-tertiary" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-metallic-tertiary" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-metallic-secondary hover:bg-metallic-secondary/90 text-white"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating Account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                </div>
 
-        <div className="text-center mt-6 text-sm text-metallic-tertiary">
-          <p>
-            Secure platform for inventory management and e-commerce operations
-          </p>
-        </div>
-      </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-metallic-secondary hover:bg-metallic-secondary/90"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating Account..." : "Create Account"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
