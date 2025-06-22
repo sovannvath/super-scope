@@ -42,15 +42,35 @@ const Homepage: React.FC = () => {
     try {
       const response = await productApi.list();
       console.log("📡 API Response:", response);
+      console.log("📦 Response Data Type:", typeof response.data);
+      console.log("📦 Response Data:", response.data);
 
       if (response.status === 200) {
-        console.log("✅ Products loaded successfully:", response.data);
-        setProducts(response.data);
+        // Handle different possible response structures
+        let productsArray: Product[] = [];
+
+        if (Array.isArray(response.data)) {
+          // Direct array
+          productsArray = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          // Nested in data property
+          productsArray = response.data.data;
+        } else if (response.data && Array.isArray(response.data.products)) {
+          // Nested in products property
+          productsArray = response.data.products;
+        } else {
+          console.warn("⚠️ Unexpected API response structure:", response.data);
+          productsArray = [];
+        }
+
+        console.log("✅ Products array:", productsArray);
+        setProducts(productsArray);
         // Set first 6 products as featured
-        setFeaturedProducts(response.data.slice(0, 6));
+        setFeaturedProducts(productsArray.slice(0, 6));
+
         toast({
           title: "Products Loaded",
-          description: `Successfully loaded ${response.data.length} products`,
+          description: `Successfully loaded ${productsArray.length} products`,
         });
       } else {
         console.error("❌ API Error:", response);
@@ -72,11 +92,15 @@ const Homepage: React.FC = () => {
     }
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredProducts = Array.isArray(products)
+    ? products.filter(
+        (product) =>
+          product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()),
+      )
+    : [];
 
   const handleAddToCart = (productId: number) => {
     if (!isAuthenticated) {
