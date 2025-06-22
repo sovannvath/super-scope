@@ -81,7 +81,7 @@ const AdminDashboard: React.FC = () => {
       setIsLoading(true);
 
       // Load dashboard stats
-      const statsResponse = await dashboardApi.adminStats();
+      const statsResponse = await dashboardApi.admin();
       if (statsResponse.status === 200) {
         setStats(statsResponse.data);
       }
