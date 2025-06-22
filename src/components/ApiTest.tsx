@@ -39,10 +39,13 @@ const ApiTest: React.FC = () => {
         headers.Authorization = `Bearer ${testToken}`;
       }
 
-      console.log(`Testing: ${fullUrl}`);
+      console.log(`🔍 Testing URL: ${fullUrl}`);
+      console.log(`🔍 Headers:`, headers);
+
       const response = await fetch(fullUrl, {
         method: "GET",
         headers,
+        mode: "cors", // Explicitly set CORS mode
       });
 
       const result = {
@@ -57,14 +60,23 @@ const ApiTest: React.FC = () => {
         [endpoint.name]: result,
       }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+      console.error(`🚨 Test Error for ${endpoint.name}:`, error);
+
+      let errorMessage = "Unknown error";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Detect specific error types
+        if (error.message.includes("Failed to fetch")) {
+          errorMessage = `🚫 CORS or Network Error: Cannot connect to ${fullUrl}. This usually means:\n1. CORS is not configured on your Laravel backend\n2. The backend is not running\n3. The URL is incorrect`;
+        }
+      }
 
       setTestResults((prev) => ({
         ...prev,
         [endpoint.name]: {
           status: "error",
-          message: `❌ Network Error: ${errorMessage}`,
+          message: `❌ ${errorMessage}`,
         },
       }));
     }
