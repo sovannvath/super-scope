@@ -73,73 +73,26 @@ const ProductManagement: React.FC = () => {
 
   const loadProducts = async () => {
     try {
-      // Using mock data for now
-      const mockProducts: Product[] = [
-        {
-          id: 1,
-          name: "Premium Laptop",
-          description:
-            "High-performance laptop with latest processor and graphics card",
-          price: 1299.99,
-          quantity: 15,
-          low_stock_threshold: 5,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-        {
-          id: 2,
-          name: "Wireless Headphones",
-          description:
-            "Noise-cancelling wireless headphones with premium sound quality",
-          price: 199.99,
-          quantity: 3,
-          low_stock_threshold: 10,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-        {
-          id: 3,
-          name: "Smart Watch",
-          description: "Advanced fitness tracking and smart notifications",
-          price: 399.99,
-          quantity: 25,
-          low_stock_threshold: 10,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-        {
-          id: 4,
-          name: "Gaming Mouse",
-          description:
-            "Professional gaming mouse with RGB lighting and precision sensor",
-          price: 79.99,
-          quantity: 2,
-          low_stock_threshold: 5,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-        {
-          id: 5,
-          name: "4K Monitor",
-          description:
-            "Ultra-high definition monitor for professional work and gaming",
-          price: 549.99,
-          quantity: 12,
-          low_stock_threshold: 8,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-      ];
-      setProducts(mockProducts);
+      const response = await productApi.list();
+      if (response.status === 200) {
+        let productsArray: Product[] = [];
+        if (Array.isArray(response.data)) {
+          productsArray = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          productsArray = response.data.data;
+        }
+        setProducts(productsArray);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load products from server",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load products",
+        description: "Failed to connect to server",
         variant: "destructive",
       });
     } finally {
@@ -174,25 +127,31 @@ const ProductManagement: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const newProduct: Product = {
-        id: Date.now(), // Mock ID
+      const productData = {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold),
-        status: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       };
 
-      setProducts((prev) => [...prev, newProduct]);
-      toast({
-        title: "Product Created",
-        description: `${newProduct.name} has been added to inventory`,
-      });
-      setIsCreateDialogOpen(false);
-      resetForm();
+      const response = await productApi.create(productData);
+
+      if (response.status === 200 || response.status === 201) {
+        toast({
+          title: "Product Created",
+          description: `${productData.name} has been added to inventory`,
+        });
+        setIsCreateDialogOpen(false);
+        resetForm();
+        loadProducts(); // Reload products from server
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to create product",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -222,27 +181,32 @@ const ProductManagement: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const updatedProduct: Product = {
-        ...selectedProduct,
+      const updateData = {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold),
-        updated_at: new Date().toISOString(),
       };
 
-      setProducts((prev) =>
-        prev.map((p) => (p.id === selectedProduct.id ? updatedProduct : p)),
-      );
+      const response = await productApi.update(selectedProduct.id, updateData);
 
-      toast({
-        title: "Product Updated",
-        description: `${updatedProduct.name} has been updated`,
-      });
-      setIsEditDialogOpen(false);
-      resetForm();
-      setSelectedProduct(null);
+      if (response.status === 200) {
+        toast({
+          title: "Product Updated",
+          description: `${updateData.name} has been updated`,
+        });
+        setIsEditDialogOpen(false);
+        resetForm();
+        setSelectedProduct(null);
+        loadProducts(); // Reload products from server
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to update product",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -256,11 +220,21 @@ const ProductManagement: React.FC = () => {
 
   const handleDelete = async (productId: number) => {
     try {
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-      toast({
-        title: "Product Deleted",
-        description: "Product has been removed from inventory",
-      });
+      const response = await productApi.delete(productId);
+
+      if (response.status === 200) {
+        toast({
+          title: "Product Deleted",
+          description: "Product has been removed from inventory",
+        });
+        loadProducts(); // Reload products from server
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to delete product",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",

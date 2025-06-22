@@ -53,41 +53,37 @@ const Cart: React.FC = () => {
 
   const loadCartItems = async () => {
     try {
-      // Mock cart data for demonstration
-      const mockCartItems: CartItem[] = [
-        {
-          id: 1,
-          productId: 1,
-          name: "Premium Laptop",
-          price: 1299.99,
-          quantity: 1,
-          description: "High-performance laptop with latest processor",
-          maxStock: 15,
-        },
-        {
-          id: 2,
-          productId: 2,
-          name: "Wireless Headphones",
-          price: 199.99,
-          quantity: 2,
-          description: "Noise-cancelling wireless headphones",
-          maxStock: 8,
-        },
-        {
-          id: 3,
-          productId: 5,
-          name: "4K Monitor",
-          price: 549.99,
-          quantity: 1,
-          description: "Ultra-high definition monitor",
-          maxStock: 12,
-        },
-      ];
-      setCartItems(mockCartItems);
+      const response = await cartApi.view();
+      if (response.status === 200) {
+        // Handle Laravel API response structure for cart
+        const cartData = response.data;
+        if (cartData && cartData.items) {
+          const formattedItems: CartItem[] = cartData.items.map(
+            (item: any) => ({
+              id: item.id,
+              productId: item.product_id || item.productId,
+              name: item.product?.name || item.name,
+              price: item.product?.price || item.price,
+              quantity: item.quantity,
+              description: item.product?.description || item.description || "",
+              maxStock: item.product?.quantity || item.maxStock || 999,
+            }),
+          );
+          setCartItems(formattedItems);
+        } else {
+          setCartItems([]);
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load cart items",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to load cart items",
+        description: "Failed to connect to server",
         variant: "destructive",
       });
     } finally {
@@ -95,63 +91,120 @@ const Cart: React.FC = () => {
     }
   };
 
-  const updateQuantity = (itemId: number, newQuantity: number) => {
+  const updateQuantity = async (itemId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
 
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          if (newQuantity > item.maxStock) {
-            toast({
-              title: "Stock Limit",
-              description: `Only ${item.maxStock} items available in stock`,
-              variant: "destructive",
-            });
-            return { ...item, quantity: item.maxStock };
-          }
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      }),
-    );
-
-    toast({
-      title: "Cart Updated",
-      description: "Item quantity has been updated",
-    });
+    try {
+      const response = await cartApi.updateItem(itemId, {
+        quantity: newQuantity,
+      });
+      if (response.status === 200) {
+        loadCartItems(); // Reload cart from server
+        toast({
+          title: "Cart Updated",
+          description: "Item quantity has been updated",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to update quantity",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update cart",
+        variant: "destructive",
+      });
+    }
   };
 
-  const removeItem = (itemId: number) => {
-    const item = cartItems.find((item) => item.id === itemId);
-    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-
-    toast({
-      title: "Item Removed",
-      description: `${item?.name} has been removed from your cart`,
-    });
+  const removeItem = async (itemId: number) => {
+    try {
+      const response = await cartApi.removeItem(itemId);
+      if (response.status === 200) {
+        loadCartItems(); // Reload cart from server
+        toast({
+          title: "Item Removed",
+          description: "Item has been removed from your cart",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to remove item",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove item",
+        variant: "destructive",
+      });
+    }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
-    toast({
-      title: "Cart Cleared",
-      description: "All items have been removed from your cart",
-    });
+  const clearCart = async () => {
+    try {
+      const response = await cartApi.clear();
+      if (response.status === 200) {
+        setCartItems([]);
+        toast({
+          title: "Cart Cleared",
+          description: "All items have been removed from your cart",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to clear cart",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear cart",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCheckout = async () => {
     setIsCheckingOut(true);
 
     try {
-      // Simulate checkout process
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Get payment methods first (you may want to implement payment method selection)
+      const paymentMethodsResponse = await orderApi.getPaymentMethods();
+      let paymentMethodId = 1; // Default payment method
 
-      toast({
-        title: "Order Placed Successfully!",
-        description: `Your order for ${cartItems.length} items has been placed. Total: $${totalAmount.toFixed(2)}`,
-      });
+      if (
+        paymentMethodsResponse.status === 200 &&
+        paymentMethodsResponse.data.length > 0
+      ) {
+        paymentMethodId = paymentMethodsResponse.data[0].id;
+      }
 
-      setCartItems([]);
+      const orderData = {
+        payment_method_id: paymentMethodId,
+        notes: "Order placed from cart",
+      };
+
+      const response = await orderApi.create(orderData);
+
+      if (response.status === 200 || response.status === 201) {
+        toast({
+          title: "Order Placed Successfully!",
+          description: `Your order has been placed successfully!`,
+        });
+        setCartItems([]);
+      } else {
+        toast({
+          title: "Checkout Failed",
+          description: response.data?.message || "Failed to place order",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Checkout Failed",
