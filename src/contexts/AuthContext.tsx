@@ -12,7 +12,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User) => void; // Simple method to set authenticated user
+  login: (user: User, token?: string) => void;
   loginWithCredentials: (email: string, password: string) => Promise<boolean>;
   register: (
     name: string,
@@ -22,6 +22,12 @@ interface AuthContextType {
   ) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  // Role-based access helpers
+  isAdmin: () => boolean;
+  isCustomer: () => boolean;
+  isWarehouseManager: () => boolean;
+  isStaff: () => boolean;
+  hasRole: (role: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -182,15 +188,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Role-based access helpers
+  const isAdmin = () => user?.role === "admin";
+  const isCustomer = () => user?.role === "customer";
+  const isWarehouseManager = () => user?.role === "warehouse_manager";
+  const isStaff = () => user?.role === "staff";
+  const hasRole = (role: string) => user?.role === role;
+
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user || !!getToken(), // Consider authenticated if user exists OR token exists
+    isAuthenticated: !!user || !!getToken(),
     isLoading,
     login,
     loginWithCredentials,
     register,
     logout,
     refreshUser,
+    isAdmin,
+    isCustomer,
+    isWarehouseManager,
+    isStaff,
+    hasRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
