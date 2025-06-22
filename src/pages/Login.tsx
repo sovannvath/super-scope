@@ -54,8 +54,12 @@ const Login: React.FC = () => {
 
       if (response.status === 200) {
         const { user, token } = response.data;
-        console.log("🔍 Login response data:", { user, token });
-        console.log("🔍 User role:", user.role);
+        console.log("🔍 Raw API response:", response.data);
+        console.log("🔍 User object from backend:", user);
+        console.log("🔍 All user properties:", Object.keys(user));
+        console.log("🔍 User role field:", user.role);
+        console.log("🔍 User user_type field:", user.user_type);
+        console.log("🔍 User type field:", user.type);
 
         saveToken(token);
         login(user);
