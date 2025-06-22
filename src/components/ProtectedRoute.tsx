@@ -33,14 +33,32 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check role-based access
   if (allowedRoles.length > 0 && user) {
-    const hasAccess = allowedRoles.includes(user.role);
+    // Get role from different possible field names
+    const userRole = user.role || user.user_type || user.type || "customer";
+    const hasAccess = allowedRoles.includes(userRole);
 
     if (!hasAccess) {
       // Instead of showing access denied, redirect to appropriate dashboard
-      const redirectPath = `/dashboard/${user.role === "warehouse_manager" ? "warehouse" : user.role}`;
+      let redirectPath;
+      switch (userRole) {
+        case "admin":
+          redirectPath = "/dashboard/admin";
+          break;
+        case "staff":
+          redirectPath = "/dashboard/staff";
+          break;
+        case "warehouse":
+        case "warehouse_manager":
+          redirectPath = "/dashboard/warehouse";
+          break;
+        case "customer":
+        default:
+          redirectPath = "/dashboard/customer";
+          break;
+      }
 
       console.log(
-        `🔄 Access denied for ${user.role} to ${allowedRoles.join(",")}. Redirecting to ${redirectPath}`,
+        `🔄 Access denied for ${userRole} to ${allowedRoles.join(",")}. Redirecting to ${redirectPath}`,
       );
 
       return <Navigate to={redirectPath} replace />;
