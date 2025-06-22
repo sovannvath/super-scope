@@ -192,12 +192,37 @@ const ProductManagement: React.FC = () => {
         // Refresh the product list
         await loadProducts();
       } else {
+        // Handle specific error cases
+        let errorMessage = "Failed to create product";
+
+        if (response.status === 422) {
+          // Validation errors
+          if (response.errors) {
+            const errorDetails = Object.values(response.errors)
+              .flat()
+              .join(", ");
+            errorMessage = `Validation Error: ${errorDetails}`;
+          } else if (response.data?.errors) {
+            const errorDetails = Object.values(response.data.errors)
+              .flat()
+              .join(", ");
+            errorMessage = `Validation Error: ${errorDetails}`;
+          }
+        } else if (response.status === 401) {
+          errorMessage = "Authentication required. Please log in again.";
+        } else if (response.status === 403) {
+          errorMessage = "Permission denied. Admin access required.";
+        } else if (response.status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else if (response.data?.message) {
+          errorMessage = response.data.message;
+        } else if (response.message) {
+          errorMessage = response.message;
+        }
+
         toast({
           title: "Create Failed",
-          description:
-            response.data?.message ||
-            response.message ||
-            "Failed to create product",
+          description: errorMessage,
           variant: "destructive",
         });
       }
