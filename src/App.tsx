@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import DashboardRouter from "@/components/DashboardRouter";
 
 // Import pages matching Laravel backend routes exactly
 import Homepage from "./pages/Homepage";
@@ -45,43 +47,114 @@ const App = () => (
         <BrowserRouter>
           <Layout>
             <Routes>
-              {/* Public Routes - Match Laravel public routes exactly */}
+              {/* Public Routes */}
               <Route path="/" element={<Homepage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-
-              {/* Product Routes - Match Laravel GET /products and GET /products/{id} */}
               <Route path="/products" element={<Products />} />
               <Route path="/products/:id" element={<ProductDetail />} />
 
-              {/* Customer Routes - Match Laravel protected routes */}
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/orders" element={<Orders />} />
+              {/* Dashboard Router - Redirects to appropriate dashboard based on role */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute requireAuth={true}>
+                    <DashboardRouter />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Admin Routes */}
+              <Route
+                path="/dashboard/admin"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <AdminAnalytics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <ProductManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/low-stock"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <LowStockAlerts />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Customer Routes */}
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute allowedRoles={["customer"]}>
+                    <Cart />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <ProtectedRoute allowedRoles={["customer"]}>
+                    <Orders />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/dashboard/customer"
-                element={<CustomerDashboard />}
+                element={
+                  <ProtectedRoute allowedRoles={["customer"]}>
+                    <CustomerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/purchase-history"
+                element={
+                  <ProtectedRoute allowedRoles={["customer"]}>
+                    <PurchaseHistory />
+                  </ProtectedRoute>
+                }
               />
 
-              {/* Admin Routes - Match Laravel admin routes */}
-              <Route path="/dashboard/admin" element={<AdminAnalytics />} />
-              <Route path="/products/low-stock" element={<LowStockAlerts />} />
-
-              {/* Staff Routes - Match Laravel staff routes */}
+              {/* Staff Routes */}
               <Route
                 path="/dashboard/staff"
-                element={<StaffOrderProcessing />}
+                element={
+                  <ProtectedRoute allowedRoles={["staff"]}>
+                    <StaffOrderProcessing />
+                  </ProtectedRoute>
+                }
               />
 
-              {/* Warehouse Routes - Match Laravel warehouse routes */}
-              <Route path="/dashboard/warehouse" element={<LowStockAlerts />} />
-
-              {/* Product Management (admin/staff) - Different from public products */}
+              {/* Warehouse Manager Routes */}
               <Route
-                path="/product-management"
-                element={<ProductManagement />}
+                path="/dashboard/warehouse"
+                element={
+                  <ProtectedRoute allowedRoles={["warehouse_manager"]}>
+                    <WarehouseApproval />
+                  </ProtectedRoute>
+                }
               />
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              {/* Shared Protected Routes (multiple roles) */}
+              <Route
+                path="/reorder-requests"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "warehouse_manager"]}>
+                    <WarehouseApproval />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
