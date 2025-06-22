@@ -165,11 +165,20 @@ async function makeApiCall<T>(
       };
     } else if (error.response) {
       // Server responded with error status
+      console.log("🔍 Processing server error response:", {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers,
+      });
+
       return {
         status: error.response.status,
         data: error.response.data,
-        message: error.response.data?.message || error.message,
-        errors: error.response.data?.errors,
+        message:
+          error.response.data?.message ||
+          error.response.statusText ||
+          error.message,
+        errors: error.response.data?.errors || error.response.data?.error,
       };
     } else if (error.request) {
       // Network error
