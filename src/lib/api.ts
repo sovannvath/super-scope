@@ -46,6 +46,17 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Debug logging for API requests
+    console.log(
+      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      {
+        baseURL: config.baseURL,
+        headers: config.headers,
+        data: config.data,
+      },
+    );
+
     return config;
   },
   (error) => Promise.reject(error),
