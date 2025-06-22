@@ -81,53 +81,6 @@ const AdminDashboard: React.FC = () => {
         setStats(null);
       }
 
-      // Load low stock products
-      let lowStockData: LowStockProduct[] = [];
-
-      try {
-        const lowStockResponse = await productApi.lowStock();
-        if (lowStockResponse.status === 200 && lowStockResponse.data) {
-          // Ensure it's an array
-          lowStockData = Array.isArray(lowStockResponse.data)
-            ? lowStockResponse.data
-            : lowStockResponse.data?.data || [];
-        } else {
-          console.warn("Low stock API failed:", lowStockResponse);
-          throw new Error("Low stock API not available");
-        }
-      } catch (lowStockError) {
-        console.warn(
-          "Low stock endpoint not available, trying to filter from all products",
-        );
-
-        // Fallback: Get all products and filter for low stock on frontend
-        try {
-          const allProductsResponse = await productApi.index();
-          if (allProductsResponse.status === 200 && allProductsResponse.data) {
-            const allProducts = Array.isArray(allProductsResponse.data)
-              ? allProductsResponse.data
-              : allProductsResponse.data?.data || [];
-
-            // Filter for low stock products
-            lowStockData = allProducts.filter(
-              (product: any) =>
-                product.quantity <= (product.low_stock_threshold || 5),
-            );
-            console.log(
-              "✅ Filtered low stock products from all products:",
-              lowStockData.length,
-            );
-          }
-        } catch (fallbackError) {
-          console.error(
-            "Failed to get products for low stock filtering:",
-            fallbackError,
-          );
-        }
-      }
-
-      setLowStockProducts(lowStockData);
-
       // Load reorder requests
       const reorderResponse = await requestOrderApi.index();
       if (reorderResponse.status === 200 && reorderResponse.data) {
