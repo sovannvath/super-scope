@@ -135,7 +135,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleReorderProduct = async (productId: number, quantity: number) => {
     try {
-      const response = await requestOrderApi.store({
+      const response = await requestOrderApi.create({
         product_id: productId,
         quantity: quantity,
         notes: `Automatic reorder due to low stock - Admin: ${user?.name}`,
