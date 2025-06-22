@@ -237,6 +237,14 @@ const ProductManagement: React.FC = () => {
         errors: response.errors,
       });
 
+      // Log validation errors in detail if present
+      if (response.status === 422 && response.errors) {
+        console.error(
+          "🚫 Validation Errors:",
+          JSON.stringify(response.errors, null, 2),
+        );
+      }
+
       if (response.status === 200 || response.status === 201) {
         toast({
           title: "Success!",
