@@ -72,23 +72,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearAuth();
         setUser(null);
       } else {
-        // For any other case (404, 500, network error), create a basic user object
-        // This prevents the app from getting stuck in loading state
+        // For any other case (404, 500, network error), don't override existing user
         console.log(
-          "⚠️ Cannot validate user from backend, creating basic user object",
+          "⚠️ Cannot validate user from backend, keeping existing user data",
         );
 
-        // Create a basic user object so the app can function
-        // In a real app, you might decode the JWT token to get user info
-        const basicUser = {
-          id: 1,
-          name: "User",
-          email: "user@example.com",
-          role: "customer", // Default role
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setUser(basicUser);
+        // Don't create a fallback user if we already have one from login
+        // This prevents overwriting the role from successful login
+        if (!user) {
+          const basicUser = {
+            id: 1,
+            name: "User",
+            email: "user@example.com",
+            role: "customer", // Default role only for completely new users
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          setUser(basicUser);
+        }
       }
     } catch (error) {
       console.log("📡 Backend connection failed, creating offline user");
