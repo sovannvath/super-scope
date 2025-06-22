@@ -211,6 +211,40 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  if (
+    hasError &&
+    !stats &&
+    !Array.isArray(lowStockProducts) &&
+    !Array.isArray(reorderRequests)
+  ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Failed to Load Dashboard
+          </h2>
+          <p className="text-gray-600 mb-6">
+            There was an error connecting to the server. Please try again.
+          </p>
+          <Button
+            onClick={() => {
+              setHasError(false);
+              loadDashboardData();
+            }}
+            className="mr-4"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/dashboard">Back to Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
