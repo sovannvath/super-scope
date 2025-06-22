@@ -12,24 +12,35 @@ export const NetworkStatus: React.FC = () => {
       try {
         const response = await productApi.index();
         const wasOffline = !isOnline;
-        setIsOnline(response.status >= 200 && response.status < 500);
+
+        // Consider successful if we get any response (even errors from server)
+        const isServerResponding = response.status > 0;
+        setIsOnline(isServerResponding);
 
         // Show status change notification
-        if (wasOffline && response.status >= 200 && response.status < 500) {
+        if (wasOffline && isServerResponding) {
           setShowStatus(true);
           setTimeout(() => setShowStatus(false), 3000);
         }
-      } catch (error) {
-        setIsOnline(false);
-        setShowStatus(true);
+      } catch (error: any) {
+        // Only mark as offline for timeout/network errors, not server errors
+        const isTimeout =
+          error.code === "ECONNABORTED" || error.message?.includes("timeout");
+        const isNetworkError = !error.response;
+
+        if (isTimeout || isNetworkError) {
+          setIsOnline(false);
+          setShowStatus(true);
+          setTimeout(() => setShowStatus(false), 5000);
+        }
       }
     };
 
-    // Check initially
-    checkConnection();
+    // Check initially with a small delay
+    setTimeout(checkConnection, 1000);
 
-    // Check every 30 seconds
-    const interval = setInterval(checkConnection, 30000);
+    // Check every 60 seconds (less aggressive)
+    const interval = setInterval(checkConnection, 60000);
 
     return () => clearInterval(interval);
   }, [isOnline]);
