@@ -127,6 +127,74 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleDemoLogin = (role: string) => {
+    console.log("🎭 Demo login for role:", role);
+
+    // Create demo user object
+    const demoUsers = {
+      admin: {
+        id: 1,
+        name: "Admin Demo",
+        email: "admin@demo.com",
+        role: "admin",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      warehouse_manager: {
+        id: 2,
+        name: "Warehouse Demo",
+        email: "warehouse@demo.com",
+        role: "warehouse_manager",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      staff: {
+        id: 3,
+        name: "Staff Demo",
+        email: "staff@demo.com",
+        role: "staff",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      customer: {
+        id: 4,
+        name: "Customer Demo",
+        email: "customer@demo.com",
+        role: "customer",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    };
+
+    const demoUser = demoUsers[role as keyof typeof demoUsers];
+
+    // Save a demo token
+    saveToken("demo-token-" + role);
+
+    // Log in with demo user
+    login(demoUser);
+
+    toast({
+      title: "Demo Login Successful",
+      description: `Logged in as ${demoUser.name} (${demoUser.role})`,
+    });
+
+    // Navigate based on role
+    switch (role) {
+      case "admin":
+        navigate("/dashboard/admin");
+        break;
+      case "staff":
+        navigate("/dashboard/staff");
+        break;
+      case "warehouse_manager":
+        navigate("/dashboard/warehouse");
+        break;
+      default:
+        navigate("/dashboard/customer");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center p-6">
       <Card className="w-full max-w-md">
