@@ -139,7 +139,7 @@ const App = () => (
                 path="/dashboard/warehouse"
                 element={
                   <ProtectedRoute allowedRoles={["warehouse_manager"]}>
-                    <WarehouseApproval />
+                    <WarehouseDashboard />
                   </ProtectedRoute>
                 }
               />
@@ -149,7 +149,7 @@ const App = () => (
                 path="/reorder-requests"
                 element={
                   <ProtectedRoute allowedRoles={["admin", "warehouse_manager"]}>
-                    <WarehouseApproval />
+                    <WarehouseDashboard />
                   </ProtectedRoute>
                 }
               />
