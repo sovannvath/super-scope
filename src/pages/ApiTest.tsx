@@ -95,13 +95,18 @@ const ApiTest: React.FC = () => {
         {
           name: "Register User",
           endpoint: "POST /register",
-          test: () =>
-            authApi.register({
-              name: credentials.name,
-              email: credentials.email,
+          test: async () => {
+            // Add timestamp to make email unique for testing
+            const timestamp = Date.now();
+            const testEmail = `test+${timestamp}@example.com`;
+
+            return authApi.register({
+              name: credentials.name + ` ${timestamp}`,
+              email: testEmail,
               password: credentials.password,
               password_confirmation: credentials.passwordConfirmation,
-            }),
+            });
+          },
         },
         {
           name: "Login User",
