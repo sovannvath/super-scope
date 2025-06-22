@@ -397,6 +397,7 @@ const ProductManagement: React.FC = () => {
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
+        status: formData.status || "active",
       };
 
       console.log("🔄 Updating product:", selectedProduct.id, updateData);
