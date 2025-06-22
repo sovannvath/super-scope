@@ -487,6 +487,17 @@ const ProductManagement: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading products...</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={() => {
+              setIsLoading(false);
+              loadProducts();
+            }}
+          >
+            Cancel / Retry
+          </Button>
         </div>
       </div>
     );
