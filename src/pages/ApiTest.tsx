@@ -440,31 +440,42 @@ const ApiTest: React.FC = () => {
           errorMessage = `🚫 Forbidden - You don't have permission for this action`;
         } else if (response.status === 404) {
           errorMessage = `🔍 Not Found - Resource doesn't exist (ID might be invalid)`;
-        } else if (response.status === 422) {
-          // Handle validation errors specifically
-          let validationErrors = "";
-          console.log("🔍 422 Response Debug:", response.data);
+          if (response.status === 422) {
+            let validationErrors = "";
+            console.log("🔍 422 Response Debug:", response.data);
+            console.log("🔍 Full Response:", response);
 
-          if (response.data?.errors) {
-            // Laravel validation errors format
-            const errors = response.data.errors;
-            validationErrors = Object.entries(errors)
-              .map(
-                ([field, messages]) =>
-                  `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`,
-              )
-              .join("; ");
-          } else if (response.data?.message) {
-            validationErrors = response.data.message;
-          } else if (typeof response.data === "string") {
-            validationErrors = response.data;
-          } else if (response.data?.raw_response) {
-            validationErrors = response.data.raw_response;
-          } else {
-            validationErrors = "Validation failed - check console for details";
+            if (response.data?.errors) {
+              // Laravel validation errors format
+              const errors = response.data.errors;
+              validationErrors = Object.entries(errors)
+                .map(
+                  ([field, messages]) =>
+                    `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`,
+                )
+                .join("; ");
+            } else if (response.data?.message) {
+              validationErrors = response.data.message;
+            } else if (typeof response.data === "string") {
+              validationErrors = response.data;
+            } else if (response.data?.raw_response) {
+              validationErrors = response.data.raw_response;
+            } else {
+              // Try to extract any useful error info
+              const dataStr = JSON.stringify(response.data, null, 2);
+              validationErrors = `Validation failed. Response data: ${dataStr}`;
+            }
+
+            // Also log to console for debugging
+            console.error("❌ Validation Error Details:", {
+              status: response.status,
+              data: response.data,
+              message: response.message,
+              errors: response.data?.errors,
+            });
+
+            return `Validation Error (422): ${validationErrors}`;
           }
-          errorMessage = `🔍 Validation Error (422): ${validationErrors}`;
-        } else if (response.status >= 500) {
           errorMessage = `🚨 Server Error (${response.status}): ${response.message || "Internal server error"}`;
         }
 
