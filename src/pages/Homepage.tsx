@@ -74,19 +74,22 @@ const Homepage: React.FC = () => {
         });
       } else {
         console.error("❌ API Error:", response);
+        const errorMsg = response.data?.message || `HTTP ${response.status}`;
         toast({
           title: "API Error",
-          description: `Failed to load products. Status: ${response.status}`,
+          description: `Failed to load products: ${errorMsg}`,
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("❌ Failed to load products:", error);
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
       toast({
         title: "Network Error",
-        description: "Failed to connect to the API server",
+        description: `Failed to connect: ${errorMsg}`,
         variant: "destructive",
       });
+    }
     } finally {
       setIsLoading(false);
     }
@@ -96,9 +99,7 @@ const Homepage: React.FC = () => {
     ? products.filter(
         (product) =>
           product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()),
+          product.description?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : [];
 
@@ -409,9 +410,7 @@ const Homepage: React.FC = () => {
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-4xl font-bold mb-2">
-              {Array.isArray(products) ? products.length : 0}+
-            </div>
+            <div className="text-4xl font-bold mb-2">{Array.isArray(products) ? products.length : 0}+</div>
             <div className="text-metallic-background/80">
               Products Available
             </div>
@@ -438,6 +437,20 @@ const Homepage: React.FC = () => {
       {/* Temporary API Test Component */}
       <div className="fixed top-20 right-4 z-50 max-w-md">
         <ApiTest />
+        <Card className="mt-2 border-2 border-green-500">
+          <CardContent className="p-4">
+            <Button
+              onClick={loadProducts}
+              disabled={isLoading}
+              className="w-full mb-2"
+            >
+              {isLoading ? "Testing..." : "🔄 Test Products API"}
+            </Button>
+            <div className="text-xs text-gray-600">
+              Products: {Array.isArray(products) ? products.length : 'Invalid'}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Public Navigation */}
