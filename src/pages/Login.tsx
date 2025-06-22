@@ -159,8 +159,24 @@ const Login: React.FC = () => {
           description: `Welcome back, ${user.name}!`,
         });
 
-        // Redirect based on role (handle different possible role names)
-        const userRole = user.role || user.user_type || user.type;
+        // Map role_id from Laravel backend to role names
+        let userRole = user.role || user.user_type || user.type;
+
+        // If we have role_id instead of role name, map it
+        if (user.role_id && !userRole) {
+          const roleMapping = {
+            1: "admin",
+            2: "warehouse_manager",
+            3: "customer",
+            4: "staff",
+          };
+          userRole =
+            roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
+
+          // Update the user object with the role name for context
+          user.role = userRole;
+        }
+
         console.log("🔍 Using role for navigation:", userRole);
 
         switch (userRole) {
