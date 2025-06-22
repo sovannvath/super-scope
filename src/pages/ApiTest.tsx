@@ -142,11 +142,17 @@ const ApiTest: React.FC = () => {
           name: "Add Item to Cart",
           endpoint: "POST /cart/add",
           test: async () => {
-            const response = await cartApi.addItem({ product_id: 1, quantity: 2 });
+            const response = await cartApi.addItem({
+              product_id: 1,
+              quantity: 2,
+            });
             // Store cart item ID for later tests
             if (response.status === 200 || response.status === 201) {
               if (response.data?.id) {
-                setTestState(prev => ({ ...prev, cartItemId: response.data.id }));
+                setTestState((prev) => ({
+                  ...prev,
+                  cartItemId: response.data.id,
+                }));
               }
             }
             return response;
@@ -399,8 +405,11 @@ const ApiTest: React.FC = () => {
             // Laravel validation errors format
             const errors = response.data.errors;
             validationErrors = Object.entries(errors)
-              .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-              .join('; ');
+              .map(
+                ([field, messages]) =>
+                  `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`,
+              )
+              .join("; ");
           } else if (response.data?.message) {
             validationErrors = response.data.message;
           }
@@ -526,8 +535,9 @@ const ApiTest: React.FC = () => {
               <Alert className="mb-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Registration Test:</strong> Uses unique email with timestamp to avoid "user already exists" errors.
-                  Login test uses the email you specify below.
+                  <strong>Registration Test:</strong> Uses unique email with
+                  timestamp to avoid "user already exists" errors. Login test
+                  uses the email you specify below.
                 </AlertDescription>
               </Alert>
 
@@ -637,7 +647,8 @@ const ApiTest: React.FC = () => {
                             setAuthToken(response.data.token);
                             toast({
                               title: "Login Successful",
-                              description: "You can now test protected endpoints",
+                              description:
+                                "You can now test protected endpoints",
                             });
                           } else {
                             toast({
@@ -668,7 +679,6 @@ const ApiTest: React.FC = () => {
                     >
                       Logout
                     </Button>
-                  </div>
                   </div>
                 </div>
 
@@ -834,27 +844,46 @@ const ApiTest: React.FC = () => {
                 <strong>⚠️ Common Errors & Solutions:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   <li>
-                    <strong>🔒 "Unauthenticated":</strong> Login first using the "Quick Login" button or Authentication tab
+                    <strong>🔒 "Unauthenticated":</strong> Login first using the
+                    "Quick Login" button or Authentication tab
                   </li>
                   <li>
-                    <strong>🔍 "Not Found" (404):</strong> Resource doesn't exist - normal for delete/update tests with hardcoded IDs
+                    <strong>🔍 "Not Found" (404):</strong> Resource doesn't
+                    exist - normal for delete/update tests with hardcoded IDs
                   </li>
                   <li>
-                    <strong>🚫 "Forbidden" (403):</strong> User doesn't have required permissions (admin/staff/warehouse role)
+                    <strong>🚫 "Forbidden" (403):</strong> User doesn't have
+                    required permissions (admin/staff/warehouse role)
                   </li>
                   <li>
-                    <strong>📡 "Network Error":</strong> Backend server might be down or CORS issues
+                    <strong>📡 "Network Error":</strong> Backend server might be
+                    down or CORS issues
                   </li>
                 </ul>
               </div>
               <div>
                 <strong>🎯 Recommended Test Order:</strong>
                 <ol className="list-decimal list-inside mt-1 space-y-1">
-                  <li>Start with <strong>Public Endpoints</strong> to test connectivity</li>
-                  <li>Use <strong>Authentication → Login User</strong> to get auth token</li>
-                  <li>Test <strong>Shopping Cart</strong> and <strong>Orders</strong> (customer features)</li>
-                  <li>Test <strong>Product Management</strong> and <strong>Dashboard</strong> (admin features)</li>
-                  <li>Some tests may fail due to permissions or missing data - this is normal!</li>
+                  <li>
+                    Start with <strong>Public Endpoints</strong> to test
+                    connectivity
+                  </li>
+                  <li>
+                    Use <strong>Authentication → Login User</strong> to get auth
+                    token
+                  </li>
+                  <li>
+                    Test <strong>Shopping Cart</strong> and{" "}
+                    <strong>Orders</strong> (customer features)
+                  </li>
+                  <li>
+                    Test <strong>Product Management</strong> and{" "}
+                    <strong>Dashboard</strong> (admin features)
+                  </li>
+                  <li>
+                    Some tests may fail due to permissions or missing data -
+                    this is normal!
+                  </li>
                 </ol>
               </div>
             </div>
