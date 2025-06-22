@@ -190,14 +190,7 @@ const Homepage: React.FC = () => {
                 Shop Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-metallic-primary text-lg px-8 py-3"
-                asChild
-              >
-                <Link to="/api-test">🧪 Test API</Link>
-              </Button>
+
               {!isAuthenticated && (
                 <Button
                   size="lg"
@@ -511,12 +504,7 @@ const Homepage: React.FC = () => {
               >
                 Products
               </Link>
-              <Link
-                to="/api-test"
-                className="text-metallic-primary hover:text-metallic-secondary"
-              >
-                API Test
-              </Link>
+
               <Link
                 to="/about"
                 className="text-metallic-primary hover:text-metallic-secondary"
