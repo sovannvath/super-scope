@@ -19,6 +19,7 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import StaffOrderProcessing from "./pages/StaffOrderProcessing";
 import ProductManagement from "./pages/ProductManagement";
 import LowStockAlerts from "./pages/LowStockAlerts";
+import ApiTest from "./pages/ApiTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,9 @@ const App = () => (
                 path="/product-management"
                 element={<ProductManagement />}
               />
+
+              {/* API Testing Route - For development and testing */}
+              <Route path="/api-test" element={<ApiTest />} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

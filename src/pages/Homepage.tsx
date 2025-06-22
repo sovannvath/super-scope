@@ -33,7 +33,6 @@ import {
   List,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import ApiTest from "@/components/ApiTest";
 
 const Homepage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -49,102 +48,41 @@ const Homepage: React.FC = () => {
   }, []);
 
   const loadProducts = async () => {
-    console.log("🔄 Loading products from API...");
     try {
       const response = await productApi.index();
-      console.log("📡 Full API Response:", response);
-      console.log("📡 Response Status:", response.status);
-      console.log("📡 Response Data:", response.data);
-      console.log("📡 Response Data Type:", typeof response.data);
-      console.log("📡 Is Array?:", Array.isArray(response.data));
-
-      if (response.data) {
-        console.log("📡 Data Keys:", Object.keys(response.data));
-        if (response.data.data) {
-          console.log("📡 Nested Data:", response.data.data);
-          console.log("📡 Nested Data Type:", typeof response.data.data);
-          console.log(
-            "📡 Nested Is Array?:",
-            Array.isArray(response.data.data),
-          );
-        }
-      }
 
       if (response.status === 200) {
         // Handle Laravel API response structure
         let productsArray: Product[] = [];
 
         if (Array.isArray(response.data)) {
-          console.log("✅ Using direct array from response.data");
           productsArray = response.data;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          console.log("✅ Using nested array from response.data.data");
-          productsArray = response.data.data;
-        } else if (
-          response.data &&
-          response.data.products &&
-          Array.isArray(response.data.products)
-        ) {
-          console.log("✅ Using response.data.products");
+        } else if (response.data && Array.isArray(response.data.products)) {
           productsArray = response.data.products;
-        } else {
-          console.warn("⚠️ Unexpected API response structure:", response.data);
-          console.warn("⚠️ Trying to extract any array from response...");
-
-          // Try to find any array in the response
-          const findArray = (obj: any): any[] => {
-            if (Array.isArray(obj)) return obj;
-            if (typeof obj === "object" && obj !== null) {
-              for (const key in obj) {
-                if (Array.isArray(obj[key])) {
-                  console.log(`⚠️ Found array at key: ${key}`);
-                  return obj[key];
-                }
-              }
-            }
-            return [];
-          };
-
-          productsArray = findArray(response.data);
+        } else if (response.data && Array.isArray(response.data.data)) {
+          productsArray = response.data.data;
         }
 
-        console.log("✅ Final products array:", productsArray);
-        console.log("✅ Products count:", productsArray.length);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
-
-        // Show success message
-        toast({
-          title: "Products Loaded Successfully",
-          description: `Loaded ${productsArray.length} products from API`,
-        });
       } else {
-        console.error("❌ API Error:", response.status);
         setProducts([]);
         setFeaturedProducts([]);
         toast({
           title: "Failed to Load Products",
-          description: `API Error: ${response.status}`,
+          description: "Unable to fetch products from the server",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("❌ API connection failed:", error);
+      console.error("API connection failed:", error);
       setProducts([]);
       setFeaturedProducts([]);
-
-      // Show more helpful error message
       toast({
-        title: "Backend Connection Error",
-        description:
-          "Cannot connect to Laravel API. Please check if your backend server is running on localhost:8000",
+        title: "Connection Error",
+        description: "Unable to connect to the server",
         variant: "destructive",
       });
-
-      // Optional: Set some demo data so the UI isn't completely broken
-      console.log(
-        "💡 Tip: Start your Laravel backend with 'php artisan serve' on port 8000",
-      );
     } finally {
       setIsLoading(false);
     }
@@ -226,6 +164,14 @@ const Homepage: React.FC = () => {
               >
                 Shop Now
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-metallic-primary text-lg px-8 py-3"
+                asChild
+              >
+                <Link to="/api-test">🧪 Test API</Link>
               </Button>
               {!isAuthenticated && (
                 <Button
@@ -541,6 +487,12 @@ const Homepage: React.FC = () => {
                 Products
               </Link>
               <Link
+                to="/api-test"
+                className="text-metallic-primary hover:text-metallic-secondary"
+              >
+                API Test
+              </Link>
+              <Link
                 to="/about"
                 className="text-metallic-primary hover:text-metallic-secondary"
               >
@@ -603,76 +555,6 @@ const Homepage: React.FC = () => {
       {/* Main Content */}
       <main className="pt-16">
         <HeroSection />
-
-        {/* API Debug Section - Check why products aren't loading */}
-        <section className="py-8 bg-blue-50 border-y border-blue-200">
-          <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-2xl font-bold text-blue-800 mb-4">
-              🔍 Product Loading Debug
-            </h2>
-            <p className="text-blue-700 mb-4">
-              Your API has data at https://laravel-wtc.onrender.com/api/products
-              but products aren't showing. Let's debug this.
-            </p>
-            <div className="space-y-4">
-              <Button
-                onClick={async () => {
-                  console.log("🧪 Testing direct API call...");
-                  try {
-                    const directResponse = await fetch(
-                      "https://laravel-wtc.onrender.com/api/products",
-                    );
-                    const directData = await directResponse.json();
-                    console.log("🧪 Direct API Response:", directData);
-                    console.log("🧪 Direct Response Type:", typeof directData);
-                    console.log(
-                      "🧪 Direct Is Array:",
-                      Array.isArray(directData),
-                    );
-
-                    toast({
-                      title: "Direct API Test",
-                      description: `Response type: ${typeof directData}, Array: ${Array.isArray(directData)}`,
-                    });
-                  } catch (error) {
-                    console.error("🧪 Direct API Error:", error);
-                  }
-                }}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                🧪 Test Direct API Call
-              </Button>
-
-              <Button
-                onClick={loadProducts}
-                variant="outline"
-                className="border-blue-600 text-blue-600"
-              >
-                🔄 Reload Products (Check Console)
-              </Button>
-
-              <div className="text-sm text-blue-700">
-                <strong>Debug Info:</strong>
-                <ul className="list-disc list-inside mt-2">
-                  <li>Products loaded: {products.length}</li>
-                  <li>Featured products: {featuredProducts.length}</li>
-                  <li>
-                    Loading state: {isLoading ? "Loading..." : "Complete"}
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <details className="cursor-pointer mt-4">
-              <summary className="text-blue-800 font-semibold">
-                🔧 Advanced API Testing
-              </summary>
-              <div className="mt-4">
-                <ApiTest />
-              </div>
-            </details>
-          </div>
-        </section>
 
         <FeaturedSection />
         <ProductsSection />
