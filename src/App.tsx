@@ -77,7 +77,7 @@ const App = () => (
                 }
               />
               <Route
-                path="/admin/products"
+                path="/product-management"
                 element={
                   <ProtectedRoute allowedRoles={["admin"]}>
                     <ProductManagement />
@@ -85,7 +85,7 @@ const App = () => (
                 }
               />
               <Route
-                path="/admin/low-stock"
+                path="/low-stock"
                 element={
                   <ProtectedRoute allowedRoles={["admin"]}>
                     <LowStockAlerts />
