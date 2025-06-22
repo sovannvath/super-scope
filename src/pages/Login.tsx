@@ -47,14 +47,10 @@ const Login: React.FC = () => {
       return;
     }
 
-    console.log("🔑 Login attempt:", {
-      email: loginForm.email,
-      apiUrl: "https://laravel-wtc.onrender.com/api/login",
-    });
+    console.log("🔑 Login form data:", loginForm);
 
     try {
       const response = await authApi.login(loginForm);
-      console.log("🔑 Login response:", response);
 
       if (response.status === 200) {
         const { user, token } = response.data;
