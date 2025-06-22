@@ -68,10 +68,10 @@ const navigationItems: NavItem[] = [
     roles: ["customer"],
   },
   {
-    label: "Restock Requests",
+    label: "Warehouse Approval",
     href: "/restock-requests",
     icon: Truck,
-    roles: ["admin", "warehouse"],
+    roles: ["warehouse"],
   },
   {
     label: "Low Stock Alerts",

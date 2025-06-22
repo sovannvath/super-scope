@@ -12,6 +12,9 @@ import Products from "./pages/Products";
 import ProductManagement from "./pages/ProductManagement";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
+import LowStockAlerts from "./pages/LowStockAlerts";
+import WarehouseApproval from "./pages/WarehouseApproval";
+import PurchaseHistory from "./pages/PurchaseHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,9 +39,9 @@ const App = () => (
               <Route path="/orders" element={<Orders />} />
               <Route path="/inventory" element={<ProductManagement />} />
               <Route path="/cart" element={<Cart />} />
-              <Route path="/purchase-history" element={<Orders />} />
-              <Route path="/restock-requests" element={<Orders />} />
-              <Route path="/low-stock" element={<Products />} />
+              <Route path="/purchase-history" element={<PurchaseHistory />} />
+              <Route path="/restock-requests" element={<WarehouseApproval />} />
+              <Route path="/low-stock" element={<LowStockAlerts />} />
               <Route path="/analytics" element={<Dashboard />} />
               <Route path="/users" element={<Dashboard />} />
               <Route path="/payment-methods" element={<Orders />} />
