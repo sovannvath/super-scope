@@ -489,7 +489,9 @@ const AdminDashboard: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {stats?.recent_orders && stats.recent_orders.length > 0 ? (
+            {stats?.recent_orders &&
+            Array.isArray(stats.recent_orders) &&
+            stats.recent_orders.length > 0 ? (
               <div className="space-y-3">
                 {stats.recent_orders
                   .slice(0, 5)
