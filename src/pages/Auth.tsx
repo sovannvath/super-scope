@@ -36,6 +36,29 @@ const Auth: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Validate form data before sending
+    if (!loginForm.email || !loginForm.password) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    if (!loginForm.email.includes("@")) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    console.log("🔑 Login form data:", loginForm);
+
     try {
       const response = await authApi.login(loginForm);
 
@@ -64,9 +87,18 @@ const Auth: React.FC = () => {
             navigate("/dashboard/customer");
         }
       } else {
+        // Handle Laravel validation errors
+        let errorMessage = response.message || "Invalid credentials";
+
+        if (response.data && response.data.errors) {
+          const errors = response.data.errors;
+          const errorMessages = Object.values(errors).flat();
+          errorMessage = errorMessages.join(", ");
+        }
+
         toast({
           title: "Login Failed",
-          description: response.message || "Invalid credentials",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -84,6 +116,39 @@ const Auth: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate all required fields
+    if (
+      !registerForm.name ||
+      !registerForm.email ||
+      !registerForm.password ||
+      !registerForm.password_confirmation
+    ) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!registerForm.email.includes("@")) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (registerForm.password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (registerForm.password !== registerForm.password_confirmation) {
       toast({
         title: "Password Mismatch",
@@ -93,6 +158,7 @@ const Auth: React.FC = () => {
       return;
     }
 
+    console.log("📝 Register form data:", registerForm);
     setIsLoading(true);
 
     try {
@@ -110,9 +176,18 @@ const Auth: React.FC = () => {
 
         navigate("/dashboard/customer");
       } else {
+        // Handle Laravel validation errors
+        let errorMessage = response.message || "Failed to create account";
+
+        if (response.data && response.data.errors) {
+          const errors = response.data.errors;
+          const errorMessages = Object.values(errors).flat();
+          errorMessage = errorMessages.join(", ");
+        }
+
         toast({
           title: "Registration Failed",
-          description: response.message || "Failed to create account",
+          description: errorMessage,
           variant: "destructive",
         });
       }
