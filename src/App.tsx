@@ -69,6 +69,9 @@ const App = () => (
                 element={<ProductManagement />}
               />
 
+              {/* API Testing Route - For development and testing */}
+              <Route path="/api-test" element={<ApiTest />} />
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
