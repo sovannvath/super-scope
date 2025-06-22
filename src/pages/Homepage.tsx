@@ -70,6 +70,12 @@ const Homepage: React.FC = () => {
         console.log("✅ Products loaded:", productsArray.length);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
+
+        // Show success message
+        toast({
+          title: "Products Loaded Successfully",
+          description: `Loaded ${productsArray.length} products from API`,
+        });
       } else {
         console.error("❌ API Error:", response.status);
         setProducts([]);
@@ -556,17 +562,24 @@ const Homepage: React.FC = () => {
       <main className="pt-16">
         <HeroSection />
 
-        {/* API Debug Section - Remove this after fixing connection */}
-        <section className="py-8 bg-yellow-50 border-y border-yellow-200">
+        {/* API Connection Success - You can remove this section now */}
+        <section className="py-8 bg-green-50 border-y border-green-200">
           <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-2xl font-bold text-yellow-800 mb-4">
-              🔧 API Debug Mode
+            <h2 className="text-2xl font-bold text-green-800 mb-4">
+              ✅ API Connection Working!
             </h2>
-            <p className="text-yellow-700 mb-4">
-              Experiencing connection issues? Use this tool to test your Laravel
-              backend connection.
+            <p className="text-green-700 mb-4">
+              Your React frontend is successfully connected to your Laravel
+              backend on Render.com.
             </p>
-            <ApiTest />
+            <details className="cursor-pointer">
+              <summary className="text-green-800 font-semibold">
+                🔧 Advanced API Testing (Click to expand)
+              </summary>
+              <div className="mt-4">
+                <ApiTest />
+              </div>
+            </details>
           </div>
         </section>
 
