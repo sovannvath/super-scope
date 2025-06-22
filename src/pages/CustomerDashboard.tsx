@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,17 +36,28 @@ interface CustomerDashboardData {
 }
 
 const CustomerDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] =
     useState<CustomerDashboardData | null>(null);
 
   useEffect(() => {
-    loadDashboard();
-  }, []);
+    if (isAuthenticated && user) {
+      loadDashboard();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, user]);
 
   const loadDashboard = async () => {
+    // Check if user is authenticated before making API call
+    if (!isAuthenticated || !user) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await dashboardApi.customer();
@@ -61,11 +73,21 @@ const CustomerDashboard: React.FC = () => {
       }
     } catch (error) {
       console.error("Dashboard error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to connect to dashboard service",
-        variant: "destructive",
-      });
+
+      // Check if it's an authentication error
+      if (error instanceof Error && error.message.includes("Failed to fetch")) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to access your dashboard",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to connect to dashboard service",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -87,16 +109,32 @@ const CustomerDashboard: React.FC = () => {
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 
-  if (!user || user.role !== "customer") {
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="text-center py-12">
+        <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
+        <h3 className="text-lg font-semibold text-metallic-primary mb-2">
+          Please Log In
+        </h3>
+        <p className="text-metallic-tertiary mb-4">
+          You need to be logged in to access your customer dashboard.
+        </p>
+        <Button onClick={() => navigate("/login")}>Go to Login</Button>
+      </div>
+    );
+  }
+
+  if (user.role !== "customer") {
     return (
       <div className="text-center py-12">
         <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
         <h3 className="text-lg font-semibold text-metallic-primary mb-2">
           Customer Access Only
         </h3>
-        <p className="text-metallic-tertiary">
+        <p className="text-metallic-tertiary mb-4">
           This dashboard is only available for customers.
         </p>
+        <Button onClick={() => navigate("/")}>Go to Homepage</Button>
       </div>
     );
   }
