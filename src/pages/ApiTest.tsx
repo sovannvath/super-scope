@@ -674,6 +674,29 @@ const ApiTest: React.FC = () => {
                     </Button>
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const localStorageToken =
+                          localStorage.getItem("auth_token");
+                        const uiToken = authToken;
+                        console.log("🔍 DEBUGGING TOKEN STATE:");
+                        console.log("localStorage token:", localStorageToken);
+                        console.log("UI state token:", uiToken);
+                        console.log(
+                          "Tokens match:",
+                          localStorageToken === uiToken,
+                        );
+
+                        toast({
+                          title: "Token Debug Info",
+                          description: `localStorage: ${localStorageToken ? "EXISTS" : "NULL"}, UI: ${uiToken ? "EXISTS" : "NULL"}, Match: ${localStorageToken === uiToken}`,
+                        });
+                      }}
+                    >
+                      🔍 Debug Tokens
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={async () => {
                         try {
                           const response = await authApi.login({
