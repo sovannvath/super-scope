@@ -185,6 +185,7 @@ const ProductManagement: React.FC = () => {
       price: "",
       quantity: "",
       low_stock_threshold: "",
+      status: "active",
     });
   };
 
