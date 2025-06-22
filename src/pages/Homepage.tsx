@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { productApi, Product } from "@/lib/api";
+import { productApi, cartApi, Product } from "@/lib/api";
 import {
   ShoppingCart,
   Search,
@@ -41,11 +41,11 @@ const Homepage: React.FC = () => {
     try {
       const response = await productApi.list();
       console.log("📡 API Response:", response);
-
+      
       if (response.status === 200) {
         // Handle Laravel API response structure
         let productsArray: Product[] = [];
-
+        
         if (Array.isArray(response.data)) {
           productsArray = response.data;
         } else if (response.data && Array.isArray(response.data.data)) {
@@ -54,7 +54,7 @@ const Homepage: React.FC = () => {
           console.warn("⚠️ Unexpected API response structure:", response.data);
           productsArray = [];
         }
-
+        
         console.log("✅ Products loaded:", productsArray.length);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
@@ -82,17 +82,15 @@ const Homepage: React.FC = () => {
     }
   };
 
-  const filteredProducts = Array.isArray(products)
+  const filteredProducts = Array.isArray(products) 
     ? products.filter(
         (product) =>
           product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()),
+          product.description?.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : [];
 
-  const handleAddToCart = (productId: number) => {
+  const handleAddToCart = async (productId: number) => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -102,10 +100,31 @@ const Homepage: React.FC = () => {
       return;
     }
 
-    toast({
-      title: "Added to Cart",
-      description: "Product has been added to your cart",
-    });
+    try {
+      const response = await cartApi.add({
+        product_id: productId,
+        quantity: 1,
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        toast({
+          title: "Added to Cart",
+          description: "Product has been added to your cart",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to add to cart",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart",
+        variant: "destructive",
+      });
+    }
   };
 
   const HeroSection = () => (
@@ -399,9 +418,7 @@ const Homepage: React.FC = () => {
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-4xl font-bold mb-2">
-              {Array.isArray(products) ? products.length : 0}+
-            </div>
+            <div className="text-4xl font-bold mb-2">{Array.isArray(products) ? products.length : 0}+</div>
             <div className="text-metallic-background/80">
               Products Available
             </div>
@@ -472,9 +489,12 @@ const Homepage: React.FC = () => {
                     variant="outline"
                     size="sm"
                     className="border-metallic-light"
+                    asChild
                   >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Cart
+                    <Link to="/cart">
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Cart
+                    </Link>
                   </Button>
                   <Button
                     asChild
@@ -580,7 +600,8 @@ const Homepage: React.FC = () => {
             <p>&copy; 2024 EcommerceHub. All rights reserved.</p>
           </div>
         </div>
-      </footer>
+      </div>
+    </footer>
     </div>
   );
 };
