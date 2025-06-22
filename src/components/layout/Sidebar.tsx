@@ -93,12 +93,6 @@ const navigationItems: NavItem[] = [
     roles: ["warehouse_manager"],
   },
   {
-    label: "Inventory Management",
-    href: "/low-stock",
-    icon: Package,
-    roles: ["admin", "warehouse_manager"],
-  },
-  {
     label: "Restock Requests",
     href: "/reorder-requests",
     icon: Truck,
