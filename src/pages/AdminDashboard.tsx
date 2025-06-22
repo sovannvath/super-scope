@@ -158,12 +158,7 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  if (
-    hasError &&
-    !stats &&
-    !Array.isArray(lowStockProducts) &&
-    !Array.isArray(reorderRequests)
-  ) {
+  if (hasError && !stats && !Array.isArray(reorderRequests)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
