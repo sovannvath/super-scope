@@ -82,26 +82,50 @@ const AdminDashboard: React.FC = () => {
 
       // Load dashboard stats
       const statsResponse = await dashboardApi.admin();
-      if (statsResponse.status === 200) {
+      if (statsResponse.status === 200 && statsResponse.data) {
         setStats(statsResponse.data);
+      } else {
+        console.warn("Dashboard stats API failed:", statsResponse);
+        setStats(null);
       }
 
       // Load low stock products
       const lowStockResponse = await productApi.lowStock();
-      if (lowStockResponse.status === 200) {
-        setLowStockProducts(lowStockResponse.data);
+      if (lowStockResponse.status === 200 && lowStockResponse.data) {
+        // Ensure it's an array
+        const lowStockData = Array.isArray(lowStockResponse.data)
+          ? lowStockResponse.data
+          : lowStockResponse.data?.data || [];
+        setLowStockProducts(lowStockData);
+      } else {
+        console.warn("Low stock API failed:", lowStockResponse);
+        setLowStockProducts([]);
       }
 
       // Load reorder requests
       const reorderResponse = await requestOrderApi.index();
-      if (reorderResponse.status === 200) {
-        setReorderRequests(reorderResponse.data);
+      if (reorderResponse.status === 200 && reorderResponse.data) {
+        // Ensure it's an array
+        const reorderData = Array.isArray(reorderResponse.data)
+          ? reorderResponse.data
+          : reorderResponse.data?.data || [];
+        setReorderRequests(reorderData);
+      } else {
+        console.warn("Reorder requests API failed:", reorderResponse);
+        setReorderRequests([]);
       }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+
+      // Reset all state to safe defaults
+      setStats(null);
+      setLowStockProducts([]);
+      setReorderRequests([]);
+
       toast({
         title: "Error",
-        description: "Failed to load dashboard data",
+        description:
+          "Failed to load dashboard data. Some features may not work.",
         variant: "destructive",
       });
     } finally {
