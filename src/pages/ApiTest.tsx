@@ -561,35 +561,97 @@ const ApiTest: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-6 flex gap-4">
-                <Button
-                  onClick={runAllTests}
-                  disabled={isTestingAll}
-                  className="flex-1"
-                  size="lg"
-                >
-                  {isTestingAll ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Running All Tests...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="mr-2 h-4 w-4" />
-                      Run All Tests
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={() => {
-                    clearAuth();
-                    setAuthToken("");
-                    setTestResults({});
-                  }}
-                  variant="outline"
-                >
-                  Clear Auth & Results
-                </Button>
+              <div className="mt-6 space-y-4">
+                {/* Authentication Status */}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <strong>Authentication Status:</strong>
+                      {authToken ? (
+                        <Badge className="ml-2" variant="default">
+                          ✅ Authenticated
+                        </Badge>
+                      ) : (
+                        <Badge className="ml-2" variant="destructive">
+                          ❌ Not Authenticated
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const response = await authApi.login({
+                              email: credentials.email,
+                              password: credentials.password,
+                            });
+                            if (response.data?.token) {
+                              saveToken(response.data.token);
+                              setAuthToken(response.data.token);
+                              toast({
+                                title: "Login Successful",
+                                description:
+                                  "You can now test protected endpoints",
+                              });
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Login Failed",
+                              description:
+                                "Check your credentials and try again",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        Quick Login
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          clearAuth();
+                          setAuthToken("");
+                          setTestResults({});
+                        }}
+                      >
+                        Logout
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    onClick={runAllTests}
+                    disabled={isTestingAll}
+                    className="flex-1"
+                    size="lg"
+                  >
+                    {isTestingAll ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Running All Tests...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        Run All Tests
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      clearAuth();
+                      setAuthToken("");
+                      setTestResults({});
+                    }}
+                    variant="outline"
+                  >
+                    Clear Auth & Results
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
