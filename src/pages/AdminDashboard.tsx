@@ -131,6 +131,7 @@ const AdminDashboard: React.FC = () => {
       // Reset all state to safe defaults
       setStats(null);
       setReorderRequests([]);
+      setTotalProducts(0);
       setHasError(true);
 
       toast({
