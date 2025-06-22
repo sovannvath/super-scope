@@ -380,6 +380,7 @@ const ProductManagement: React.FC = () => {
       price: product.price.toString(),
       quantity: product.quantity.toString(),
       low_stock_threshold: product.low_stock_threshold.toString(),
+      status: (product as any).status || "active",
     });
     setIsEditDialogOpen(true);
   };
