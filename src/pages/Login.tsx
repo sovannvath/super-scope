@@ -54,6 +54,9 @@ const Login: React.FC = () => {
 
       if (response.status === 200) {
         const { user, token } = response.data;
+        console.log("🔍 Login response data:", { user, token });
+        console.log("🔍 User role:", user.role);
+
         saveToken(token);
         login(user);
 
@@ -62,8 +65,11 @@ const Login: React.FC = () => {
           description: `Welcome back, ${user.name}!`,
         });
 
-        // Redirect based on role
-        switch (user.role) {
+        // Redirect based on role (handle different possible role names)
+        const userRole = user.role || user.user_type || user.type;
+        console.log("🔍 Using role for navigation:", userRole);
+
+        switch (userRole) {
           case "admin":
             navigate("/dashboard/admin");
             break;
@@ -71,8 +77,10 @@ const Login: React.FC = () => {
             navigate("/dashboard/staff");
             break;
           case "warehouse":
+          case "warehouse_manager":
             navigate("/dashboard/warehouse");
             break;
+          case "customer":
           default:
             navigate("/dashboard/customer");
         }
