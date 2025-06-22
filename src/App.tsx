@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
+import ProductManagement from "./pages/ProductManagement";
+import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
 
@@ -27,9 +29,13 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/products" element={<Products />} />
+              <Route
+                path="/product-management"
+                element={<ProductManagement />}
+              />
               <Route path="/orders" element={<Orders />} />
-              <Route path="/inventory" element={<Products />} />
-              <Route path="/cart" element={<Orders />} />
+              <Route path="/inventory" element={<ProductManagement />} />
+              <Route path="/cart" element={<Cart />} />
               <Route path="/purchase-history" element={<Orders />} />
               <Route path="/restock-requests" element={<Orders />} />
               <Route path="/low-stock" element={<Products />} />

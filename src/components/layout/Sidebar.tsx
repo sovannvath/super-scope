@@ -35,7 +35,13 @@ const navigationItems: NavItem[] = [
     label: "Products",
     href: "/products",
     icon: Package,
-    roles: ["admin", "warehouse", "customer"],
+    roles: ["customer"],
+  },
+  {
+    label: "Product Management",
+    href: "/product-management",
+    icon: Store,
+    roles: ["admin", "warehouse"],
   },
   {
     label: "Inventory",
