@@ -206,12 +206,12 @@ const ApiTest: React.FC = () => {
           test: () => orderApi.getPaymentMethods(),
         },
         {
-          name: "Update Order Status",
+          name: "Update Order Status (may fail if no order)",
           endpoint: "PUT /orders/{id}/status",
           test: () => orderApi.updateStatus(1, "processing"),
         },
         {
-          name: "Update Payment Status",
+          name: "Update Payment Status (may fail if no order)",
           endpoint: "PUT /orders/{id}/payment",
           test: () => orderApi.updatePaymentStatus(1, "paid"),
         },
