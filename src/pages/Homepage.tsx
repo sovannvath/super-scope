@@ -49,6 +49,7 @@ const Homepage: React.FC = () => {
 
   const loadProducts = async () => {
     try {
+      console.log("🔄 Loading products from API...");
       const response = await productApi.index();
 
       if (response.status === 200) {
@@ -63,24 +64,42 @@ const Homepage: React.FC = () => {
           productsArray = response.data.data;
         }
 
+        console.log(`✅ Loaded ${productsArray.length} products`);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
+
+        toast({
+          title: "Products Loaded",
+          description: `Successfully loaded ${productsArray.length} products`,
+        });
       } else {
+        console.warn(`⚠️ API returned status ${response.status}`);
         setProducts([]);
         setFeaturedProducts([]);
+
+        // Show specific error based on response
+        let errorMessage =
+          response.message || "Unable to fetch products from the server";
+        if (response.status === 0) {
+          errorMessage =
+            "CORS error: The server doesn't allow requests from this domain. Please contact the administrator to configure CORS settings.";
+        }
+
         toast({
           title: "Failed to Load Products",
-          description: "Unable to fetch products from the server",
+          description: errorMessage,
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("API connection failed:", error);
+      console.error("🚨 API connection failed:", error);
       setProducts([]);
       setFeaturedProducts([]);
+
       toast({
         title: "Connection Error",
-        description: "Unable to connect to the server",
+        description:
+          "Unable to connect to the Laravel backend. This might be a CORS issue or the server may be unavailable.",
         variant: "destructive",
       });
     } finally {
