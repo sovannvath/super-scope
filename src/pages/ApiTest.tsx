@@ -142,11 +142,17 @@ const ApiTest: React.FC = () => {
           name: "Add Item to Cart",
           endpoint: "POST /cart/add",
           test: async () => {
-            const response = await cartApi.addItem({ product_id: 1, quantity: 2 });
+            const response = await cartApi.addItem({
+              product_id: 1,
+              quantity: 2,
+            });
             // Store cart item ID for later tests
             if (response.status === 200 || response.status === 201) {
               if (response.data?.id) {
-                setTestState(prev => ({ ...prev, cartItemId: response.data.id }));
+                setTestState((prev) => ({
+                  ...prev,
+                  cartItemId: response.data.id,
+                }));
               }
             }
             return response;
@@ -371,7 +377,10 @@ const ApiTest: React.FC = () => {
         if (testName === "Login User") {
           console.log("🔐 Login Response Data:", response.data);
           if (response.data?.token) {
-            console.log("✅ Token found in login response:", response.data.token.substring(0, 20) + "...");
+            console.log(
+              "✅ Token found in login response:",
+              response.data.token.substring(0, 20) + "...",
+            );
             saveToken(response.data.token);
             setAuthToken(response.data.token);
           } else {
@@ -407,11 +416,14 @@ const ApiTest: React.FC = () => {
             // Laravel validation errors format
             const errors = response.data.errors;
             validationErrors = Object.entries(errors)
-              .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-              .join('; ');
+              .map(
+                ([field, messages]) =>
+                  `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`,
+              )
+              .join("; ");
           } else if (response.data?.message) {
             validationErrors = response.data.message;
-          } else if (typeof response.data === 'string') {
+          } else if (typeof response.data === "string") {
             validationErrors = response.data;
           } else if (response.data?.raw_response) {
             validationErrors = response.data.raw_response;
@@ -419,7 +431,6 @@ const ApiTest: React.FC = () => {
             validationErrors = "Validation failed - check console for details";
           }
           errorMessage = `🔍 Validation Error (422): ${validationErrors}`;
-        }
         } else if (response.status >= 500) {
           errorMessage = `🚨 Server Error (${response.status}): ${response.message || "Internal server error"}`;
         }
@@ -541,8 +552,9 @@ const ApiTest: React.FC = () => {
               <Alert className="mb-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Registration Test:</strong> Uses unique email with timestamp to avoid "user already exists" errors.
-                  Login test uses the email you specify below.
+                  <strong>Registration Test:</strong> Uses unique email with
+                  timestamp to avoid "user already exists" errors. Login test
+                  uses the email you specify below.
                 </AlertDescription>
               </Alert>
 
@@ -647,15 +659,20 @@ const ApiTest: React.FC = () => {
                           const response = await authApi.user();
                           toast({
                             title: "Token Test Result",
-                            description: response.status === 200
-                              ? "✅ Token is valid - authentication working!"
-                              : `❌ Token invalid - Status: ${response.status}`,
-                            variant: response.status === 200 ? "default" : "destructive",
+                            description:
+                              response.status === 200
+                                ? "✅ Token is valid - authentication working!"
+                                : `❌ Token invalid - Status: ${response.status}`,
+                            variant:
+                              response.status === 200
+                                ? "default"
+                                : "destructive",
                           });
                         } catch (error) {
                           toast({
                             title: "Token Test Failed",
-                            description: "❌ Cannot authenticate with current token",
+                            description:
+                              "❌ Cannot authenticate with current token",
                             variant: "destructive",
                           });
                         }
@@ -667,16 +684,20 @@ const ApiTest: React.FC = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        const localStorageToken = localStorage.getItem("auth_token");
+                        const localStorageToken =
+                          localStorage.getItem("auth_token");
                         const uiToken = authToken;
                         console.log("🔍 DEBUGGING TOKEN STATE:");
                         console.log("localStorage token:", localStorageToken);
                         console.log("UI state token:", uiToken);
-                        console.log("Tokens match:", localStorageToken === uiToken);
+                        console.log(
+                          "Tokens match:",
+                          localStorageToken === uiToken,
+                        );
 
                         toast({
                           title: "Token Debug Info",
-                          description: `localStorage: ${localStorageToken ? 'EXISTS' : 'NULL'}, UI: ${uiToken ? 'EXISTS' : 'NULL'}, Match: ${localStorageToken === uiToken}`,
+                          description: `localStorage: ${localStorageToken ? "EXISTS" : "NULL"}, UI: ${uiToken ? "EXISTS" : "NULL"}, Match: ${localStorageToken === uiToken}`,
                         });
                       }}
                     >
@@ -699,7 +720,8 @@ const ApiTest: React.FC = () => {
                           console.error("Network test error:", error);
                           toast({
                             title: "Network Test Failed",
-                            description: "❌ Cannot reach API server - check connection",
+                            description:
+                              "❌ Cannot reach API server - check connection",
                             variant: "destructive",
                           });
                         }
@@ -718,26 +740,36 @@ const ApiTest: React.FC = () => {
                         if (!token) {
                           toast({
                             title: "No Token Found",
-                            description: "Please login first before testing cart",
+                            description:
+                              "Please login first before testing cart",
                             variant: "destructive",
                           });
                           return;
                         }
 
                         try {
-                          console.log("Making cart request with token:", token.substring(0, 20) + "...");
+                          console.log(
+                            "Making cart request with token:",
+                            token.substring(0, 20) + "...",
+                          );
                           const response = await cartApi.index();
                           console.log("Manual cart response:", response);
                           toast({
                             title: "Manual Cart Test",
-                            description: `Status: ${response.status} - ${response.data?.message || 'Success'}`,
-                            variant: response.status === 200 ? "default" : "destructive",
+                            description: `Status: ${response.status} - ${response.data?.message || "Success"}`,
+                            variant:
+                              response.status === 200
+                                ? "default"
+                                : "destructive",
                           });
                         } catch (error) {
                           console.error("Manual cart test error:", error);
                           toast({
                             title: "Manual Cart Test Error",
-                            description: error instanceof Error ? error.message : "Unknown error",
+                            description:
+                              error instanceof Error
+                                ? error.message
+                                : "Unknown error",
                             variant: "destructive",
                           });
                         }
@@ -758,7 +790,8 @@ const ApiTest: React.FC = () => {
                             setAuthToken(response.data.token);
                             toast({
                               title: "Login Successful",
-                              description: "You can now test protected endpoints",
+                              description:
+                                "You can now test protected endpoints",
                             });
                           } else {
                             toast({
@@ -954,27 +987,46 @@ const ApiTest: React.FC = () => {
                 <strong>⚠️ Common Errors & Solutions:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   <li>
-                    <strong>🔒 "Unauthenticated":</strong> Login first using the "Quick Login" button or Authentication tab
+                    <strong>🔒 "Unauthenticated":</strong> Login first using the
+                    "Quick Login" button or Authentication tab
                   </li>
                   <li>
-                    <strong>🔍 "Not Found" (404):</strong> Resource doesn't exist - normal for delete/update tests with hardcoded IDs
+                    <strong>🔍 "Not Found" (404):</strong> Resource doesn't
+                    exist - normal for delete/update tests with hardcoded IDs
                   </li>
                   <li>
-                    <strong>🚫 "Forbidden" (403):</strong> User doesn't have required permissions (admin/staff/warehouse role)
+                    <strong>🚫 "Forbidden" (403):</strong> User doesn't have
+                    required permissions (admin/staff/warehouse role)
                   </li>
                   <li>
-                    <strong>📡 "Network Error":</strong> Backend server might be down or CORS issues
+                    <strong>📡 "Network Error":</strong> Backend server might be
+                    down or CORS issues
                   </li>
                 </ul>
               </div>
               <div>
                 <strong>🎯 Recommended Test Order:</strong>
                 <ol className="list-decimal list-inside mt-1 space-y-1">
-                  <li>Start with <strong>Public Endpoints</strong> to test connectivity</li>
-                  <li>Use <strong>Authentication → Login User</strong> to get auth token</li>
-                  <li>Test <strong>Shopping Cart</strong> and <strong>Orders</strong> (customer features)</li>
-                  <li>Test <strong>Product Management</strong> and <strong>Dashboard</strong> (admin features)</li>
-                  <li>Some tests may fail due to permissions or missing data - this is normal!</li>
+                  <li>
+                    Start with <strong>Public Endpoints</strong> to test
+                    connectivity
+                  </li>
+                  <li>
+                    Use <strong>Authentication → Login User</strong> to get auth
+                    token
+                  </li>
+                  <li>
+                    Test <strong>Shopping Cart</strong> and{" "}
+                    <strong>Orders</strong> (customer features)
+                  </li>
+                  <li>
+                    Test <strong>Product Management</strong> and{" "}
+                    <strong>Dashboard</strong> (admin features)
+                  </li>
+                  <li>
+                    Some tests may fail due to permissions or missing data -
+                    this is normal!
+                  </li>
                 </ol>
               </div>
             </div>
