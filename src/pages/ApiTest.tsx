@@ -768,7 +768,7 @@ const ApiTest: React.FC = () => {
         {/* Backend Status */}
         <Alert className="mt-8">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Backend Information</AlertTitle>
+          <AlertTitle>Testing Guide & Troubleshooting</AlertTitle>
           <AlertDescription>
             <div className="space-y-2 mt-2">
               <div>
@@ -781,18 +781,50 @@ const ApiTest: React.FC = () => {
                 <strong>Authentication:</strong> Laravel Sanctum (Bearer Token)
               </div>
               <div>
-                <strong>Test Tips:</strong>
+                <strong>⚠️ Common Errors & Solutions:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   <li>
-                    Run "Public Endpoints" first to test basic connectivity
+                    <strong>🔒 "Unauthenticated":</strong> Login first using the
+                    "Quick Login" button or Authentication tab
                   </li>
-                  <li>Use "Register User" or "Login User" to get auth token</li>
-                  <li>Protected endpoints require valid authentication</li>
                   <li>
-                    Some endpoints may fail if resources don't exist (404)
+                    <strong>🔍 "Not Found" (404):</strong> Resource doesn't
+                    exist - normal for delete/update tests with hardcoded IDs
                   </li>
-                  <li>Admin/Staff endpoints may require specific user roles</li>
+                  <li>
+                    <strong>🚫 "Forbidden" (403):</strong> User doesn't have
+                    required permissions (admin/staff/warehouse role)
+                  </li>
+                  <li>
+                    <strong>📡 "Network Error":</strong> Backend server might be
+                    down or CORS issues
+                  </li>
                 </ul>
+              </div>
+              <div>
+                <strong>🎯 Recommended Test Order:</strong>
+                <ol className="list-decimal list-inside mt-1 space-y-1">
+                  <li>
+                    Start with <strong>Public Endpoints</strong> to test
+                    connectivity
+                  </li>
+                  <li>
+                    Use <strong>Authentication → Login User</strong> to get auth
+                    token
+                  </li>
+                  <li>
+                    Test <strong>Shopping Cart</strong> and{" "}
+                    <strong>Orders</strong> (customer features)
+                  </li>
+                  <li>
+                    Test <strong>Product Management</strong> and{" "}
+                    <strong>Dashboard</strong> (admin features)
+                  </li>
+                  <li>
+                    Some tests may fail due to permissions or missing data -
+                    this is normal!
+                  </li>
+                </ol>
               </div>
             </div>
           </AlertDescription>
