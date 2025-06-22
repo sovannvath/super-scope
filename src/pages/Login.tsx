@@ -49,6 +49,96 @@ const Login: React.FC = () => {
 
     console.log("🔑 Login form data:", loginForm);
 
+    // Check for mock accounts first
+    const mockAccounts = {
+      "admin@test.com": {
+        email: "admin@test.com",
+        password: "password123",
+        user: {
+          id: 1,
+          name: "Admin User",
+          email: "admin@test.com",
+          role: "admin",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-admin",
+      },
+      "warehouse@test.com": {
+        email: "warehouse@test.com",
+        password: "password123",
+        user: {
+          id: 2,
+          name: "Warehouse Manager",
+          email: "warehouse@test.com",
+          role: "warehouse_manager",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-warehouse",
+      },
+      "staff@test.com": {
+        email: "staff@test.com",
+        password: "password123",
+        user: {
+          id: 3,
+          name: "Staff Member",
+          email: "staff@test.com",
+          role: "staff",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-staff",
+      },
+      "customer@test.com": {
+        email: "customer@test.com",
+        password: "password123",
+        user: {
+          id: 4,
+          name: "Customer User",
+          email: "customer@test.com",
+          role: "customer",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-customer",
+      },
+    };
+
+    // Check if this is a mock account
+    const mockAccount =
+      mockAccounts[loginForm.email as keyof typeof mockAccounts];
+    if (mockAccount && mockAccount.password === loginForm.password) {
+      console.log("🎭 Using mock account for", loginForm.email);
+
+      saveToken(mockAccount.token);
+      login(mockAccount.user);
+
+      toast({
+        title: "Login Successful (Mock)",
+        description: `Welcome back, ${mockAccount.user.name}!`,
+      });
+
+      // Navigate based on role
+      const userRole = mockAccount.user.role;
+      switch (userRole) {
+        case "admin":
+          navigate("/dashboard/admin");
+          break;
+        case "staff":
+          navigate("/dashboard/staff");
+          break;
+        case "warehouse_manager":
+          navigate("/dashboard/warehouse");
+          break;
+        default:
+          navigate("/dashboard/customer");
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    // If not a mock account, try real backend
     try {
       const response = await authApi.login(loginForm);
 
