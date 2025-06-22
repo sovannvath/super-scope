@@ -70,13 +70,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Route not found - backend might not have /user endpoint yet
         console.log("⚠️ User endpoint not found, keeping token for now");
         setUser(null);
+      } else if (response.status === 0) {
+        // Network error - backend unavailable
+        console.log("📡 Backend unavailable, keeping token for offline use");
+        setUser(null);
       } else {
         // For other errors, keep the token but don't set user data
         console.log("⚠️ Cannot validate user, but keeping token");
         setUser(null);
       }
     } catch (error) {
-      console.error("Failed to refresh user:", error);
+      console.log("📡 Backend connection failed, working in offline mode");
       // Don't clear auth on network errors, keep the token
       setUser(null);
     } finally {
