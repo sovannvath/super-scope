@@ -318,12 +318,8 @@ const AdminDashboard: React.FC = () => {
                 {stats?.total_products?.toLocaleString() || "0"}
               </div>
               <p className="text-xs text-muted-foreground">
-                {lowStockProducts.length > 0 && (
-                  <span className="text-red-600">
-                    <AlertTriangle className="inline h-3 w-3 mr-1" />
-                    {lowStockProducts.length} low stock
-                  </span>
-                )}
+                <TrendingUp className="inline h-3 w-3 mr-1" />
+                +5% from last month
               </p>
             </CardContent>
           </Card>
