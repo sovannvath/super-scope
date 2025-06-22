@@ -52,16 +52,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const response = await authApi.me();
-      if (response.status === 200) {
+      if (response.status === 200 && response.data) {
         setUser(response.data);
-      } else {
-        console.log("Token validation failed, clearing auth");
+        console.log("✅ User authenticated:", response.data.name);
+      } else if (response.status === 401) {
+        // Only clear auth on 401 Unauthorized
+        console.log("🔒 Token expired or invalid, clearing auth");
         clearAuth();
+        setUser(null);
+      } else {
+        // For other errors, keep the token but don't set user data
+        console.log("⚠️ Cannot validate user, but keeping token");
         setUser(null);
       }
     } catch (error) {
       console.error("Failed to refresh user:", error);
-      clearAuth();
+      // Don't clear auth on network errors, keep the token
       setUser(null);
     } finally {
       setIsLoading(false);
