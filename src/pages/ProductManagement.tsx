@@ -64,29 +64,62 @@ const ProductManagement: React.FC = () => {
 
   const loadProducts = async () => {
     try {
+      setIsLoading(true);
+      console.log("🔄 Loading products...");
+
       const response = await productApi.index();
+      console.log("📡 API response:", response);
+
       if (response.status === 200) {
         let productsArray: Product[] = [];
+
+        // Handle different response structures from Laravel
         if (Array.isArray(response.data)) {
           productsArray = response.data;
+        } else if (response.data && Array.isArray(response.data.products)) {
+          productsArray = response.data.products;
         } else if (response.data && Array.isArray(response.data.data)) {
           productsArray = response.data.data;
         }
+
+        console.log("✅ Loaded products:", productsArray.length);
         setProducts(productsArray);
+
+        if (productsArray.length === 0) {
+          toast({
+            title: "No Products",
+            description: "No products found in the database",
+          });
+        }
+      } else if (response.status === 0) {
+        // Timeout or network error
+        toast({
+          title: "Loading...",
+          description: "Server is starting up, please wait",
+        });
       } else {
         toast({
           title: "Error",
-          description: "Failed to load products",
+          description: response.message || "Failed to load products",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Error loading products:", error);
-      toast({
-        title: "Error",
-        description: "Failed to connect to server",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      console.error("❌ Error loading products:", error);
+
+      // Handle timeout errors gracefully
+      if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+        toast({
+          title: "Loading...",
+          description: "Server is starting up, please wait and try again",
+        });
+      } else {
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to server. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
