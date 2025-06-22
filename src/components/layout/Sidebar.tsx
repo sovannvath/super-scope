@@ -60,13 +60,13 @@ const navigationItems: NavItem[] = [
   },
   {
     label: "Product Management",
-    href: "/admin/products",
+    href: "/product-management",
     icon: Store,
     roles: ["admin"],
   },
   {
     label: "Low Stock Alerts",
-    href: "/admin/low-stock",
+    href: "/low-stock",
     icon: AlertTriangle,
     roles: ["admin"],
   },
