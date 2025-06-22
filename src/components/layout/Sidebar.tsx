@@ -60,7 +60,7 @@ const navigationItems: NavItem[] = [
   },
   {
     label: "Product Management",
-    href: "/product-management",
+    href: "/admin/products",
     icon: Store,
     roles: ["admin"],
   },
