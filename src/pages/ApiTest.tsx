@@ -1029,6 +1029,30 @@ const ApiTest: React.FC = () => {
                   </li>
                 </ol>
               </div>
+              <div>
+                <strong>✅ Expected Results:</strong>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li>
+                    <strong>404 "Not Found":</strong> Normal for update/delete
+                    tests with hardcoded IDs
+                  </li>
+                  <li>
+                    <strong>422 "Validation Error":</strong> Normal for create
+                    operations without required data
+                  </li>
+                  <li>
+                    <strong>403 "Forbidden":</strong> Normal for admin/staff
+                    endpoints with customer user
+                  </li>
+                  <li>
+                    <strong>401 "Unauthenticated":</strong> Login required - use
+                    Quick Login button
+                  </li>
+                  <li>
+                    <strong>200 "Success":</strong> Endpoint works correctly
+                  </li>
+                </ul>
+              </div>
             </div>
           </AlertDescription>
         </Alert>
