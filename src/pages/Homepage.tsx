@@ -118,6 +118,12 @@ const Homepage: React.FC = () => {
     : [];
 
   const handleAddToCart = async (productId: number) => {
+    console.log("🔐 Auth check:", {
+      isAuthenticated,
+      user: user?.name,
+      hasToken: !!getToken(),
+    });
+
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
