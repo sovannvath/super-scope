@@ -202,26 +202,53 @@ const ApiTest: React.FC = () => {
 
         <Alert>
           <AlertDescription>
-            <strong>Common Solutions:</strong>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>
-                Start Laravel backend:{" "}
-                <code className="bg-muted px-1 rounded">php artisan serve</code>
-              </li>
-              <li>
-                Check if running on port 8000:{" "}
-                <code className="bg-muted px-1 rounded">
-                  http://localhost:8000
+            <strong>🚫 CORS Error Solutions for Laravel on Render.com:</strong>
+            <div className="mt-2 space-y-2">
+              <div>
+                <strong>1. Test your API manually:</strong>
+                <div className="mt-1">
+                  <a
+                    href="https://laravel-wtc.onrender.com/api/products"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    https://laravel-wtc.onrender.com/api/products
+                  </a>
+                </div>
+              </div>
+
+              <div>
+                <strong>2. Fix CORS in Laravel (config/cors.php):</strong>
+                <pre className="bg-muted p-2 rounded text-xs mt-1 overflow-x-auto">
+                  {`'paths' => ['api/*'],
+'allowed_methods' => ['*'],
+'allowed_origins' => ['*'], // or specific domains
+'allowed_headers' => ['*'],
+'exposed_headers' => [],
+'max_age' => 0,
+'supports_credentials' => false,`}
+                </pre>
+              </div>
+
+              <div>
+                <strong>
+                  3. Ensure Laravel Sanctum CORS middleware is installed:
+                </strong>
+                <code className="bg-muted px-1 rounded text-xs">
+                  composer require laravel/sanctum
                 </code>
-              </li>
-              <li>
-                Add CORS headers to your Laravel API (check cors.php config)
-              </li>
-              <li>
-                Verify your <code className="bg-muted px-1 rounded">.env</code>{" "}
-                file has correct database settings
-              </li>
-            </ul>
+              </div>
+
+              <div>
+                <strong>4. Current API URL being used:</strong>
+                <code className="bg-muted px-1 rounded text-xs">
+                  {import.meta.env.VITE_API_BASE_URL ||
+                    import.meta.env.VITE_API_URL ||
+                    "https://laravel-wtc.onrender.com/api"}
+                </code>
+              </div>
+            </div>
           </AlertDescription>
         </Alert>
       </CardContent>
