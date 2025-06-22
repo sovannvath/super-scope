@@ -42,13 +42,6 @@ interface DashboardStats {
   pending_reorders: any[];
 }
 
-interface LowStockProduct {
-  id: number;
-  name: string;
-  quantity: number;
-  low_stock_threshold: number;
-}
-
 interface ReorderRequest {
   id: number;
   product_id: number;
