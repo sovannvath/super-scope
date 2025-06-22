@@ -123,12 +123,22 @@ const ApiTest: React.FC = () => {
             const timestamp = Date.now();
             const testEmail = `test+${timestamp}@example.com`;
 
-            return authApi.register({
+            console.log("🔧 Registration data:", {
               name: credentials.name + ` ${timestamp}`,
               email: testEmail,
               password: credentials.password,
               password_confirmation: credentials.passwordConfirmation,
             });
+
+            const response = await authApi.register({
+              name: credentials.name + ` ${timestamp}`,
+              email: testEmail,
+              password: credentials.password,
+              password_confirmation: credentials.passwordConfirmation,
+            });
+
+            console.log("📡 Registration response:", response);
+            return response;
           },
         },
         {
