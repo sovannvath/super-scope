@@ -5,7 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { productApi, cartApi, Product } from "@/lib/api";
+import { productApi, cartApi } from "@/lib/api";
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  low_stock_threshold: number;
+  created_at: string;
+  updated_at: string;
+}
 import {
   ShoppingCart,
   Search,
@@ -39,7 +50,7 @@ const Homepage: React.FC = () => {
   const loadProducts = async () => {
     console.log("🔄 Loading products from API...");
     try {
-      const response = await productApi.list();
+      const response = await productApi.index();
       console.log("📡 API Response:", response);
 
       if (response.status === 200) {
@@ -103,7 +114,7 @@ const Homepage: React.FC = () => {
     }
 
     try {
-      const response = await cartApi.add({
+      const response = await cartApi.addItem({
         product_id: productId,
         quantity: 1,
       });
