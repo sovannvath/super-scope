@@ -95,6 +95,8 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
+    // Also load products count directly as a fallback
+    loadTotalProducts();
   }, []);
 
   const loadDashboardData = async () => {
