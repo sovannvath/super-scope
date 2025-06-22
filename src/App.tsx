@@ -10,6 +10,8 @@ import { Layout } from "@/components/layout/Layout";
 import Homepage from "./pages/Homepage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -35,6 +37,10 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
 
+              {/* Product Routes - Match Laravel GET /products and GET /products/{id} */}
+              <Route path="/products" element={<Products />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
+
               {/* Customer Routes - Match Laravel protected routes */}
               <Route path="/cart" element={<Cart />} />
               <Route path="/orders" element={<Orders />} />
@@ -56,8 +62,11 @@ const App = () => (
               {/* Warehouse Routes - Match Laravel warehouse routes */}
               <Route path="/dashboard/warehouse" element={<LowStockAlerts />} />
 
-              {/* Product Management (admin/staff) */}
-              <Route path="/products" element={<ProductManagement />} />
+              {/* Product Management (admin/staff) - Different from public products */}
+              <Route
+                path="/product-management"
+                element={<ProductManagement />}
+              />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
