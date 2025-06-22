@@ -33,7 +33,6 @@ import {
   List,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import ApiTest from "@/components/ApiTest";
 
 const Homepage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
