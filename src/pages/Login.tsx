@@ -190,6 +190,16 @@ const Login: React.FC = () => {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
 
+            {/* Debug: API Test Button */}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={testEndpoints}
+            >
+              🩺 Test API Connectivity
+            </Button>
+
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
