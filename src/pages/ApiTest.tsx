@@ -384,11 +384,22 @@ const ApiTest: React.FC = () => {
           },
         }));
       } else {
+        // Special handling for authentication errors
+        let errorMessage = `❌ HTTP ${response.status}: ${response.message || "Error"}`;
+
+        if (response.status === 401) {
+          errorMessage = `🔒 Unauthenticated - Please login first or check your auth token`;
+        } else if (response.status === 403) {
+          errorMessage = `🚫 Forbidden - You don't have permission for this action`;
+        } else if (response.status === 404) {
+          errorMessage = `🔍 Not Found - Resource doesn't exist (ID might be invalid)`;
+        }
+
         setTestResults((prev) => ({
           ...prev,
           [testName]: {
             status: "error",
-            message: `❌ HTTP ${response.status}: ${response.message || "Error"}`,
+            message: errorMessage,
             data: response.data,
             responseTime,
           },
