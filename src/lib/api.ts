@@ -216,21 +216,15 @@ export const cartApi = {
 
 // Dashboard API
 export const dashboardApi = {
-  // Get dashboard statistics
-  stats: async () => makeApiCall(() => apiClient.get("/dashboard/stats")),
+  // Role-specific dashboards
+  customer: async () => makeApiCall(() => apiClient.get("/dashboard/customer")),
+  admin: async () => makeApiCall(() => apiClient.get("/dashboard/admin")),
+  warehouse: async () =>
+    makeApiCall(() => apiClient.get("/dashboard/warehouse")),
+  staff: async () => makeApiCall(() => apiClient.get("/dashboard/staff")),
 
-  // Get dashboard data
-  index: async () => makeApiCall(() => apiClient.get("/dashboard")),
-
-  // Get recent activities
-  activities: async () =>
-    makeApiCall(() => apiClient.get("/dashboard/activities")),
-
-  // Get analytics data
-  analytics: async (period?: string) =>
-    makeApiCall(() =>
-      apiClient.get(`/dashboard/analytics${period ? `?period=${period}` : ""}`),
-    ),
+  // Generic dashboard (for compatibility)
+  index: async () => makeApiCall(() => apiClient.get("/dashboard/customer")),
 };
 
 // Request Order API (for inventory requests)
