@@ -60,6 +60,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("🔒 Token expired or invalid, clearing auth");
         clearAuth();
         setUser(null);
+      } else if (response.status === 404) {
+        // Route not found - backend might not have /user endpoint yet
+        console.log("⚠️ User endpoint not found, keeping token for now");
+        setUser(null);
       } else {
         // For other errors, keep the token but don't set user data
         console.log("⚠️ Cannot validate user, but keeping token");
