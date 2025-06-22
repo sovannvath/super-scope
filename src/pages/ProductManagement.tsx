@@ -274,25 +274,32 @@ const ProductManagement: React.FC = () => {
 
   const handleDelete = async (productId: number) => {
     try {
+      console.log("🔄 Deleting product:", productId);
       const response = await productApi.delete(productId);
+      console.log("📡 Delete response:", response);
 
       if (response.status === 200) {
         toast({
-          title: "Success",
+          title: "Success!",
           description: "Product deleted successfully",
         });
-        loadProducts();
+        // Refresh the product list
+        await loadProducts();
       } else {
         toast({
-          title: "Error",
-          description: response.data?.message || "Failed to delete product",
+          title: "Delete Failed",
+          description:
+            response.data?.message ||
+            response.message ||
+            "Failed to delete product",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Delete error:", error);
       toast({
         title: "Error",
-        description: "Failed to delete product",
+        description: error.message || "Failed to delete product",
         variant: "destructive",
       });
     }
