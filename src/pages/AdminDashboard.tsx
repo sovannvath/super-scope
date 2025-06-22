@@ -57,9 +57,7 @@ const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>(
-    [],
-  );
+
   const [reorderRequests, setReorderRequests] = useState<ReorderRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
