@@ -733,6 +733,39 @@ const ApiTest: React.FC = () => {
                       size="sm"
                       variant="outline"
                       onClick={async () => {
+                        console.log("🔍 422 VALIDATION ERROR TEST");
+                        try {
+                          // This should trigger a 422 validation error
+                          const response = await orderApi.updatePaymentStatus(
+                            999,
+                            "invalid_status" as any,
+                          );
+                          console.log("422 test response:", response);
+                          console.log("422 response data:", response.data);
+                          console.log(
+                            "422 response message:",
+                            response.message,
+                          );
+                          toast({
+                            title: "422 Test Result",
+                            description: `Status: ${response.status} - Check console for details`,
+                          });
+                        } catch (error) {
+                          console.error("422 test error:", error);
+                          toast({
+                            title: "422 Test Error",
+                            description: "Check console for error details",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      🔍 Test 422 Error
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
                         console.log("🛒 MANUAL CART TEST - FULL DEBUG");
                         const token = getToken();
                         console.log("Manual test token:", token);
