@@ -155,7 +155,29 @@ const ProductManagement: React.FC = () => {
       ) {
         toast({
           title: "Validation Error",
-          description: "Please fill in all required fields",
+          description:
+            "Please fill in all required fields (Name, Description, Price, Quantity)",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate numeric fields
+      if (parseFloat(formData.price) <= 0) {
+        toast({
+          title: "Validation Error",
+          description: "Price must be greater than 0",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (parseInt(formData.quantity) < 0) {
+        toast({
+          title: "Validation Error",
+          description: "Quantity cannot be negative",
           variant: "destructive",
         });
         setIsSubmitting(false);
