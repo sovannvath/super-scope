@@ -63,9 +63,9 @@ const ApiTest: React.FC = () => {
   const [isTestingAll, setIsTestingAll] = useState(false);
   const [credentials, setCredentials] = useState<TestCredentials>({
     email: "test@example.com",
-    password: "password123",
+    password: "SecurePass123!",
     name: "Test User",
-    passwordConfirmation: "password123",
+    passwordConfirmation: "SecurePass123!",
   });
   const [authToken, setAuthToken] = useState<string>(getToken() || "");
   const [testState, setTestState] = useState<TestState>({});
