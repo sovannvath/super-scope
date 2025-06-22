@@ -6,9 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
 
-// Import pages matching Laravel backend routes
+// Import pages matching Laravel backend routes exactly
 import Homepage from "./pages/Homepage";
-import Auth from "./pages/Auth";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -29,9 +30,10 @@ const App = () => (
         <BrowserRouter>
           <Layout>
             <Routes>
-              {/* Public Routes - Match Laravel public routes */}
+              {/* Public Routes - Match Laravel public routes exactly */}
               <Route path="/" element={<Homepage />} />
-              <Route path="/auth" element={<Auth />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
               {/* Customer Routes - Match Laravel protected routes */}
               <Route path="/cart" element={<Cart />} />
@@ -43,28 +45,19 @@ const App = () => (
 
               {/* Admin Routes - Match Laravel admin routes */}
               <Route path="/dashboard/admin" element={<AdminAnalytics />} />
-              <Route
-                path="/product-management"
-                element={<ProductManagement />}
-              />
-              <Route path="/low-stock" element={<LowStockAlerts />} />
+              <Route path="/products/low-stock" element={<LowStockAlerts />} />
 
               {/* Staff Routes - Match Laravel staff routes */}
               <Route
                 path="/dashboard/staff"
                 element={<StaffOrderProcessing />}
               />
-              <Route
-                path="/order-processing"
-                element={<StaffOrderProcessing />}
-              />
 
               {/* Warehouse Routes - Match Laravel warehouse routes */}
               <Route path="/dashboard/warehouse" element={<LowStockAlerts />} />
 
-              {/* Redirects for backward compatibility */}
-              <Route path="/dashboard" element={<CustomerDashboard />} />
-              <Route path="/analytics" element={<AdminAnalytics />} />
+              {/* Product Management (admin/staff) */}
+              <Route path="/products" element={<ProductManagement />} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
