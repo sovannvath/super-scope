@@ -479,6 +479,12 @@ const Homepage: React.FC = () => {
                 Products
               </Link>
               <Link
+                to="/api-test"
+                className="text-metallic-primary hover:text-metallic-secondary"
+              >
+                API Test
+              </Link>
+              <Link
                 to="/about"
                 className="text-metallic-primary hover:text-metallic-secondary"
               >
