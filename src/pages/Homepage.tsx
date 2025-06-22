@@ -49,102 +49,41 @@ const Homepage: React.FC = () => {
   }, []);
 
   const loadProducts = async () => {
-    console.log("🔄 Loading products from API...");
     try {
       const response = await productApi.index();
-      console.log("📡 Full API Response:", response);
-      console.log("📡 Response Status:", response.status);
-      console.log("📡 Response Data:", response.data);
-      console.log("📡 Response Data Type:", typeof response.data);
-      console.log("📡 Is Array?:", Array.isArray(response.data));
-
-      if (response.data) {
-        console.log("📡 Data Keys:", Object.keys(response.data));
-        if (response.data.data) {
-          console.log("📡 Nested Data:", response.data.data);
-          console.log("📡 Nested Data Type:", typeof response.data.data);
-          console.log(
-            "📡 Nested Is Array?:",
-            Array.isArray(response.data.data),
-          );
-        }
-      }
 
       if (response.status === 200) {
         // Handle Laravel API response structure
         let productsArray: Product[] = [];
 
         if (Array.isArray(response.data)) {
-          console.log("✅ Using direct array from response.data");
           productsArray = response.data;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          console.log("✅ Using nested array from response.data.data");
-          productsArray = response.data.data;
-        } else if (
-          response.data &&
-          response.data.products &&
-          Array.isArray(response.data.products)
-        ) {
-          console.log("✅ Using response.data.products");
+        } else if (response.data && Array.isArray(response.data.products)) {
           productsArray = response.data.products;
-        } else {
-          console.warn("⚠️ Unexpected API response structure:", response.data);
-          console.warn("⚠️ Trying to extract any array from response...");
-
-          // Try to find any array in the response
-          const findArray = (obj: any): any[] => {
-            if (Array.isArray(obj)) return obj;
-            if (typeof obj === "object" && obj !== null) {
-              for (const key in obj) {
-                if (Array.isArray(obj[key])) {
-                  console.log(`⚠️ Found array at key: ${key}`);
-                  return obj[key];
-                }
-              }
-            }
-            return [];
-          };
-
-          productsArray = findArray(response.data);
+        } else if (response.data && Array.isArray(response.data.data)) {
+          productsArray = response.data.data;
         }
 
-        console.log("✅ Final products array:", productsArray);
-        console.log("✅ Products count:", productsArray.length);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
-
-        // Show success message
-        toast({
-          title: "Products Loaded Successfully",
-          description: `Loaded ${productsArray.length} products from API`,
-        });
       } else {
-        console.error("❌ API Error:", response.status);
         setProducts([]);
         setFeaturedProducts([]);
         toast({
           title: "Failed to Load Products",
-          description: `API Error: ${response.status}`,
+          description: "Unable to fetch products from the server",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("❌ API connection failed:", error);
+      console.error("API connection failed:", error);
       setProducts([]);
       setFeaturedProducts([]);
-
-      // Show more helpful error message
       toast({
-        title: "Backend Connection Error",
-        description:
-          "Cannot connect to Laravel API. Please check if your backend server is running on localhost:8000",
+        title: "Connection Error",
+        description: "Unable to connect to the server",
         variant: "destructive",
       });
-
-      // Optional: Set some demo data so the UI isn't completely broken
-      console.log(
-        "💡 Tip: Start your Laravel backend with 'php artisan serve' on port 8000",
-      );
     } finally {
       setIsLoading(false);
     }
