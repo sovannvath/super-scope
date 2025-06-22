@@ -150,9 +150,9 @@ export const authApi = {
 
   logout: async () => makeApiCall(() => apiClient.post("/logout")),
 
-  me: async () => makeApiCall(() => apiClient.get("/me")),
+  user: async () => makeApiCall(() => apiClient.get("/user")),
 
-  refreshToken: async () => makeApiCall(() => apiClient.post("/refresh")),
+  me: async () => makeApiCall(() => apiClient.get("/user")), // Alias for compatibility
 };
 
 // Product API
