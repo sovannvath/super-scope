@@ -142,7 +142,7 @@ const ApiTest: React.FC = () => {
         },
         {
           name: "Get Current User",
-          endpoint: "GET /me",
+          endpoint: "GET /user",
           test: () => authApi.me(),
         },
         {
