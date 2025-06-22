@@ -117,8 +117,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (token) {
       saveToken(token);
     }
+    console.log("🔍 AuthContext login - received user:", user);
+    console.log("🔍 AuthContext login - user role:", user.role);
     setUser(user);
-    console.log("✅ User logged in:", user.name);
+    console.log("✅ User logged in:", user.name, "with role:", user.role);
   };
 
   const loginWithCredentials = async (
