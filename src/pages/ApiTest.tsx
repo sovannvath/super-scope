@@ -699,6 +699,32 @@ const ApiTest: React.FC = () => {
                       size="sm"
                       variant="outline"
                       onClick={async () => {
+                        console.log("🌐 NETWORK CONNECTIVITY TEST");
+                        try {
+                          // Test basic connectivity to the API
+                          const response = await productApi.index();
+                          console.log("Network test response:", response);
+                          toast({
+                            title: "Network Test",
+                            description: `✅ API reachable - Status: ${response.status}`,
+                          });
+                        } catch (error) {
+                          console.error("Network test error:", error);
+                          toast({
+                            title: "Network Test Failed",
+                            description:
+                              "❌ Cannot reach API server - check connection",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      🌐 Network Test
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
                         console.log("🛒 MANUAL CART TEST - FULL DEBUG");
                         const token = getToken();
                         console.log("Manual test token:", token);
