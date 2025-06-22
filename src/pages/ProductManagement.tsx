@@ -443,7 +443,8 @@ const ProductManagement: React.FC = () => {
                       low_stock_threshold: e.target.value,
                     })
                   }
-                  required
+                  placeholder="Default: 5"
+                  min="0"
                 />
               </div>
               <DialogFooter>
