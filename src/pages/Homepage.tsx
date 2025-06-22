@@ -33,6 +33,7 @@ import {
   List,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ApiTest from "@/components/ApiTest";
 
 const Homepage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -554,6 +555,21 @@ const Homepage: React.FC = () => {
       {/* Main Content */}
       <main className="pt-16">
         <HeroSection />
+
+        {/* API Debug Section - Remove this after fixing connection */}
+        <section className="py-8 bg-yellow-50 border-y border-yellow-200">
+          <div className="max-w-6xl mx-auto px-6">
+            <h2 className="text-2xl font-bold text-yellow-800 mb-4">
+              🔧 API Debug Mode
+            </h2>
+            <p className="text-yellow-700 mb-4">
+              Experiencing connection issues? Use this tool to test your Laravel
+              backend connection.
+            </p>
+            <ApiTest />
+          </div>
+        </section>
+
         <FeaturedSection />
         <ProductsSection />
         <StatsSection />
