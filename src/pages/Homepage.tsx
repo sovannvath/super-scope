@@ -22,6 +22,7 @@ import {
   List,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ApiTest } from "@/components/ApiTest";
 
 const Homepage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -408,6 +409,11 @@ const Homepage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Temporary API Test Component */}
+      <div className="fixed top-20 right-4 z-50 max-w-md">
+        <ApiTest />
+      </div>
+
       {/* Public Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-metallic-light shadow-sm">
         <div className="max-w-6xl mx-auto px-6">
