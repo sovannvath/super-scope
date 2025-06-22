@@ -136,11 +136,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authApi.login({ email, password });
 
       if (response.status === 200 && response.data.token) {
+        let user = response.data.user;
+
+        // Map role_id from Laravel backend to role names if needed
+        if (user.role_id && !user.role) {
+          const roleMapping = {
+            1: "admin",
+            2: "warehouse_manager",
+            3: "customer",
+            4: "staff",
+          };
+          user.role =
+            roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
+        }
+
         saveToken(response.data.token);
-        setUser(response.data.user);
+        setUser(user);
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${response.data.user.name}!`,
+          description: `Welcome back, ${user.name}!`,
         });
         return true;
       } else {

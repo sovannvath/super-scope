@@ -90,73 +90,13 @@ const navigationItems: NavItem[] = [
     label: "Warehouse Dashboard",
     href: "/dashboard/warehouse",
     icon: LayoutDashboard,
-    roles: ["warehouse"],
+    roles: ["warehouse_manager"],
   },
   {
-    label: "Inventory Management",
-    href: "/low-stock",
-    icon: Package,
-    roles: ["admin", "warehouse"],
-  },
-  {
-    label: "Orders",
-    href: "/orders",
-    icon: ClipboardList,
-    roles: ["staff"],
-  },
-  {
-    label: "Order Processing",
-    href: "/orders",
-    icon: ClipboardList,
-    roles: ["admin", "staff"],
-  },
-  {
-    label: "Shopping Cart",
-    href: "/cart",
-    icon: ShoppingCart,
-    roles: ["customer"],
-  },
-  {
-    label: "Purchase History",
-    href: "/purchase-history",
-    icon: FileText,
-    roles: ["customer"],
-  },
-  {
-    label: "Warehouse Approval",
-    href: "/restock-requests",
+    label: "Restock Requests",
+    href: "/reorder-requests",
     icon: Truck,
-    roles: ["warehouse"],
-  },
-  {
-    label: "Low Stock Alerts",
-    href: "/low-stock",
-    icon: AlertTriangle,
-    roles: ["admin", "warehouse"],
-  },
-  {
-    label: "Admin Analytics",
-    href: "/analytics",
-    icon: TrendingUp,
-    roles: ["admin"],
-  },
-  {
-    label: "Users",
-    href: "/users",
-    icon: Users,
-    roles: ["admin"],
-  },
-  {
-    label: "Payment Methods",
-    href: "/payment-methods",
-    icon: CreditCard,
-    roles: ["admin"],
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-    roles: ["admin", "customer", "warehouse", "staff"],
+    roles: ["admin", "warehouse_manager"],
   },
 ];
 
@@ -171,13 +111,13 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-metallic-light overflow-y-auto">
       <nav className="p-4 space-y-2">
-        {filteredItems.map((item) => {
+        {filteredItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
 
           return (
             <Link
-              key={item.href}
+              key={`${item.href}-${item.label}-${index}`}
               to={item.href}
               className={cn(
                 "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
