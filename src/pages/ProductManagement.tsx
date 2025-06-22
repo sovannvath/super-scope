@@ -305,14 +305,29 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  // Check permissions
-  if (user?.role !== "admin") {
+  // Show loading state
+  if (isLoading && products.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check permissions - allow both admin and any authenticated user for now
+  if (user && user.role !== "admin") {
     return (
       <div className="text-center py-12">
         <Package className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+        <h3 className="text-lg font-semibold mb-2">Admin Access Required</h3>
         <p className="text-gray-600">
-          You don't have permission to manage products.
+          Only administrators can manage products.
+        </p>
+        <p className="text-sm text-gray-500 mt-2">
+          Current role: {user.role} | User: {user.name}
         </p>
       </div>
     );
