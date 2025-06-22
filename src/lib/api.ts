@@ -232,26 +232,24 @@ export const requestOrderApi = {
   // Get all request orders
   index: async () => makeApiCall(() => apiClient.get("/request-orders")),
 
+  // Get single request order
+  show: async (id: number) =>
+    makeApiCall(() => apiClient.get(`/request-orders/${id}`)),
+
   // Create new request order
   create: async (orderData: any) =>
     makeApiCall(() => apiClient.post("/request-orders", orderData)),
 
-  // Update request order
-  update: async (id: number, orderData: any) =>
-    makeApiCall(() => apiClient.put(`/request-orders/${id}`, orderData)),
-
-  // Delete request order
-  delete: async (id: number) =>
-    makeApiCall(() => apiClient.delete(`/request-orders/${id}`)),
-
-  // Approve request order
-  approve: async (id: number) =>
-    makeApiCall(() => apiClient.post(`/request-orders/${id}/approve`)),
-
-  // Reject request order
-  reject: async (id: number, reason?: string) =>
+  // Admin approval
+  adminApproval: async (id: number, data: any) =>
     makeApiCall(() =>
-      apiClient.post(`/request-orders/${id}/reject`, { reason }),
+      apiClient.put(`/request-orders/${id}/admin-approval`, data),
+    ),
+
+  // Warehouse approval
+  warehouseApproval: async (id: number, data: any) =>
+    makeApiCall(() =>
+      apiClient.put(`/request-orders/${id}/warehouse-approval`, data),
     ),
 };
 
