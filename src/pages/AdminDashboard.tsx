@@ -57,13 +57,12 @@ const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [stats, setStats] = useState<DashboardStats | null>(null);
-
   const [reorderRequests, setReorderRequests] = useState<ReorderRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-
+  const [totalProducts, setTotalProducts] = useState<number>(0);
   useEffect(() => {
     loadDashboardData();
   }, []);
