@@ -98,7 +98,6 @@ const AdminDashboard: React.FC = () => {
 
       // Reset all state to safe defaults
       setStats(null);
-      setLowStockProducts([]);
       setReorderRequests([]);
       setHasError(true);
 
