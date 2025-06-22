@@ -84,92 +84,54 @@ const WarehouseApproval: React.FC = () => {
 
   const loadRestockRequests = async () => {
     try {
-      // Mock restock requests data
-      const mockRequests: RestockRequest[] = [
-        {
-          id: 1,
-          productId: 2,
-          productName: "Wireless Headphones",
-          productDescription: "Noise-cancelling wireless headphones",
-          currentStock: 3,
-          requestedQuantity: 25,
-          status: "pending",
-          priority: "high",
-          requestedBy: "Admin User",
-          requestedAt: "2024-01-22T10:30:00Z",
-          adminNotes: "High demand product, customers asking frequently",
-          estimatedCost: 2499.75,
-          supplierInfo: "TechSupplier Co. - 2-3 days delivery",
-        },
-        {
-          id: 2,
-          productId: 4,
-          productName: "Gaming Mouse",
-          productDescription: "Professional gaming mouse with RGB lighting",
-          currentStock: 2,
-          requestedQuantity: 15,
-          status: "pending",
-          priority: "medium",
-          requestedBy: "Staff User",
-          requestedAt: "2024-01-21T14:20:00Z",
-          adminNotes: "Gaming season approaching, need inventory",
-          estimatedCost: 1199.85,
-          supplierInfo: "GameGear Ltd. - 1 week delivery",
-        },
-        {
-          id: 3,
-          productId: 8,
-          productName: "USB-C Cable",
-          productDescription: "High-speed USB-C charging cable",
-          currentStock: 1,
-          requestedQuantity: 50,
-          status: "approved",
-          priority: "urgent",
-          requestedBy: "Admin User",
-          requestedAt: "2024-01-20T09:15:00Z",
-          approvedBy: "Warehouse Manager",
-          approvedAt: "2024-01-20T11:30:00Z",
-          warehouseNotes: "Approved with reduced quantity due to budget",
-          adminNotes: "Essential accessory, very popular",
-          estimatedCost: 624.5,
-          supplierInfo: "CablePro Inc. - Next day delivery",
-        },
-        {
-          id: 4,
-          productId: 1,
-          productName: "Premium Laptop",
-          productDescription: "High-performance laptop with latest processor",
-          currentStock: 5,
-          requestedQuantity: 10,
-          status: "rejected",
-          priority: "low",
-          requestedBy: "Staff User",
-          requestedAt: "2024-01-19T16:45:00Z",
-          approvedBy: "Warehouse Manager",
-          approvedAt: "2024-01-19T18:20:00Z",
-          warehouseNotes: "Budget constraints, current stock sufficient",
-          adminNotes: "Stock running low but manageable",
-          estimatedCost: 12999.9,
-          supplierInfo: "LaptopTech Corp. - 1-2 weeks delivery",
-        },
-        {
-          id: 5,
-          productId: 5,
-          productName: "4K Monitor",
-          productDescription: "Ultra-high definition monitor",
-          currentStock: 12,
-          requestedQuantity: 8,
-          status: "pending",
-          priority: "urgent",
-          requestedBy: "Admin User",
-          requestedAt: "2024-01-22T08:15:00Z",
-          adminNotes: "Corporate order coming next week",
-          estimatedCost: 4399.92,
-          supplierInfo: "DisplayMaster - 5 days delivery",
-        },
-      ];
+      const response = await requestOrderApi.list();
+      if (response.status === 200) {
+        let requestsArray: any[] = [];
+        if (Array.isArray(response.data)) {
+          requestsArray = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          requestsArray = response.data.data;
+        }
 
-      setRequests(mockRequests);
+        // Format request data to match interface
+        const formattedRequests: RestockRequest[] = requestsArray.map(
+          (req: any) => ({
+            id: req.id,
+            productId: req.product_id,
+            productName: req.product?.name || "Unknown Product",
+            productDescription: req.product?.description || "",
+            currentStock: req.product?.quantity || 0,
+            requestedQuantity: req.quantity,
+            status:
+              req.warehouse_approval_status === "approved"
+                ? "approved"
+                : req.warehouse_approval_status === "rejected"
+                  ? "rejected"
+                  : "pending",
+            priority: req.priority || "medium", // You may need to add priority field to your Laravel model
+            requestedBy: req.user?.name || "Unknown User",
+            requestedAt: req.created_at,
+            approvedBy:
+              req.warehouse_approval_status !== "pending"
+                ? user?.name
+                : undefined,
+            approvedAt:
+              req.updated_at !== req.created_at ? req.updated_at : undefined,
+            adminNotes: req.admin_notes || "",
+            warehouseNotes: req.warehouse_notes || "",
+            estimatedCost: (req.product?.price || 0) * req.quantity,
+            supplierInfo: "Standard Supplier - 3-5 days delivery", // Default supplier info
+          }),
+        );
+
+        setRequests(formattedRequests);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load restock requests",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -197,32 +159,43 @@ const WarehouseApproval: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const updatedRequest: RestockRequest = {
-        ...selectedRequest,
-        status: approvalAction === "approve" ? "approved" : "rejected",
-        approvedBy: user?.name || "Warehouse Manager",
-        approvedAt: new Date().toISOString(),
-        warehouseNotes: warehouseNotes,
-        requestedQuantity:
-          approvalAction === "approve"
-            ? parseInt(adjustedQuantity)
-            : selectedRequest.requestedQuantity,
+      const approvalData = {
+        warehouse_approval_status:
+          approvalAction === "approve" ? "approved" : "rejected",
+        warehouse_notes: warehouseNotes,
       };
 
-      setRequests((prev) =>
-        prev.map((req) =>
-          req.id === selectedRequest.id ? updatedRequest : req,
-        ),
+      // If approving, include adjusted quantity
+      if (
+        approvalAction === "approve" &&
+        adjustedQuantity !== selectedRequest.requestedQuantity.toString()
+      ) {
+        // You might need to update the quantity in the request as well
+        approvalData.quantity = parseInt(adjustedQuantity);
+      }
+
+      const response = await requestOrderApi.warehouseApproval(
+        selectedRequest.id,
+        approvalData,
       );
 
-      toast({
-        title: `Request ${approvalAction === "approve" ? "Approved" : "Rejected"}`,
-        description: `Restock request for ${selectedRequest.productName} has been ${approvalAction}d.`,
-        variant: approvalAction === "approve" ? "default" : "destructive",
-      });
+      if (response.status === 200) {
+        toast({
+          title: `Request ${approvalAction === "approve" ? "Approved" : "Rejected"}`,
+          description: `Restock request for ${selectedRequest.productName} has been ${approvalAction}d.`,
+          variant: approvalAction === "approve" ? "default" : "destructive",
+        });
 
-      setIsApprovalDialogOpen(false);
-      setSelectedRequest(null);
+        setIsApprovalDialogOpen(false);
+        setSelectedRequest(null);
+        loadRestockRequests(); // Reload data from server
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to process approval",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",

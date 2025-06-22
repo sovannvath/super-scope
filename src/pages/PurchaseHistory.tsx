@@ -92,7 +92,49 @@ const PurchaseHistory: React.FC = () => {
 
   const loadPurchaseHistory = async () => {
     try {
-      // Mock purchase history data
+      const response = await orderApi.list();
+      if (response.status === 200) {
+        let ordersArray: any[] = [];
+        if (Array.isArray(response.data)) {
+          ordersArray = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          ordersArray = response.data.data;
+        }
+
+        // Format order data to match interface
+        const formattedOrders: Order[] = ordersArray.map((order: any) => ({
+          id: order.id,
+          orderNumber: order.order_number || `ORD-${order.id}`,
+          date: order.created_at,
+          status: order.order_status || 'pending',
+          paymentStatus: order.payment_status || 'pending',
+          paymentMethod: order.payment_method?.name || 'Unknown',
+          subtotal: parseFloat(order.subtotal || '0'),
+          shipping: parseFloat(order.shipping || '0'),
+          tax: parseFloat(order.tax || '0'),
+          total: parseFloat(order.total || '0'),
+          items: order.items || [],
+          shippingAddress: order.shipping_address || {
+            street: '',
+            city: '',
+            state: '',
+            zipCode: '',
+            country: '',
+          },
+          trackingNumber: order.tracking_number,
+          estimatedDelivery: order.estimated_delivery,
+          notes: order.notes,
+        }));
+
+        setOrders(formattedOrders);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load purchase history",
+          variant: "destructive",
+        });
+      }
+      /* Mock purchase history data
       const mockOrders: Order[] = [
         {
           id: 1,

@@ -66,86 +66,64 @@ const LowStockAlerts: React.FC = () => {
 
   const loadLowStockData = async () => {
     try {
-      // Mock data for low stock products
-      const mockLowStockProducts: Product[] = [
-        {
-          id: 2,
-          name: "Wireless Headphones",
-          description: "Noise-cancelling wireless headphones",
-          price: 199.99,
-          quantity: 3,
-          low_stock_threshold: 10,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-        {
-          id: 4,
-          name: "Gaming Mouse",
-          description: "Professional gaming mouse with RGB lighting",
-          price: 79.99,
-          quantity: 2,
-          low_stock_threshold: 5,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-        {
-          id: 8,
-          name: "USB-C Cable",
-          description: "High-speed USB-C charging cable",
-          price: 24.99,
-          quantity: 1,
-          low_stock_threshold: 15,
-          status: true,
-          created_at: "2024-01-01",
-          updated_at: "2024-01-01",
-        },
-      ];
+      // Load low stock products
+      const lowStockResponse = await productApi.getLowStock();
+      if (lowStockResponse.status === 200) {
+        let lowStockArray: Product[] = [];
+        if (Array.isArray(lowStockResponse.data)) {
+          lowStockArray = lowStockResponse.data;
+        } else if (
+          lowStockResponse.data &&
+          Array.isArray(lowStockResponse.data.data)
+        ) {
+          lowStockArray = lowStockResponse.data.data;
+        }
+        setLowStockProducts(lowStockArray);
+      }
 
-      // Mock restock requests
-      const mockRestockRequests: RestockRequest[] = [
-        {
-          id: 1,
-          productId: 2,
-          productName: "Wireless Headphones",
-          currentStock: 3,
-          requestedQuantity: 25,
-          status: "pending",
-          requestedBy: "Admin User",
-          requestedAt: "2024-01-22T10:30:00Z",
-          notes: "High demand product, need immediate restocking",
-        },
-        {
-          id: 2,
-          productId: 4,
-          productName: "Gaming Mouse",
-          currentStock: 2,
-          requestedQuantity: 15,
-          status: "approved",
-          requestedBy: "Admin User",
-          requestedAt: "2024-01-21T14:20:00Z",
-          approvedBy: "Warehouse Manager",
-          approvedAt: "2024-01-21T16:45:00Z",
-          notes: "Gaming season approaching",
-        },
-        {
-          id: 3,
-          productId: 8,
-          productName: "USB-C Cable",
-          currentStock: 1,
-          requestedQuantity: 50,
-          status: "rejected",
-          requestedBy: "Staff User",
-          requestedAt: "2024-01-20T09:15:00Z",
-          approvedBy: "Warehouse Manager",
-          approvedAt: "2024-01-20T11:30:00Z",
-          notes: "Supplier unavailable",
-        },
-      ];
+      // Load restock requests
+      const requestsResponse = await requestOrderApi.list();
+      if (requestsResponse.status === 200) {
+        let requestsArray: any[] = [];
+        if (Array.isArray(requestsResponse.data)) {
+          requestsArray = requestsResponse.data;
+        } else if (
+          requestsResponse.data &&
+          Array.isArray(requestsResponse.data.data)
+        ) {
+          requestsArray = requestsResponse.data.data;
+        }
 
-      setLowStockProducts(mockLowStockProducts);
-      setRestockRequests(mockRestockRequests);
+        // Format request data to match interface
+        const formattedRequests: RestockRequest[] = requestsArray.map(
+          (req: any) => ({
+            id: req.id,
+            productId: req.product_id,
+            productName: req.product?.name || "Unknown Product",
+            currentStock: req.product?.quantity || 0,
+            requestedQuantity: req.quantity,
+            status:
+              req.admin_approval_status === "approved" &&
+              req.warehouse_approval_status === "approved"
+                ? "approved"
+                : req.admin_approval_status === "rejected" ||
+                    req.warehouse_approval_status === "rejected"
+                  ? "rejected"
+                  : "pending",
+            requestedBy: req.user?.name || "Unknown User",
+            requestedAt: req.created_at,
+            approvedBy:
+              req.warehouse_approval_status !== "pending"
+                ? "Warehouse Manager"
+                : undefined,
+            approvedAt:
+              req.updated_at !== req.created_at ? req.updated_at : undefined,
+            notes: req.admin_notes || req.warehouse_notes || "",
+          }),
+        );
+
+        setRestockRequests(formattedRequests);
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -169,29 +147,33 @@ const LowStockAlerts: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const newRequest: RestockRequest = {
-        id: Date.now(),
-        productId: selectedProduct.id,
-        productName: selectedProduct.name,
-        currentStock: selectedProduct.quantity,
-        requestedQuantity: parseInt(requestQuantity),
-        status: "pending",
-        requestedBy: user?.name || "Unknown User",
-        requestedAt: new Date().toISOString(),
-        notes: requestNotes,
+      const requestData = {
+        product_id: selectedProduct.id,
+        quantity: parseInt(requestQuantity),
+        admin_notes: requestNotes,
       };
 
-      setRestockRequests((prev) => [newRequest, ...prev]);
+      const response = await requestOrderApi.create(requestData);
 
-      toast({
-        title: "Restock Request Submitted",
-        description: `Request for ${requestQuantity} units of ${selectedProduct.name} has been sent to the warehouse.`,
-      });
+      if (response.status === 200 || response.status === 201) {
+        toast({
+          title: "Restock Request Submitted",
+          description: `Request for ${requestQuantity} units of ${selectedProduct.name} has been sent to the warehouse.`,
+        });
 
-      setIsRequestDialogOpen(false);
-      setSelectedProduct(null);
-      setRequestQuantity("");
-      setRequestNotes("");
+        setIsRequestDialogOpen(false);
+        setSelectedProduct(null);
+        setRequestQuantity("");
+        setRequestNotes("");
+        loadLowStockData(); // Reload data from server
+      } else {
+        toast({
+          title: "Error",
+          description:
+            response.data?.message || "Failed to submit restock request",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
