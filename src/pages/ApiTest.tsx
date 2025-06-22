@@ -596,7 +596,7 @@ const ApiTest: React.FC = () => {
               <div className="mt-6 space-y-4">
                 {/* Authentication Status */}
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <div>
                       <strong>Authentication Status:</strong>
                       {authToken ? (
@@ -609,6 +609,31 @@ const ApiTest: React.FC = () => {
                         </Badge>
                       )}
                     </div>
+                  </div>
+
+                  {authToken && (
+                    <div className="text-xs text-gray-600 mb-2">
+                      <strong>Token:</strong> {authToken.substring(0, 20)}...
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const currentToken = getToken();
+                        setAuthToken(currentToken || "");
+                        toast({
+                          title: "Token Refreshed",
+                          description: currentToken
+                            ? `Token found: ${currentToken.substring(0, 20)}...`
+                            : "No token found in storage",
+                        });
+                      }}
+                    >
+                      🔄 Refresh Token
+                    </Button>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
