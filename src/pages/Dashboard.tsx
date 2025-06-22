@@ -25,7 +25,11 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadDashboardData();
+    if (user?.role) {
+      loadDashboardData();
+    } else {
+      setIsLoading(false);
+    }
   }, [user?.role]);
 
   const loadDashboardData = async () => {
@@ -47,24 +51,21 @@ const Dashboard: React.FC = () => {
           response = await dashboardApi.staff();
           break;
         default:
+          setIsLoading(false);
           return;
       }
 
       if (response.status === 200) {
         setDashboardData(response.data);
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to load dashboard data",
-          variant: "destructive",
-        });
+        console.warn("Dashboard API returned non-200 status:", response.status);
+        // Continue without dashboard data but stop loading
+        setDashboardData(null);
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        variant: "destructive",
-      });
+      console.error("Dashboard API failed:", error);
+      // Continue without dashboard data but stop loading
+      setDashboardData(null);
     } finally {
       setIsLoading(false);
     }

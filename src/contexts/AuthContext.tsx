@@ -59,22 +59,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
       }
     } catch (error) {
-      console.log("API unavailable, using mock user for development");
-      // For development purposes, create a mock user if API is unavailable
-      const mockUser = {
-        id: 1,
-        name: "Demo User",
-        email: "demo@example.com",
-        role: "admin" as const,
-        email_verified_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setUser(mockUser);
-
-      // Don't clear auth - keep the token for when API becomes available
-      // clearAuth();
-      // setUser(null);
+      console.error("Failed to refresh user:", error);
+      clearAuth();
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -105,36 +92,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
     } catch (error) {
-      console.log("API unavailable, using demo login");
-
-      // For development purposes, allow demo login when API is unavailable
-      if (email === "demo@example.com" || email === "admin@example.com") {
-        const mockUser = {
-          id: 1,
-          name: email === "admin@example.com" ? "Admin User" : "Demo User",
-          email: email,
-          role:
-            email === "admin@example.com"
-              ? ("admin" as const)
-              : ("customer" as const),
-          email_verified_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        saveToken("demo-token-" + Date.now());
-        setUser(mockUser);
-        toast({
-          title: "Demo Login Successful",
-          description: `Welcome, ${mockUser.name}! (Demo Mode)`,
-        });
-        return true;
-      }
-
       toast({
         title: "Login Error",
-        description:
-          "API unavailable. Try demo@example.com or admin@example.com for demo mode.",
+        description: "Unable to connect to the server. Please try again.",
         variant: "destructive",
       });
       return false;
@@ -175,33 +135,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
     } catch (error) {
-      console.log("API unavailable, using demo registration");
-
-      // For development purposes, allow demo registration when API is unavailable
-      if (password === passwordConfirmation) {
-        const mockUser = {
-          id: Date.now(),
-          name: name,
-          email: email,
-          role: "customer" as const,
-          email_verified_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        saveToken("demo-token-" + Date.now());
-        setUser(mockUser);
-        toast({
-          title: "Demo Registration Successful",
-          description: `Welcome, ${mockUser.name}! (Demo Mode)`,
-        });
-        return true;
-      }
-
       toast({
         title: "Registration Error",
-        description:
-          "API unavailable. Registration works in demo mode when passwords match.",
+        description: "Unable to connect to the server. Please try again.",
         variant: "destructive",
       });
       return false;
