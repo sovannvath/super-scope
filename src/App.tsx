@@ -23,6 +23,7 @@ import StaffDashboard from "./pages/StaffDashboard";
 import ProductManagement from "./pages/ProductManagement";
 import LowStockAlerts from "./pages/LowStockAlerts";
 import WarehouseDashboard from "./pages/WarehouseDashboard";
+import PurchaseHistory from "./pages/PurchaseHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
