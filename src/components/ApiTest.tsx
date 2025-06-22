@@ -10,6 +10,7 @@ const ApiTest: React.FC = () => {
     [key: string]: { status: "success" | "error" | "testing"; message: string };
   }>({});
   const [isTestingAll, setIsTestingAll] = useState(false);
+  const [directTestResult, setDirectTestResult] = useState<string>("");
 
   const testEndpoints = [
     { name: "Products (Public)", url: "/products", auth: false },
@@ -139,20 +140,66 @@ const ApiTest: React.FC = () => {
           </AlertDescription>
         </Alert>
 
-        <Button
-          onClick={testAllEndpoints}
-          disabled={isTestingAll}
-          className="w-full"
-        >
-          {isTestingAll ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Testing Endpoints...
-            </>
-          ) : (
-            "Test API Connection"
+        <div className="space-y-2">
+          <Button
+            onClick={testAllEndpoints}
+            disabled={isTestingAll}
+            className="w-full"
+          >
+            {isTestingAll ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Testing Endpoints...
+              </>
+            ) : (
+              "Test API Connection"
+            )}
+          </Button>
+
+          <Button
+            onClick={async () => {
+              setDirectTestResult("Testing...");
+              try {
+                const apiUrl =
+                  import.meta.env.VITE_API_BASE_URL ||
+                  import.meta.env.VITE_API_URL ||
+                  "https://laravel-wtc.onrender.com/api";
+                const response = await fetch(`${apiUrl}/products`, {
+                  method: "GET",
+                  headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                  },
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  setDirectTestResult(
+                    `✅ SUCCESS! Got ${Array.isArray(data) ? data.length : "some"} products`,
+                  );
+                } else {
+                  setDirectTestResult(
+                    `❌ HTTP ${response.status}: ${response.statusText}`,
+                  );
+                }
+              } catch (error) {
+                setDirectTestResult(
+                  `🚫 CORS/Network Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+                );
+              }
+            }}
+            variant="outline"
+            className="w-full"
+          >
+            🔗 Direct API Test (Bypass CORS)
+          </Button>
+
+          {directTestResult && (
+            <div className="p-2 bg-muted rounded text-sm">
+              <strong>Direct Test Result:</strong> {directTestResult}
+            </div>
           )}
-        </Button>
+        </div>
 
         <div className="space-y-2">
           {testEndpoints.map((endpoint) => {
