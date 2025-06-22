@@ -111,13 +111,13 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-metallic-light overflow-y-auto">
       <nav className="p-4 space-y-2">
-        {filteredItems.map((item) => {
+        {filteredItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
 
           return (
             <Link
-              key={item.href}
+              key={`${item.href}-${item.label}-${index}`}
               to={item.href}
               className={cn(
                 "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
