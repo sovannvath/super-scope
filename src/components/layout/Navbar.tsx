@@ -20,7 +20,9 @@ export const Navbar: React.FC = () => {
     await logout();
   };
 
-  const getUserInitials = (name: string) => {
+  const getUserInitials = (name?: string) => {
+    if (!name) return "U";
+
     return name
       .split(" ")
       .map((n) => n[0])
@@ -92,17 +94,17 @@ export const Navbar: React.FC = () => {
               >
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-metallic-primary text-white text-sm">
-                    {user ? getUserInitials(user.name) : "U"}
+                    {getUserInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-left">
                   <p className="text-sm font-medium text-metallic-primary">
-                    {user?.name}
+                    {user?.name || "User"}
                   </p>
                   <Badge
-                    className={`text-xs ${getRoleBadgeColor(user?.role || "")}`}
+                    className={`text-xs ${getRoleBadgeColor(user?.role || "customer")}`}
                   >
-                    {user?.role}
+                    {user?.role || "customer"}
                   </Badge>
                 </div>
               </Button>
