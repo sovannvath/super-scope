@@ -239,13 +239,6 @@ export const productApi = {
   delete: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/products/${id}`)),
 
-  // Get low stock products
-  lowStock: async () => makeApiCall(() => apiClient.get("/products/low-stock")),
-
-  // Alternative low stock endpoint
-  getLowStock: async () =>
-    makeApiCall(() => apiClient.get("/products/low-stock")),
-
   // Search products
   search: async (query: string) =>
     makeApiCall(() =>
