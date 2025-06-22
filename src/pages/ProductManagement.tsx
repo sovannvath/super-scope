@@ -230,6 +230,7 @@ const ProductManagement: React.FC = () => {
         return;
       }
 
+      // Try different data formats that Laravel might expect
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
@@ -237,6 +238,27 @@ const ProductManagement: React.FC = () => {
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
       };
+
+      // Alternative formats to try if the first fails
+      const alternativeFormats = [
+        {
+          ...productData,
+          // Sometimes Laravel expects string prices
+          price: formData.price.toString(),
+          quantity: formData.quantity.toString(),
+          low_stock_threshold: (formData.low_stock_threshold || "5").toString(),
+        },
+        {
+          ...productData,
+          // Sometimes the field is called stock instead of quantity
+          stock: parseInt(formData.quantity),
+        },
+        {
+          ...productData,
+          // Sometimes threshold field has different name
+          threshold: parseInt(formData.low_stock_threshold) || 5,
+        },
+      ];
 
       console.log("🔄 Creating product:", productData);
       console.log("🔐 User auth:", {
