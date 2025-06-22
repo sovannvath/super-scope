@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { productApi, cartApi } from "@/lib/api";
+import { productApi, cartApi, getToken } from "@/lib/api";
 
 interface Product {
   id: number;
@@ -49,6 +49,7 @@ const Homepage: React.FC = () => {
 
   const loadProducts = async () => {
     try {
+      console.log("🔄 Loading products from API...");
       const response = await productApi.index();
 
       if (response.status === 200) {
@@ -63,26 +64,39 @@ const Homepage: React.FC = () => {
           productsArray = response.data.data;
         }
 
+        console.log(`✅ Loaded ${productsArray.length} products`);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
+
+        if (productsArray.length > 0) {
+          toast({
+            title: "Products Loaded",
+            description: `Successfully loaded ${productsArray.length} products`,
+          });
+        }
       } else {
+        console.warn(`⚠️ API returned status ${response.status}`);
         setProducts([]);
         setFeaturedProducts([]);
-        toast({
-          title: "Failed to Load Products",
-          description: "Unable to fetch products from the server",
-          variant: "destructive",
-        });
+
+        // Only show error toast for non-zero status (actual server responses)
+        if (response.status > 0) {
+          toast({
+            title: "Server Error",
+            description: response.message || "Server returned an error",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
-      console.error("API connection failed:", error);
+      console.error("🚨 API connection failed:", error);
       setProducts([]);
       setFeaturedProducts([]);
-      toast({
-        title: "Connection Error",
-        description: "Unable to connect to the server",
-        variant: "destructive",
-      });
+
+      // Don't show error toast for network failures - just log them
+      console.log(
+        "Backend appears to be unavailable. App will continue to work without data.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +113,12 @@ const Homepage: React.FC = () => {
     : [];
 
   const handleAddToCart = async (productId: number) => {
+    console.log("🔐 Auth check:", {
+      isAuthenticated,
+      user: user?.name,
+      hasToken: !!getToken(),
+    });
+
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -165,14 +185,7 @@ const Homepage: React.FC = () => {
                 Shop Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-metallic-primary text-lg px-8 py-3"
-                asChild
-              >
-                <Link to="/api-test">🧪 Test API</Link>
-              </Button>
+
               {!isAuthenticated && (
                 <Button
                   size="lg"
@@ -486,12 +499,7 @@ const Homepage: React.FC = () => {
               >
                 Products
               </Link>
-              <Link
-                to="/api-test"
-                className="text-metallic-primary hover:text-metallic-secondary"
-              >
-                API Test
-              </Link>
+
               <Link
                 to="/about"
                 className="text-metallic-primary hover:text-metallic-secondary"
