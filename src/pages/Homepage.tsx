@@ -68,40 +68,35 @@ const Homepage: React.FC = () => {
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
 
-        toast({
-          title: "Products Loaded",
-          description: `Successfully loaded ${productsArray.length} products`,
-        });
+        if (productsArray.length > 0) {
+          toast({
+            title: "Products Loaded",
+            description: `Successfully loaded ${productsArray.length} products`,
+          });
+        }
       } else {
         console.warn(`⚠️ API returned status ${response.status}`);
         setProducts([]);
         setFeaturedProducts([]);
 
-        // Show specific error based on response
-        let errorMessage =
-          response.message || "Unable to fetch products from the server";
-        if (response.status === 0) {
-          errorMessage =
-            "CORS error: The server doesn't allow requests from this domain. Please contact the administrator to configure CORS settings.";
+        // Only show error toast for non-zero status (actual server responses)
+        if (response.status > 0) {
+          toast({
+            title: "Server Error",
+            description: response.message || "Server returned an error",
+            variant: "destructive",
+          });
         }
-
-        toast({
-          title: "Failed to Load Products",
-          description: errorMessage,
-          variant: "destructive",
-        });
       }
     } catch (error) {
       console.error("🚨 API connection failed:", error);
       setProducts([]);
       setFeaturedProducts([]);
 
-      toast({
-        title: "Connection Error",
-        description:
-          "Unable to connect to the Laravel backend. This might be a CORS issue or the server may be unavailable.",
-        variant: "destructive",
-      });
+      // Don't show error toast for network failures - just log them
+      console.log(
+        "Backend appears to be unavailable. App will continue to work without data.",
+      );
     } finally {
       setIsLoading(false);
     }
