@@ -83,11 +83,19 @@ const Homepage: React.FC = () => {
       console.error("❌ API connection failed:", error);
       setProducts([]);
       setFeaturedProducts([]);
+
+      // Show more helpful error message
       toast({
-        title: "Connection Error",
-        description: "Failed to connect to the API server",
+        title: "Backend Connection Error",
+        description:
+          "Cannot connect to Laravel API. Please check if your backend server is running on localhost:8000",
         variant: "destructive",
       });
+
+      // Optional: Set some demo data so the UI isn't completely broken
+      console.log(
+        "💡 Tip: Start your Laravel backend with 'php artisan serve' on port 8000",
+      );
     } finally {
       setIsLoading(false);
     }
