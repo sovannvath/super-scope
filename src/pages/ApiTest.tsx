@@ -703,18 +703,39 @@ const ApiTest: React.FC = () => {
                         const token = getToken();
                         console.log("Manual test token:", token);
 
+                        if (!token) {
+                          toast({
+                            title: "No Token Found",
+                            description:
+                              "Please login first before testing cart",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
                         try {
+                          console.log(
+                            "Making cart request with token:",
+                            token.substring(0, 20) + "...",
+                          );
                           const response = await cartApi.index();
                           console.log("Manual cart response:", response);
                           toast({
                             title: "Manual Cart Test",
-                            description: `Status: ${response.status} - Check console for details`,
+                            description: `Status: ${response.status} - ${response.data?.message || "Success"}`,
+                            variant:
+                              response.status === 200
+                                ? "default"
+                                : "destructive",
                           });
                         } catch (error) {
                           console.error("Manual cart test error:", error);
                           toast({
                             title: "Manual Cart Test Error",
-                            description: "Check console for error details",
+                            description:
+                              error instanceof Error
+                                ? error.message
+                                : "Unknown error",
                             variant: "destructive",
                           });
                         }
