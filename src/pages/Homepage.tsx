@@ -86,7 +86,9 @@ const Homepage: React.FC = () => {
     ? products.filter(
         (product) =>
           product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+          product.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()),
       )
     : [];
 
@@ -418,7 +420,9 @@ const Homepage: React.FC = () => {
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-4xl font-bold mb-2">{Array.isArray(products) ? products.length : 0}+</div>
+            <div className="text-4xl font-bold mb-2">
+              {Array.isArray(products) ? products.length : 0}+
+            </div>
             <div className="text-metallic-background/80">
               Products Available
             </div>
@@ -599,7 +603,6 @@ const Homepage: React.FC = () => {
           <div className="border-t border-metallic-secondary mt-8 pt-8 text-center text-metallic-background/80">
             <p>&copy; 2024 EcommerceHub. All rights reserved.</p>
           </div>
-        </div>
         </div>
       </footer>
     </div>
