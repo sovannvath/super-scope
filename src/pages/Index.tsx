@@ -1,39 +1,34 @@
-const Index = () => {
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
+
+const Index: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        navigate("/dashboard");
+      } else {
+        navigate("/auth");
+      }
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-metallic-background via-white to-metallic-light">
       <div className="text-center">
-        {/* TODO: replace everything here with the actual app! */}
-        <h1 className="text-2xl font-semibold text-slate-800 flex items-center justify-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-slate-400"
-            viewBox="0 0 50 50"
-          >
-            <circle
-              className="opacity-30"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-            />
-            <circle
-              className="text-slate-600"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-              strokeDasharray="100"
-              strokeDashoffset="75"
-            />
-          </svg>
-          Generating your app...
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-metallic-primary to-metallic-secondary rounded-full mb-4 shadow-lg">
+          <span className="text-white font-bold text-xl">EC</span>
+        </div>
+        <h1 className="text-2xl font-semibold text-metallic-primary flex items-center justify-center gap-3 mb-4">
+          <Loader2 className="animate-spin h-6 w-6" />
+          EcommerceHub
         </h1>
-        <p className="mt-4 text-slate-600 max-w-md">
-          Watch the chat on the left for updates that might need your attention
-          to finish generating
+        <p className="text-metallic-tertiary">
+          Loading your personalized experience...
         </p>
       </div>
     </div>
