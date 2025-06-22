@@ -83,8 +83,17 @@ apiClient.interceptors.response.use(
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,
+        fullResponse: error.response,
       },
     );
+
+    // Also log the response data separately for better visibility
+    if (error.response?.data) {
+      console.error(
+        "📋 Error Response Data:",
+        JSON.stringify(error.response.data, null, 2),
+      );
+    }
 
     if (error.response?.status === 401) {
       // Token expired or invalid
