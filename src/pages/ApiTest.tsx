@@ -697,6 +697,33 @@ const ApiTest: React.FC = () => {
                     </Button>
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        console.log("🛒 MANUAL CART TEST - FULL DEBUG");
+                        const token = getToken();
+                        console.log("Manual test token:", token);
+
+                        try {
+                          const response = await cartApi.index();
+                          console.log("Manual cart response:", response);
+                          toast({
+                            title: "Manual Cart Test",
+                            description: `Status: ${response.status} - Check console for details`,
+                          });
+                        } catch (error) {
+                          console.error("Manual cart test error:", error);
+                          toast({
+                            title: "Manual Cart Test Error",
+                            description: "Check console for error details",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      🛒 Manual Cart Test
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={async () => {
                         try {
                           const response = await authApi.login({
