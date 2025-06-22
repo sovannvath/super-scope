@@ -361,7 +361,8 @@ const AdminDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="max-h-96 overflow-y-auto">
-              {lowStockProducts.length === 0 ? (
+              {!Array.isArray(lowStockProducts) ||
+              lowStockProducts.length === 0 ? (
                 <p className="text-center text-gray-500 py-8">
                   No low stock items
                 </p>
