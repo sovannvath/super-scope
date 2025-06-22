@@ -120,6 +120,7 @@ export interface Product {
   price: number;
   quantity: number;
   low_stock_threshold: number;
+  status: string;
   created_at: string;
   updated_at: string;
 }
