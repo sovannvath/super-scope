@@ -312,11 +312,14 @@ const AdminDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {stats?.total_products?.toLocaleString() || "0"}
+                {stats?.total_products?.toLocaleString() ||
+                  totalProducts.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline h-3 w-3 mr-1" />
-                +5% from last month
+                {totalProducts > 0
+                  ? `${totalProducts} products available`
+                  : "+5% from last month"}
               </p>
             </CardContent>
           </Card>
