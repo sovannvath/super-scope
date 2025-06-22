@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const response = await authApi.user();
+      const response = await authApi.me();
       if (response.status === 200) {
         setUser(response.data);
       } else {
