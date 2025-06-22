@@ -374,9 +374,18 @@ const ApiTest: React.FC = () => {
 
       if (response.status >= 200 && response.status < 300) {
         // Handle special cases for auth endpoints
-        if (testName === "Login User" && response.data?.token) {
-          saveToken(response.data.token);
-          setAuthToken(response.data.token);
+        if (testName === "Login User") {
+          console.log("🔐 Login Response Data:", response.data);
+          if (response.data?.token) {
+            console.log(
+              "✅ Token found in login response:",
+              response.data.token.substring(0, 20) + "...",
+            );
+            saveToken(response.data.token);
+            setAuthToken(response.data.token);
+          } else {
+            console.warn("⚠️ No token found in login response!", response.data);
+          }
         }
 
         setTestResults((prev) => ({
