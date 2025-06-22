@@ -532,9 +532,18 @@ const ApiTest: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <Alert className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Registration Test:</strong> Uses unique email with
+                  timestamp to avoid "user already exists" errors. Login test
+                  uses the email you specify below.
+                </AlertDescription>
+              </Alert>
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="email">Test Email</Label>
+                  <Label htmlFor="email">Test Email (for Login)</Label>
                   <Input
                     id="email"
                     value={credentials.email}
