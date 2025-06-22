@@ -192,7 +192,7 @@ const Homepage: React.FC = () => {
                   className="border-white text-white hover:bg-white hover:text-metallic-primary text-lg px-8 py-3"
                   asChild
                 >
-                  <Link to="/auth">Join Us</Link>
+                  <Link to="/register">Join Us</Link>
                 </Button>
               )}
             </div>
@@ -542,14 +542,14 @@ const Homepage: React.FC = () => {
                     size="sm"
                     className="border-metallic-light"
                   >
-                    <Link to="/auth">Sign In</Link>
+                    <Link to="/login">Sign In</Link>
                   </Button>
                   <Button
                     asChild
                     size="sm"
                     className="bg-metallic-primary hover:bg-metallic-primary/90"
                   >
-                    <Link to="/auth">Join Now</Link>
+                    <Link to="/register">Join Now</Link>
                   </Button>
                 </div>
               )}
