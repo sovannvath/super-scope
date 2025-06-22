@@ -162,6 +162,10 @@ const Login: React.FC = () => {
         // Map role_id from Laravel backend to role names
         let userRole = user.role || user.user_type || user.type;
 
+        console.log("🔍 Original user object:", user);
+        console.log("🔍 Original userRole:", userRole);
+        console.log("🔍 User role_id:", user.role_id);
+
         // If we have role_id instead of role name, map it
         if (user.role_id && !userRole) {
           const roleMapping = {
@@ -173,11 +177,14 @@ const Login: React.FC = () => {
           userRole =
             roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
 
+          console.log("🔍 Mapped role_id", user.role_id, "to role:", userRole);
+
           // Update the user object with the role name for context
           user.role = userRole;
         }
 
-        console.log("🔍 Using role for navigation:", userRole);
+        console.log("🔍 Final userRole for navigation:", userRole);
+        console.log("🔍 Updated user object:", user);
 
         switch (userRole) {
           case "admin":
