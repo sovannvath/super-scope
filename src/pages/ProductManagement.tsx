@@ -193,8 +193,16 @@ const ProductManagement: React.FC = () => {
       };
 
       console.log("🔄 Creating product:", productData);
-      console.log("🔐 User auth:", { user: user?.name, role: user?.role });
-      console.log("🔗 API call to:", productApi);
+      console.log("🔐 User auth:", {
+        user: user?.name,
+        role: user?.role,
+        hasToken: !!localStorage.getItem("auth_token"),
+      });
+      console.log("🌐 API Config:", {
+        baseURL: "https://laravel-wtc.onrender.com/api",
+        endpoint: "/products",
+        method: "POST",
+      });
 
       const response = await productApi.create(productData);
       console.log("📡 Create response:", {
