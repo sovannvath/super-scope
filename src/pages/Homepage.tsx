@@ -492,12 +492,12 @@ const Homepage: React.FC = () => {
               >
                 Home
               </Link>
-              <a
-                href="#products"
+              <Link
+                to="/products"
                 className="text-metallic-primary hover:text-metallic-secondary"
               >
                 Products
-              </a>
+              </Link>
               <Link
                 to="/about"
                 className="text-metallic-primary hover:text-metallic-secondary"
