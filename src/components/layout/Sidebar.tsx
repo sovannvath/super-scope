@@ -94,7 +94,7 @@ const navigationItems: NavItem[] = [
   },
   {
     label: "Inventory Management",
-    href: "/admin/low-stock",
+    href: "/low-stock",
     icon: Package,
     roles: ["admin", "warehouse_manager"],
   },
