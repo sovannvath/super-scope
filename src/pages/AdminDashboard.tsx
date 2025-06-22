@@ -112,36 +112,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleReorderProduct = async (productId: number, quantity: number) => {
-    try {
-      const response = await requestOrderApi.store({
-        product_id: productId,
-        quantity: quantity,
-        notes: `Automatic reorder due to low stock - Admin: ${user?.name}`,
-      });
-
-      if (response.status === 200 || response.status === 201) {
-        toast({
-          title: "Reorder Request Sent",
-          description: "Request has been sent to warehouse manager",
-        });
-        loadDashboardData(); // Reload data
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to send reorder request",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send reorder request",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleApproveReorder = async (requestId: number) => {
     try {
       const response = await requestOrderApi.adminApproval(requestId, true);
