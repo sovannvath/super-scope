@@ -384,7 +384,7 @@ const ApiTest: React.FC = () => {
           },
         }));
       } else {
-        // Special handling for authentication errors
+        // Special handling for different error types
         let errorMessage = `❌ HTTP ${response.status}: ${response.message || "Error"}`;
 
         if (response.status === 401) {
@@ -393,6 +393,24 @@ const ApiTest: React.FC = () => {
           errorMessage = `🚫 Forbidden - You don't have permission for this action`;
         } else if (response.status === 404) {
           errorMessage = `🔍 Not Found - Resource doesn't exist (ID might be invalid)`;
+        } else if (response.status === 422) {
+          // Handle validation errors specifically
+          let validationErrors = "";
+          if (response.data?.errors) {
+            // Laravel validation errors format
+            const errors = response.data.errors;
+            validationErrors = Object.entries(errors)
+              .map(
+                ([field, messages]) =>
+                  `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`,
+              )
+              .join("; ");
+          } else if (response.data?.message) {
+            validationErrors = response.data.message;
+          }
+          errorMessage = `🔍 Validation Error (422): ${validationErrors || "Check your input data"}`;
+        } else if (response.status >= 500) {
+          errorMessage = `🚨 Server Error (${response.status}): ${response.message || "Internal server error"}`;
         }
 
         setTestResults((prev) => ({
