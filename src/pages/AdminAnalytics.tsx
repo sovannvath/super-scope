@@ -100,8 +100,42 @@ const AdminAnalytics: React.FC = () => {
 
   const loadAnalytics = async () => {
     try {
+      const response = await dashboardApi.admin();
+      if (response.status === 200) {
+        const dashboardData = response.data;
+
+        // Map dashboard data to analytics summary
+        const analyticsData: AnalyticsSummary = {
+          totalRevenue: dashboardData.totalIncome || 0,
+          revenueGrowth: dashboardData.revenueGrowth || 0,
+          totalOrders: dashboardData.totalOrders || 0,
+          ordersGrowth: dashboardData.ordersGrowth || 0,
+          totalCustomers: dashboardData.totalCustomers || 0,
+          customersGrowth: dashboardData.customersGrowth || 0,
+          averageOrderValue: dashboardData.averageOrderValue || 0,
+          aovGrowth: dashboardData.aovGrowth || 0,
+          conversionRate: dashboardData.conversionRate || 0,
+          conversionGrowth: dashboardData.conversionGrowth || 0,
+          lowStockItems: dashboardData.lowStockAlerts?.length || 0,
+          pendingOrders: dashboardData.pendingOrders?.length || 0,
+          topSellingCategory: dashboardData.topSellingCategory || "N/A",
+        };
+
+        setAnalytics(analyticsData);
+
+        // Set mock data for detailed analytics (you may need separate API endpoints for these)
+        setSalesData([]);
+        setProductAnalytics([]);
+        setCustomerSegments([]);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load analytics data",
+          variant: "destructive",
+        });
+      }
       // Mock analytics data
-      const mockAnalytics: AnalyticsSummary = {
+      /* const mockAnalytics: AnalyticsSummary = {
         totalRevenue: 145420.5,
         revenueGrowth: 12.5,
         totalOrders: 1247,

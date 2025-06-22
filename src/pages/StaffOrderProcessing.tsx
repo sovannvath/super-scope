@@ -115,8 +115,70 @@ const StaffOrderProcessing: React.FC = () => {
 
   const loadOrders = async () => {
     try {
+      const response = await orderApi.list();
+      if (response.status === 200) {
+        let ordersArray: any[] = [];
+        if (Array.isArray(response.data)) {
+          ordersArray = response.data;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          ordersArray = response.data.data;
+        }
+
+        // Format order data to match interface
+        const formattedOrders: Order[] = ordersArray.map((order: any) => ({
+          id: order.id,
+          orderNumber: order.order_number || `ORD-${order.id}`,
+          customer: {
+            id: order.user?.id || 0,
+            name: order.user?.name || 'Unknown Customer',
+            email: order.user?.email || '',
+            phone: order.user?.phone,
+          },
+          date: order.created_at,
+          status: order.order_status || 'pending',
+          priority: order.priority || 'normal',
+          paymentStatus: order.payment_status || 'pending',
+          paymentMethod: order.payment_method?.name || 'Unknown',
+          subtotal: parseFloat(order.subtotal || '0'),
+          shipping: parseFloat(order.shipping || '0'),
+          tax: parseFloat(order.tax || '0'),
+          total: parseFloat(order.total || '0'),
+          items: (order.items || []).map((item: any) => ({
+            id: item.id,
+            productId: item.product_id,
+            productName: item.product?.name || 'Unknown Product',
+            quantity: item.quantity,
+            unitPrice: parseFloat(item.price || '0'),
+            totalPrice: parseFloat(item.price || '0') * item.quantity,
+            packed: false, // Default to unpacked
+          })),
+          shippingAddress: order.shipping_address || {
+            street: '',
+            city: '',
+            state: '',
+            zipCode: '',
+            country: '',
+          },
+          trackingNumber: order.tracking_number,
+          estimatedDelivery: order.estimated_delivery,
+          staffNotes: order.staff_notes,
+          customerNotes: order.customer_notes,
+          processedBy: order.processed_by,
+          processedAt: order.processed_at,
+          shippedBy: order.shipped_by,
+          shippedAt: order.shipped_at,
+        }));
+
+        setOrders(formattedOrders);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load orders",
+          variant: "destructive",
+        });
+      }
       // Mock orders data
-      const mockOrders: Order[] = [
+      /* const mockOrders: Order[] = [
         {
           id: 1,
           orderNumber: "ORD-2024-001",
@@ -415,34 +477,33 @@ const StaffOrderProcessing: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const updatedOrder: Order = {
-        ...selectedOrder,
-        status: newStatus as any,
-        processedBy: user?.name || "Staff User",
-        processedAt: new Date().toISOString(),
-        staffNotes: staffNotes,
-        ...(newStatus === "shipped" && {
-          shippedBy: user?.name || "Staff User",
-          shippedAt: new Date().toISOString(),
-          trackingNumber: trackingNumber,
-          estimatedDelivery: estimatedDelivery,
-        }),
-      };
+      // Update order status via API
+      const statusData = { order_status: newStatus };
+      const response = await orderApi.updateStatus(selectedOrder.id, statusData);
 
-      setOrders((prev) =>
-        prev.map((order) =>
-          order.id === selectedOrder.id ? updatedOrder : order,
-        ),
-      );
+      if (response.status === 200) {
+        // If shipping, also update tracking info (you might need a separate endpoint)
+        if (newStatus === "shipped" && trackingNumber) {
+          // Add tracking number and delivery date logic here if your API supports it
+          // This might require a separate API call or additional fields in the status update
+        }
 
-      toast({
-        title: "Order Updated",
-        description: `Order ${selectedOrder.orderNumber} has been marked as ${newStatus}.`,
-      });
+        toast({
+          title: "Order Updated",
+          description: `Order ${selectedOrder.orderNumber} has been marked as ${newStatus}.`,
+        });
 
-      setIsProcessingDialogOpen(false);
-      setIsShippingDialogOpen(false);
-      setSelectedOrder(null);
+        setIsProcessingDialogOpen(false);
+        setIsShippingDialogOpen(false);
+        setSelectedOrder(null);
+        loadOrders(); // Reload orders from server
+      } else {
+        toast({
+          title: "Error",
+          description: response.data?.message || "Failed to update order status",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
