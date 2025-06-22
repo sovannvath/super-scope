@@ -198,6 +198,51 @@ const Login: React.FC = () => {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
 
+            {/* Demo Mode - Test All Roles */}
+            <div className="border-t border-metallic-light pt-4 mt-4">
+              <p className="text-center text-sm text-metallic-tertiary mb-3">
+                🎭 Demo Mode - Test All Roles
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDemoLogin("admin")}
+                  className="text-xs"
+                >
+                  👑 Admin
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDemoLogin("warehouse_manager")}
+                  className="text-xs"
+                >
+                  📦 Warehouse
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDemoLogin("staff")}
+                  className="text-xs"
+                >
+                  👨‍💼 Staff
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDemoLogin("customer")}
+                  className="text-xs"
+                >
+                  🛒 Customer
+                </Button>
+              </div>
+            </div>
+
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
