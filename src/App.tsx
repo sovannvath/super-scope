@@ -5,18 +5,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+
+// Import pages matching Laravel backend routes exactly
+import Homepage from "./pages/Homepage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Products from "./pages/Products";
-import ProductManagement from "./pages/ProductManagement";
+import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
-import LowStockAlerts from "./pages/LowStockAlerts";
-import WarehouseApproval from "./pages/WarehouseApproval";
-import PurchaseHistory from "./pages/PurchaseHistory";
-import StaffOrderProcessing from "./pages/StaffOrderProcessing";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import AdminAnalytics from "./pages/AdminAnalytics";
+import StaffOrderProcessing from "./pages/StaffOrderProcessing";
+import ProductManagement from "./pages/ProductManagement";
+import LowStockAlerts from "./pages/LowStockAlerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,24 +32,42 @@ const App = () => (
         <BrowserRouter>
           <Layout>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              {/* Public Routes - Match Laravel public routes exactly */}
+              <Route path="/" element={<Homepage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+
+              {/* Product Routes - Match Laravel GET /products and GET /products/{id} */}
               <Route path="/products" element={<Products />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
+
+              {/* Customer Routes - Match Laravel protected routes */}
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route
+                path="/dashboard/customer"
+                element={<CustomerDashboard />}
+              />
+
+              {/* Admin Routes - Match Laravel admin routes */}
+              <Route path="/dashboard/admin" element={<AdminAnalytics />} />
+              <Route path="/products/low-stock" element={<LowStockAlerts />} />
+
+              {/* Staff Routes - Match Laravel staff routes */}
+              <Route
+                path="/dashboard/staff"
+                element={<StaffOrderProcessing />}
+              />
+
+              {/* Warehouse Routes - Match Laravel warehouse routes */}
+              <Route path="/dashboard/warehouse" element={<LowStockAlerts />} />
+
+              {/* Product Management (admin/staff) - Different from public products */}
               <Route
                 path="/product-management"
                 element={<ProductManagement />}
               />
-              <Route path="/orders" element={<StaffOrderProcessing />} />
-              <Route path="/inventory" element={<ProductManagement />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/purchase-history" element={<PurchaseHistory />} />
-              <Route path="/restock-requests" element={<WarehouseApproval />} />
-              <Route path="/low-stock" element={<LowStockAlerts />} />
-              <Route path="/analytics" element={<AdminAnalytics />} />
-              <Route path="/users" element={<Dashboard />} />
-              <Route path="/payment-methods" element={<Orders />} />
-              <Route path="/settings" element={<Dashboard />} />
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

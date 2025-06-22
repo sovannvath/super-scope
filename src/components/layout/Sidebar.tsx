@@ -25,28 +25,77 @@ interface NavItem {
 }
 
 const navigationItems: NavItem[] = [
+  // Customer Navigation
   {
     label: "Dashboard",
-    href: "/dashboard",
+    href: "/dashboard/customer",
     icon: LayoutDashboard,
-    roles: ["admin", "customer", "warehouse", "staff"],
+    roles: ["customer"],
   },
   {
-    label: "Products",
-    href: "/products",
+    label: "Shop Products",
+    href: "/",
     icon: Package,
     roles: ["customer"],
+  },
+  {
+    label: "My Cart",
+    href: "/cart",
+    icon: ShoppingCart,
+    roles: ["customer"],
+  },
+  {
+    label: "My Orders",
+    href: "/orders",
+    icon: ClipboardList,
+    roles: ["customer"],
+  },
+
+  // Admin Navigation
+  {
+    label: "Admin Dashboard",
+    href: "/dashboard/admin",
+    icon: TrendingUp,
+    roles: ["admin"],
   },
   {
     label: "Product Management",
     href: "/product-management",
     icon: Store,
-    roles: ["admin", "warehouse"],
+    roles: ["admin"],
   },
   {
-    label: "Inventory",
-    href: "/inventory",
-    icon: Store,
+    label: "Low Stock Alerts",
+    href: "/low-stock",
+    icon: AlertTriangle,
+    roles: ["admin"],
+  },
+
+  // Staff Navigation
+  {
+    label: "Staff Dashboard",
+    href: "/dashboard/staff",
+    icon: LayoutDashboard,
+    roles: ["staff"],
+  },
+  {
+    label: "Order Processing",
+    href: "/order-processing",
+    icon: Truck,
+    roles: ["staff"],
+  },
+
+  // Warehouse Navigation
+  {
+    label: "Warehouse Dashboard",
+    href: "/dashboard/warehouse",
+    icon: LayoutDashboard,
+    roles: ["warehouse"],
+  },
+  {
+    label: "Inventory Management",
+    href: "/low-stock",
+    icon: Package,
     roles: ["admin", "warehouse"],
   },
   {

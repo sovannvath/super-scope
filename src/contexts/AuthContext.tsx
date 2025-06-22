@@ -12,7 +12,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (user: User) => void; // Simple method to set authenticated user
+  loginWithCredentials: (email: string, password: string) => Promise<boolean>;
   register: (
     name: string,
     email: string,
@@ -50,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const response = await authApi.getUserInfo();
+      const response = await authApi.user();
       if (response.status === 200) {
         setUser(response.data);
       } else {
@@ -71,7 +72,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshUser();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  // Simple method to set authenticated user (used by Login/Register components)
+  const login = (user: User) => {
+    setUser(user);
+  };
+
+  const loginWithCredentials = async (
+    email: string,
+    password: string,
+  ): Promise<boolean> => {
     try {
       const response = await authApi.login({ email, password });
 
@@ -164,6 +173,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isLoading,
     login,
+    loginWithCredentials,
     register,
     logout,
     refreshUser,
