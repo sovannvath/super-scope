@@ -62,6 +62,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Metallic Chic Color Palette
+        metallic: {
+          primary: "hsl(var(--metallic-primary))", // #3D52A0
+          secondary: "hsl(var(--metallic-secondary))", // #7091E6
+          tertiary: "hsl(var(--metallic-tertiary))", // #8697C4
+          light: "hsl(var(--metallic-light))", // #ADBBDA
+          background: "hsl(var(--metallic-background))", // #EDE8F5
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
