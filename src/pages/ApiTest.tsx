@@ -136,22 +136,43 @@ const ApiTest: React.FC = () => {
         {
           name: "Add Item to Cart",
           endpoint: "POST /cart/add",
-          test: () => cartApi.addItem({ product_id: 1, quantity: 2 }),
+          test: async () => {
+            const response = await cartApi.addItem({
+              product_id: 1,
+              quantity: 2,
+            });
+            // Store cart item ID for later tests
+            if (response.status === 200 || response.status === 201) {
+              if (response.data?.id) {
+                setTestState((prev) => ({
+                  ...prev,
+                  cartItemId: response.data.id,
+                }));
+              }
+            }
+            return response;
+          },
         },
         {
-          name: "Clear Cart (Safe Test)",
+          name: "Update Cart Item",
+          endpoint: "PUT /cart/items/{id}",
+          test: () => {
+            const itemId = testState.cartItemId || 1; // Fallback to 1 if no ID stored
+            return cartApi.updateItem(itemId, 3);
+          },
+        },
+        {
+          name: "Remove Cart Item",
+          endpoint: "DELETE /cart/items/{id}",
+          test: () => {
+            const itemId = testState.cartItemId || 1; // Fallback to 1 if no ID stored
+            return cartApi.removeItem(itemId);
+          },
+        },
+        {
+          name: "Clear Cart",
           endpoint: "DELETE /cart/clear",
           test: () => cartApi.clear(),
-        },
-        {
-          name: "Update Cart Item (May fail if no items)",
-          endpoint: "PUT /cart/items/{id}",
-          test: () => cartApi.updateItem(1, 3),
-        },
-        {
-          name: "Remove Cart Item (May fail if no items)",
-          endpoint: "DELETE /cart/items/{id}",
-          test: () => cartApi.removeItem(1),
         },
       ],
     },
