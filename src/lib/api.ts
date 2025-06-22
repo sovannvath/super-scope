@@ -262,12 +262,20 @@ export const orderApi = {
   show: async (id: number) => makeApiCall(() => apiClient.get(`/orders/${id}`)),
 
   // Create new order
-  create: async (orderData: any) =>
+  store: async (orderData: any) =>
     makeApiCall(() => apiClient.post("/orders", orderData)),
+
+  // Get payment methods
+  getPaymentMethods: async () =>
+    makeApiCall(() => apiClient.get("/payment-methods")),
 
   // Update order status
   updateStatus: async (id: number, status: string) =>
     makeApiCall(() => apiClient.put(`/orders/${id}/status`, { status })),
+
+  // Update payment status
+  updatePaymentStatus: async (id: number, paymentData: any) =>
+    makeApiCall(() => apiClient.put(`/orders/${id}/payment`, paymentData)),
 };
 
 // User API
