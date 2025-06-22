@@ -180,7 +180,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user || !!getToken(), // Consider authenticated if user exists OR token exists
     isLoading,
     login,
     loginWithCredentials,
