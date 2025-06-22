@@ -645,6 +645,35 @@ const ApiTest: React.FC = () => {
                     </Button>
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          const response = await authApi.user();
+                          toast({
+                            title: "Token Test Result",
+                            description:
+                              response.status === 200
+                                ? "✅ Token is valid - authentication working!"
+                                : `❌ Token invalid - Status: ${response.status}`,
+                            variant:
+                              response.status === 200
+                                ? "default"
+                                : "destructive",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Token Test Failed",
+                            description:
+                              "❌ Cannot authenticate with current token",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      🧪 Test Token
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={async () => {
                         try {
                           const response = await authApi.login({
