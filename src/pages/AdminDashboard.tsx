@@ -258,6 +258,12 @@ const AdminDashboard: React.FC = () => {
             Admin Dashboard
           </h1>
           <p className="text-gray-600">Welcome back, {user?.name}!</p>
+          {stats?.total_revenue === 0 && stats?.total_orders === 0 && (
+            <div className="mt-2 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-md inline-flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              Limited Mode: Some features may be unavailable
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
