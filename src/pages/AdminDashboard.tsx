@@ -122,6 +122,7 @@ const AdminDashboard: React.FC = () => {
       setStats(null);
       setLowStockProducts([]);
       setReorderRequests([]);
+      setHasError(true);
 
       toast({
         title: "Error",
