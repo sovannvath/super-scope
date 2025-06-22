@@ -200,7 +200,7 @@ export const cartApi = {
 
   // Add item to cart
   addItem: async (data: { product_id: number; quantity: number }) =>
-    makeApiCall(() => apiClient.post("/cart/items", data)),
+    makeApiCall(() => apiClient.post("/cart/add", data)),
 
   // Update cart item quantity
   updateItem: async (itemId: number, quantity: number) =>
@@ -211,10 +211,7 @@ export const cartApi = {
     makeApiCall(() => apiClient.delete(`/cart/items/${itemId}`)),
 
   // Clear entire cart
-  clear: async () => makeApiCall(() => apiClient.delete("/cart")),
-
-  // Get cart total
-  getTotal: async () => makeApiCall(() => apiClient.get("/cart/total")),
+  clear: async () => makeApiCall(() => apiClient.delete("/cart/clear")),
 };
 
 // Dashboard API
