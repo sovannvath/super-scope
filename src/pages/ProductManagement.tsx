@@ -272,18 +272,43 @@ const ProductManagement: React.FC = () => {
         method: "POST",
       });
 
-      const response = await productApi.create(productData);
-      console.log("📡 Create response:", {
+      // Try the main format first
+      let response = await productApi.create(productData);
+      console.log("📡 Create response (main format):", {
         status: response.status,
         data: response.data,
         message: response.message,
         errors: response.errors,
       });
 
-      // Log validation errors in detail if present
+      // If it fails with validation error, try alternative formats
+      if (response.status === 422) {
+        console.log("🔄 Trying alternative formats...");
+
+        for (let i = 0; i < alternativeFormats.length; i++) {
+          const altFormat = alternativeFormats[i];
+          console.log(`🧪 Testing format ${i + 1}:`, altFormat);
+
+          const altResponse = await productApi.create(altFormat);
+          console.log(`📡 Alternative format ${i + 1} response:`, {
+            status: altResponse.status,
+            data: altResponse.data,
+            message: altResponse.message,
+            errors: altResponse.errors,
+          });
+
+          if (altResponse.status === 200 || altResponse.status === 201) {
+            response = altResponse;
+            console.log("✅ Found working format:", altFormat);
+            break;
+          }
+        }
+      }
+
+      // Log validation errors in detail if still present
       if (response.status === 422 && response.errors) {
         console.error(
-          "🚫 Validation Errors:",
+          "🚫 Final Validation Errors:",
           JSON.stringify(response.errors, null, 2),
         );
       }
