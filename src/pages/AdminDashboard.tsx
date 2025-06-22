@@ -107,6 +107,20 @@ const AdminDashboard: React.FC = () => {
       const statsResponse = await dashboardApi.admin();
       if (statsResponse.status === 200 && statsResponse.data) {
         setStats(statsResponse.data);
+      } else if (statsResponse.status === 401) {
+        console.warn(
+          "Dashboard API: Authentication required, using fallback data",
+        );
+        // Create fallback stats when authentication fails
+        const fallbackStats = {
+          total_revenue: 0,
+          total_orders: 0,
+          total_products: 0,
+          total_customers: 0,
+          recent_orders: [],
+          pending_reorders: [],
+        };
+        setStats(fallbackStats);
       } else {
         console.warn("Dashboard stats API failed:", statsResponse);
         setStats(null);
