@@ -243,11 +243,25 @@ const ProductManagement: React.FC = () => {
         user: user?.name,
         role: user?.role,
         hasToken: !!localStorage.getItem("auth_token"),
+        tokenPreview:
+          localStorage.getItem("auth_token")?.substring(0, 20) + "...",
       });
       console.log("🌐 API Config:", {
         baseURL: "https://laravel-wtc.onrender.com/api",
         endpoint: "/products",
         method: "POST",
+        fullURL: "https://laravel-wtc.onrender.com/api/products",
+      });
+      console.log("📝 Form Data Types:", {
+        name: typeof productData.name + " - " + productData.name,
+        description:
+          typeof productData.description + " - " + productData.description,
+        price: typeof productData.price + " - " + productData.price,
+        quantity: typeof productData.quantity + " - " + productData.quantity,
+        low_stock_threshold:
+          typeof productData.low_stock_threshold +
+          " - " +
+          productData.low_stock_threshold,
       });
 
       const response = await productApi.create(productData);
