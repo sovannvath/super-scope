@@ -60,7 +60,32 @@ const ProductManagement: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
+    // Test backend connectivity
+    testBackendConnection();
   }, []);
+
+  const testBackendConnection = async () => {
+    try {
+      console.log("🔍 Testing backend connection...");
+      const response = await fetch(
+        "https://laravel-wtc.onrender.com/api/products",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        },
+      );
+      console.log("🌐 Backend test response:", {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+    } catch (error) {
+      console.error("🚨 Backend connection test failed:", error);
+    }
+  };
 
   const loadProducts = async () => {
     try {
