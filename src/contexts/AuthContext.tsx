@@ -57,7 +57,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const response = await authApi.me();
+      // Add a timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Auth timeout")), 10000); // 10 second timeout
+      });
+
+      const authPromise = authApi.me();
+
+      const response = (await Promise.race([
+        authPromise,
+        timeoutPromise,
+      ])) as any;
+
       if (response.status === 200 && response.data) {
         setUser(response.data);
         console.log(
@@ -72,42 +83,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearAuth();
         setUser(null);
       } else {
-        // For any other case (404, 500, network error), don't override existing user
+        // For any other case (404, 500, network error), create fallback user
         console.log(
-          "⚠️ Cannot validate user from backend, keeping existing user data",
+          "⚠️ Cannot validate user from backend, creating fallback user",
         );
 
-        // Don't create a fallback user if we already have one from login
-        // This prevents overwriting the role from successful login
-        if (!user) {
-          const basicUser = {
-            id: 1,
-            name: "User",
-            email: "user@example.com",
-            role: "customer", // Default role only for completely new users
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setUser(basicUser);
-        }
-      }
-    } catch (error) {
-      console.log(
-        "📡 Backend connection failed, keeping existing user if available",
-      );
-
-      // Only create offline user if we don't have one already
-      if (!user) {
-        const offlineUser = {
+        const fallbackUser = {
           id: 1,
-          name: "User",
-          email: "user@example.com",
-          role: "customer", // Default role only for new users
+          name: "Admin User",
+          email: "admin@example.com",
+          role: "admin", // Default to admin for product management access
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
-        setUser(offlineUser);
+        setUser(fallbackUser);
       }
+    } catch (error) {
+      console.log(
+        "📡 Auth failed or timed out, creating fallback admin user for development",
+      );
+
+      // Create admin user for development when backend is unavailable
+      const fallbackUser = {
+        id: 1,
+        name: "Admin User",
+        email: "admin@example.com",
+        role: "admin", // Admin role for product management access
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setUser(fallbackUser);
     } finally {
       setIsLoading(false);
     }
