@@ -146,35 +146,58 @@ const ProductManagement: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Validate form data
+      if (
+        !formData.name.trim() ||
+        !formData.description.trim() ||
+        !formData.price ||
+        !formData.quantity
+      ) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const productData = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
-        low_stock_threshold: parseInt(formData.low_stock_threshold),
+        low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
       };
 
+      console.log("🔄 Creating product:", productData);
       const response = await productApi.create(productData);
+      console.log("📡 Create response:", response);
 
       if (response.status === 200 || response.status === 201) {
         toast({
-          title: "Success",
-          description: "Product created successfully",
+          title: "Success!",
+          description: `Product "${productData.name}" created successfully`,
         });
         setIsCreateDialogOpen(false);
         resetForm();
-        loadProducts();
+        // Refresh the product list
+        await loadProducts();
       } else {
         toast({
-          title: "Error",
-          description: response.data?.message || "Failed to create product",
+          title: "Create Failed",
+          description:
+            response.data?.message ||
+            response.message ||
+            "Failed to create product",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Create error:", error);
       toast({
         title: "Error",
-        description: "Failed to create product",
+        description: error.message || "Failed to create product",
         variant: "destructive",
       });
     } finally {
