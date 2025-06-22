@@ -302,6 +302,27 @@ export const healthApi = {
   ping: async () => makeApiCall(() => apiClient.get("/ping")),
 };
 
+// Notification API
+export const notificationApi = {
+  // Get all notifications
+  index: async () => makeApiCall(() => apiClient.get("/notifications")),
+
+  // Get unread notifications
+  unread: async () => makeApiCall(() => apiClient.get("/notifications/unread")),
+
+  // Mark notification as read
+  markAsRead: async (id: number) =>
+    makeApiCall(() => apiClient.put(`/notifications/${id}/read`)),
+
+  // Mark all notifications as read
+  markAllAsRead: async () =>
+    makeApiCall(() => apiClient.put("/notifications/read-all")),
+
+  // Delete notification
+  destroy: async (id: number) =>
+    makeApiCall(() => apiClient.delete(`/notifications/${id}`)),
+};
+
 // Export the axios instance for custom requests
 export { apiClient };
 
