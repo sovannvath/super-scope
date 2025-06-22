@@ -67,17 +67,20 @@ const ProductManagement: React.FC = () => {
   const testBackendConnection = async () => {
     try {
       console.log("🔍 Testing backend connection...");
-      const response = await fetch("https://laravel-wtc.onrender.com/api/products", {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`
-        }
-      });
+      const response = await fetch(
+        "https://laravel-wtc.onrender.com/api/products",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        },
+      );
       console.log("🌐 Backend test response:", {
         status: response.status,
-        headers: Object.fromEntries(response.headers.entries())
+        headers: Object.fromEntries(response.headers.entries()),
       });
     } catch (error) {
       console.error("🚨 Backend connection test failed:", error);
@@ -177,7 +180,8 @@ const ProductManagement: React.FC = () => {
       ) {
         toast({
           title: "Validation Error",
-          description: "Please fill in all required fields (Name, Description, Price, Quantity)",
+          description:
+            "Please fill in all required fields (Name, Description, Price, Quantity)",
           variant: "destructive",
         });
         setIsSubmitting(false);
@@ -217,12 +221,12 @@ const ProductManagement: React.FC = () => {
       console.log("🔐 User auth:", {
         user: user?.name,
         role: user?.role,
-        hasToken: !!localStorage.getItem("auth_token")
+        hasToken: !!localStorage.getItem("auth_token"),
       });
       console.log("🌐 API Config:", {
         baseURL: "https://laravel-wtc.onrender.com/api",
         endpoint: "/products",
-        method: "POST"
+        method: "POST",
       });
 
       const response = await productApi.create(productData);
@@ -230,12 +234,15 @@ const ProductManagement: React.FC = () => {
         status: response.status,
         data: response.data,
         message: response.message,
-        errors: response.errors
+        errors: response.errors,
       });
 
       // Log validation errors in detail if present
       if (response.status === 422 && response.errors) {
-        console.error("🚫 Validation Errors:", JSON.stringify(response.errors, null, 2));
+        console.error(
+          "🚫 Validation Errors:",
+          JSON.stringify(response.errors, null, 2),
+        );
       }
 
       if (response.status === 200 || response.status === 201) {
@@ -256,19 +263,21 @@ const ProductManagement: React.FC = () => {
           console.log("🔍 Processing validation errors:", {
             errors: response.errors,
             dataErrors: response.data?.errors,
-            fullResponse: response
+            fullResponse: response,
           });
 
           let validationErrors = response.errors || response.data?.errors;
 
           if (validationErrors) {
-            if (typeof validationErrors === 'object') {
+            if (typeof validationErrors === "object") {
               const errorDetails = Object.entries(validationErrors)
                 .map(([field, messages]) => {
-                  const messageArray = Array.isArray(messages) ? messages : [messages];
-                  return `${field}: ${messageArray.join(', ')}`;
+                  const messageArray = Array.isArray(messages)
+                    ? messages
+                    : [messages];
+                  return `${field}: ${messageArray.join(", ")}`;
                 })
-                .join('\n');
+                .join("\n");
               errorMessage = `Validation Errors:\n${errorDetails}`;
             } else {
               errorMessage = `Validation Error: ${validationErrors}`;
@@ -276,7 +285,6 @@ const ProductManagement: React.FC = () => {
           } else {
             errorMessage = `Validation failed. Please check your input data.`;
           }
-        }
         } else if (response.status === 401) {
           errorMessage = "Authentication required. Please log in again.";
         } else if (response.status === 403) {
