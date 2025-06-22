@@ -134,8 +134,16 @@ const PurchaseHistory: React.FC = () => {
           variant: "destructive",
         });
       }
-      /* Mock purchase history data
-      const mockOrders: Order[] = [
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load purchase history",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
         {
           id: 1,
           orderNumber: "ORD-2024-001",
