@@ -80,6 +80,9 @@ const AdminDashboard: React.FC = () => {
         setStats(null);
       }
 
+      // Fallback: Fetch total products count directly from products API
+      await loadTotalProducts();
+
       // Load reorder requests
       const reorderResponse = await requestOrderApi.index();
       if (reorderResponse.status === 200 && reorderResponse.data) {
