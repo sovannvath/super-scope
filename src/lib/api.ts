@@ -46,6 +46,17 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Debug logging for API requests
+    console.log(
+      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      {
+        baseURL: config.baseURL,
+        headers: config.headers,
+        data: config.data,
+      },
+    );
+
     return config;
   },
   (error) => Promise.reject(error),
@@ -53,8 +64,37 @@ apiClient.interceptors.request.use(
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Debug logging for successful responses
+    console.log(
+      `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
+      {
+        status: response.status,
+        data: response.data,
+      },
+    );
+    return response;
+  },
   (error) => {
+    // Debug logging for error responses
+    console.error(
+      `❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
+      {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        fullResponse: error.response,
+      },
+    );
+
+    // Also log the response data separately for better visibility
+    if (error.response?.data) {
+      console.error(
+        "📋 Error Response Data:",
+        JSON.stringify(error.response.data, null, 2),
+      );
+    }
+
     if (error.response?.status === 401) {
       // Token expired or invalid
       removeToken();
@@ -80,6 +120,7 @@ export interface Product {
   price: number;
   quantity: number;
   low_stock_threshold: number;
+  status: string;
   created_at: string;
   updated_at: string;
 }
@@ -125,11 +166,20 @@ async function makeApiCall<T>(
       };
     } else if (error.response) {
       // Server responded with error status
+      console.log("🔍 Processing server error response:", {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers,
+      });
+
       return {
         status: error.response.status,
         data: error.response.data,
-        message: error.response.data?.message || error.message,
-        errors: error.response.data?.errors,
+        message:
+          error.response.data?.message ||
+          error.response.statusText ||
+          error.message,
+        errors: error.response.data?.errors || error.response.data?.error,
       };
     } else if (error.request) {
       // Network error
@@ -166,38 +216,35 @@ export const authApi = {
   me: async () => makeApiCall(() => apiClient.get("/user")), // Alias for compatibility
 };
 
-// Product API
+// Product API - Aligned with Laravel backend routes
 export const productApi = {
-  // Get all products
+  // GET /products - Get all products (public route)
   index: async () => makeApiCall(() => apiClient.get("/products")),
 
-  // Alternative list endpoint
-  list: async () => makeApiCall(() => apiClient.get("/products")),
-
-  // Get single product
+  // GET /products/{id} - Get single product (public route)
   show: async (id: number) =>
     makeApiCall(() => apiClient.get(`/products/${id}`)),
 
-  // Create new product
+  // POST /products - Create new product (protected route)
   create: async (productData: Partial<Product>) =>
     makeApiCall(() => apiClient.post("/products", productData)),
 
-  // Update product
+  // PUT /products/{id} - Update product (protected route)
   update: async (id: number, productData: Partial<Product>) =>
     makeApiCall(() => apiClient.put(`/products/${id}`, productData)),
 
-  // Delete product
+  // DELETE /products/{id} - Delete product (protected route)
   delete: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/products/${id}`)),
 
-  // Get low stock products
-  lowStock: async () => makeApiCall(() => apiClient.get("/products/low-stock")),
+  // DELETE alias for destroy method
+  destroy: async (id: number) =>
+    makeApiCall(() => apiClient.delete(`/products/${id}`)),
 
-  // Alternative low stock endpoint
-  getLowStock: async () =>
-    makeApiCall(() => apiClient.get("/products/low-stock")),
+  // Alternative list endpoint (alias for index)
+  list: async () => makeApiCall(() => apiClient.get("/products")),
 
-  // Search products
+  // Search products (if backend supports it)
   search: async (query: string) =>
     makeApiCall(() =>
       apiClient.get(`/products/search?q=${encodeURIComponent(query)}`),
@@ -249,6 +296,10 @@ export const requestOrderApi = {
 
   // Create new request order
   create: async (orderData: any) =>
+    makeApiCall(() => apiClient.post("/request-orders", orderData)),
+
+  // Alias for create method for backward compatibility
+  store: async (orderData: any) =>
     makeApiCall(() => apiClient.post("/request-orders", orderData)),
 
   // Admin approval

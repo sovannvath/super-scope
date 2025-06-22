@@ -56,11 +56,58 @@ const ProductManagement: React.FC = () => {
     price: "",
     quantity: "",
     low_stock_threshold: "",
+    status: "active", // Default status
   });
 
   useEffect(() => {
     loadProducts();
+    // Test backend connectivity
+    testBackendConnection();
   }, []);
+
+  const testBackendConnection = async () => {
+    try {
+      console.log("🔍 Testing backend connection...");
+      const response = await fetch(
+        "https://laravel-wtc.onrender.com/api/products",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        },
+      );
+      console.log("🌐 Backend test response:", {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
+      // If we can get products, let's analyze the structure
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📊 Existing product structure sample:", data);
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(
+            "🏗️ Product schema from existing data:",
+            Object.keys(data[0]),
+          );
+        } else if (
+          data.data &&
+          Array.isArray(data.data) &&
+          data.data.length > 0
+        ) {
+          console.log(
+            "🏗️ Product schema from existing data:",
+            Object.keys(data.data[0]),
+          );
+        }
+      }
+    } catch (error) {
+      console.error("🚨 Backend connection test failed:", error);
+    }
+  };
 
   const loadProducts = async () => {
     try {
@@ -103,9 +150,14 @@ const ProductManagement: React.FC = () => {
           description: response.message || "Failed to load products",
           variant: "destructive",
         });
+        // Set empty products array on error
+        setProducts([]);
       }
     } catch (error: any) {
       console.error("❌ Error loading products:", error);
+
+      // Always set empty array on error to prevent infinite loading
+      setProducts([]);
 
       // Handle timeout errors gracefully
       if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
@@ -121,6 +173,7 @@ const ProductManagement: React.FC = () => {
         });
       }
     } finally {
+      // Always stop loading
       setIsLoading(false);
     }
   };
@@ -138,6 +191,7 @@ const ProductManagement: React.FC = () => {
       price: "",
       quantity: "",
       low_stock_threshold: "",
+      status: "active",
     });
   };
 
@@ -155,7 +209,29 @@ const ProductManagement: React.FC = () => {
       ) {
         toast({
           title: "Validation Error",
-          description: "Please fill in all required fields",
+          description:
+            "Please fill in all required fields (Name, Description, Price, Quantity)",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate numeric fields
+      if (parseFloat(formData.price) <= 0) {
+        toast({
+          title: "Validation Error",
+          description: "Price must be greater than 0",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (parseInt(formData.quantity) < 0) {
+        toast({
+          title: "Validation Error",
+          description: "Quantity cannot be negative",
           variant: "destructive",
         });
         setIsSubmitting(false);
@@ -168,11 +244,69 @@ const ProductManagement: React.FC = () => {
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
+        status: formData.status || "active",
       };
 
       console.log("🔄 Creating product:", productData);
+      console.log("🔐 User auth:", {
+        user: user?.name,
+        role: user?.role,
+        hasToken: !!localStorage.getItem("auth_token"),
+        tokenPreview:
+          localStorage.getItem("auth_token")?.substring(0, 20) + "...",
+      });
+      console.log("🌐 API Config:", {
+        baseURL: "https://laravel-wtc.onrender.com/api",
+        endpoint: "/products",
+        method: "POST",
+        fullURL: "https://laravel-wtc.onrender.com/api/products",
+      });
+      console.log("📝 Form Data Types:", {
+        name: typeof productData.name + " - " + productData.name,
+        description:
+          typeof productData.description + " - " + productData.description,
+        price: typeof productData.price + " - " + productData.price,
+        quantity: typeof productData.quantity + " - " + productData.quantity,
+        low_stock_threshold:
+          typeof productData.low_stock_threshold +
+          " - " +
+          productData.low_stock_threshold,
+      });
+
       const response = await productApi.create(productData);
-      console.log("📡 Create response:", response);
+      console.log("📡 Create response:", {
+        status: response.status,
+        data: response.data,
+        message: response.message,
+        errors: response.errors,
+      });
+
+      // Log validation errors in detail if present
+      if (response.status === 422) {
+        console.error(
+          "🚫 Validation Errors:",
+          JSON.stringify(response.errors, null, 2),
+        );
+        console.error(
+          "🚫 Response Data:",
+          JSON.stringify(response.data, null, 2),
+        );
+
+        // Try to understand what fields are required by testing minimal data
+        console.log("🧪 Testing minimal product data...");
+        const minimalProduct = {
+          name: "Test Product",
+          description: "Test Description",
+          price: 10.0,
+        };
+
+        try {
+          const minimalResponse = await productApi.create(minimalProduct);
+          console.log("🧪 Minimal test response:", minimalResponse);
+        } catch (minError) {
+          console.log("🧪 Minimal test also failed:", minError);
+        }
+      }
 
       if (response.status === 200 || response.status === 201) {
         toast({
@@ -184,12 +318,51 @@ const ProductManagement: React.FC = () => {
         // Refresh the product list
         await loadProducts();
       } else {
+        // Handle specific error cases
+        let errorMessage = "Failed to create product";
+
+        if (response.status === 422) {
+          // Validation errors
+          console.log("🔍 Processing validation errors:", {
+            errors: response.errors,
+            dataErrors: response.data?.errors,
+            fullResponse: response,
+          });
+
+          let validationErrors = response.errors || response.data?.errors;
+
+          if (validationErrors) {
+            if (typeof validationErrors === "object") {
+              const errorDetails = Object.entries(validationErrors)
+                .map(([field, messages]) => {
+                  const messageArray = Array.isArray(messages)
+                    ? messages
+                    : [messages];
+                  return `${field}: ${messageArray.join(", ")}`;
+                })
+                .join("\n");
+              errorMessage = `Validation Errors:\n${errorDetails}`;
+            } else {
+              errorMessage = `Validation Error: ${validationErrors}`;
+            }
+          } else {
+            errorMessage = `Validation failed. Please check your input data.`;
+          }
+        } else if (response.status === 401) {
+          errorMessage = "Authentication required. Please log in again.";
+        } else if (response.status === 403) {
+          errorMessage = "Permission denied. Admin access required.";
+        } else if (response.status === 500) {
+          errorMessage = "Server error. Please try again later.";
+        } else if (response.data?.message) {
+          errorMessage = response.data.message;
+        } else if (response.message) {
+          errorMessage = response.message;
+        }
+
         toast({
           title: "Create Failed",
-          description:
-            response.data?.message ||
-            response.message ||
-            "Failed to create product",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -213,6 +386,7 @@ const ProductManagement: React.FC = () => {
       price: product.price.toString(),
       quantity: product.quantity.toString(),
       low_stock_threshold: product.low_stock_threshold.toString(),
+      status: (product as any).status || "active",
     });
     setIsEditDialogOpen(true);
   };
@@ -229,6 +403,7 @@ const ProductManagement: React.FC = () => {
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
+        status: formData.status || "active",
       };
 
       console.log("🔄 Updating product:", selectedProduct.id, updateData);
@@ -312,6 +487,17 @@ const ProductManagement: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading products...</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            onClick={() => {
+              setIsLoading(false);
+              loadProducts();
+            }}
+          >
+            Cancel / Retry
+          </Button>
         </div>
       </div>
     );
@@ -410,8 +596,25 @@ const ProductManagement: React.FC = () => {
                       low_stock_threshold: e.target.value,
                     })
                   }
-                  required
+                  placeholder="Default: 5"
+                  min="0"
                 />
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="draft">Draft</option>
+                </select>
               </div>
               <DialogFooter>
                 <Button
@@ -638,6 +841,22 @@ const ProductManagement: React.FC = () => {
                 required
               />
             </div>
+            <div>
+              <Label htmlFor="edit-status">Status</Label>
+              <select
+                id="edit-status"
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
             <DialogFooter>
               <Button
                 type="button"
@@ -684,6 +903,12 @@ const ProductManagement: React.FC = () => {
                 <Label className="font-medium">Low Stock Threshold:</Label>
                 <p className="text-gray-600">
                   {selectedProduct.low_stock_threshold}
+                </p>
+              </div>
+              <div>
+                <Label className="font-medium">Status:</Label>
+                <p className="text-gray-600 capitalize">
+                  {(selectedProduct as any).status || "active"}
                 </p>
               </div>
               <div>
