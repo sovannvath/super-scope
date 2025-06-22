@@ -63,6 +63,36 @@ const AdminDashboard: React.FC = () => {
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [totalProducts, setTotalProducts] = useState<number>(0);
+  const loadTotalProducts = async () => {
+    try {
+      console.log("🔄 Fetching total products count...");
+      const response = await productApi.index();
+
+      if (response.status === 200 && response.data) {
+        let productsArray = [];
+
+        // Handle different response structures from Laravel
+        if (Array.isArray(response.data)) {
+          productsArray = response.data;
+        } else if (response.data && Array.isArray(response.data.products)) {
+          productsArray = response.data.products;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          productsArray = response.data.data;
+        }
+
+        const count = productsArray.length;
+        setTotalProducts(count);
+        console.log(`✅ Total products: ${count}`);
+      } else {
+        console.warn("Failed to fetch products for count:", response);
+        setTotalProducts(0);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching total products:", error);
+      setTotalProducts(0);
+    }
+  };
+
   useEffect(() => {
     loadDashboardData();
   }, []);
