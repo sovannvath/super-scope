@@ -49,6 +49,12 @@ interface TestCredentials {
   passwordConfirmation: string;
 }
 
+interface TestState {
+  cartItemId?: number;
+  productId?: number;
+  orderId?: number;
+}
+
 const ApiTest: React.FC = () => {
   const { toast } = useToast();
   const [testResults, setTestResults] = useState<{
