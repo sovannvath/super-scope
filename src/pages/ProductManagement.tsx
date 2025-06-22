@@ -82,6 +82,27 @@ const ProductManagement: React.FC = () => {
         status: response.status,
         headers: Object.fromEntries(response.headers.entries()),
       });
+
+      // If we can get products, let's analyze the structure
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📊 Existing product structure sample:", data);
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(
+            "🏗️ Product schema from existing data:",
+            Object.keys(data[0]),
+          );
+        } else if (
+          data.data &&
+          Array.isArray(data.data) &&
+          data.data.length > 0
+        ) {
+          console.log(
+            "🏗️ Product schema from existing data:",
+            Object.keys(data.data[0]),
+          );
+        }
+      }
     } catch (error) {
       console.error("🚨 Backend connection test failed:", error);
     }
