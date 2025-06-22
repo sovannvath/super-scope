@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -35,29 +33,22 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { productApi, Product } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Package,
-  AlertTriangle,
-  TrendingUp,
-  DollarSign,
-  Eye,
-  MoreHorizontal,
-} from "lucide-react";
+import { Package, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ProductManagement: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -73,7 +64,7 @@ const ProductManagement: React.FC = () => {
 
   const loadProducts = async () => {
     try {
-      const response = await productApi.list();
+      const response = await productApi.index();
       if (response.status === 200) {
         let productsArray: Product[] = [];
         if (Array.isArray(response.data)) {
@@ -85,11 +76,12 @@ const ProductManagement: React.FC = () => {
       } else {
         toast({
           title: "Error",
-          description: "Failed to load products from server",
+          description: "Failed to load products",
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error("Error loading products:", error);
       toast({
         title: "Error",
         description: "Failed to connect to server",
@@ -100,17 +92,11 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const lowStockCount = products.filter(
-    (p) => p.quantity <= p.low_stock_threshold,
-  ).length;
-  const totalValue = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
-  const totalProducts = products.length;
+  // Pagination calculations
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = products.slice(startIndex, endIndex);
 
   const resetForm = () => {
     setFormData({
@@ -139,12 +125,12 @@ const ProductManagement: React.FC = () => {
 
       if (response.status === 200 || response.status === 201) {
         toast({
-          title: "Product Created",
-          description: `${productData.name} has been added to inventory`,
+          title: "Success",
+          description: "Product created successfully",
         });
         setIsCreateDialogOpen(false);
         resetForm();
-        loadProducts(); // Reload products from server
+        loadProducts();
       } else {
         toast({
           title: "Error",
@@ -193,13 +179,13 @@ const ProductManagement: React.FC = () => {
 
       if (response.status === 200) {
         toast({
-          title: "Product Updated",
-          description: `${updateData.name} has been updated`,
+          title: "Success",
+          description: "Product updated successfully",
         });
         setIsEditDialogOpen(false);
         resetForm();
         setSelectedProduct(null);
-        loadProducts(); // Reload products from server
+        loadProducts();
       } else {
         toast({
           title: "Error",
@@ -218,16 +204,21 @@ const ProductManagement: React.FC = () => {
     }
   };
 
+  const handleView = (product: Product) => {
+    setSelectedProduct(product);
+    setIsViewDialogOpen(true);
+  };
+
   const handleDelete = async (productId: number) => {
     try {
       const response = await productApi.delete(productId);
 
       if (response.status === 200) {
         toast({
-          title: "Product Deleted",
-          description: "Product has been removed from inventory",
+          title: "Success",
+          description: "Product deleted successfully",
         });
-        loadProducts(); // Reload products from server
+        loadProducts();
       } else {
         toast({
           title: "Error",
@@ -244,24 +235,13 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const getStockStatus = (product: Product) => {
-    if (product.quantity === 0) {
-      return { label: "Out of Stock", variant: "destructive" as const };
-    } else if (product.quantity <= product.low_stock_threshold) {
-      return { label: "Low Stock", variant: "secondary" as const };
-    } else {
-      return { label: "In Stock", variant: "default" as const };
-    }
-  };
-
-  if (user?.role !== "admin" && user?.role !== "warehouse") {
+  // Check permissions
+  if (user?.role !== "admin") {
     return (
       <div className="text-center py-12">
-        <Package className="mx-auto h-16 w-16 text-metallic-light mb-4" />
-        <h3 className="text-lg font-semibold text-metallic-primary mb-2">
-          Access Denied
-        </h3>
-        <p className="text-metallic-tertiary">
+        <Package className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+        <p className="text-gray-600">
           You don't have permission to manage products.
         </p>
       </div>
@@ -269,22 +249,14 @@ const ProductManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-metallic-primary">
-            Product Management
-          </h1>
-          <p className="text-metallic-tertiary">
-            Manage your inventory and product catalog
-          </p>
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Products List</h1>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-metallic-primary hover:bg-metallic-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Product
+            <Button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+              Create New
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
@@ -316,7 +288,7 @@ const ProductManagement: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price">Price ($)</Label>
+                  <Label htmlFor="price">Price</Label>
                   <Input
                     id="price"
                     type="number"
@@ -364,12 +336,8 @@ const ProductManagement: React.FC = () => {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-metallic-primary hover:bg-metallic-primary/90"
-                >
-                  {isSubmitting ? "Creating..." : "Create Product"}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Creating..." : "Create"}
                 </Button>
               </DialogFooter>
             </form>
@@ -377,191 +345,142 @@ const ProductManagement: React.FC = () => {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Products
-            </CardTitle>
-            <Package className="h-4 w-4 text-metallic-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-metallic-primary">
-              {totalProducts}
-            </div>
-            <p className="text-xs text-metallic-tertiary">Active in catalog</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Inventory Value
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-metallic-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-metallic-primary">
-              ${totalValue.toLocaleString()}
-            </div>
-            <p className="text-xs text-metallic-tertiary">Total stock value</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Low Stock Items
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {lowStockCount}
-            </div>
-            <p className="text-xs text-metallic-tertiary">Need restocking</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Products
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-metallic-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-metallic-primary">
-              {products.filter((p) => p.status).length}
-            </div>
-            <p className="text-xs text-metallic-tertiary">Available for sale</p>
-          </CardContent>
-        </Card>
+      {/* Table */}
+      <div className="bg-white border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Created At
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Name
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Weight
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Price
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
+                Action
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  Loading products...
+                </TableCell>
+              </TableRow>
+            ) : currentProducts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  No products found
+                </TableCell>
+              </TableRow>
+            ) : (
+              currentProducts.map((product, index) => (
+                <TableRow
+                  key={product.id}
+                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                >
+                  <TableCell className="px-6 py-4 text-sm text-gray-600">
+                    {new Date(product.created_at).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-gray-900">
+                    {product.name}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-gray-600">
+                    {product.quantity}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 text-sm text-gray-600">
+                    {product.price}
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs rounded"
+                        onClick={() => handleEdit(product)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded"
+                        onClick={() => handleView(product)}
+                      >
+                        Show
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs rounded"
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{product.name}"?
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(product.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
 
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Product Inventory</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-metallic-tertiary" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      Loading products...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredProducts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      No products found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredProducts.map((product) => {
-                    const stockStatus = getStockStatus(product);
-                    return (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-sm text-metallic-tertiary">
-                              {product.description.slice(0, 50)}...
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>${product.price.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <span
-                            className={
-                              product.quantity <= product.low_stock_threshold
-                                ? "text-red-600 font-medium"
-                                : ""
-                            }
-                          >
-                            {product.quantity}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={stockStatus.variant}>
-                            {stockStatus.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          ${(product.price * product.quantity).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(product)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Delete Product
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "
-                                    {product.name}"? This action cannot be
-                                    undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(product.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <Button
+            variant="ghost"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="flex items-center text-blue-600 hover:text-blue-800"
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -594,7 +513,7 @@ const ProductManagement: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-price">Price ($)</Label>
+                <Label htmlFor="edit-price">Price</Label>
                 <Input
                   id="edit-price"
                   type="number"
@@ -642,15 +561,57 @@ const ProductManagement: React.FC = () => {
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-metallic-primary hover:bg-metallic-primary/90"
-              >
-                {isSubmitting ? "Updating..." : "Update Product"}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Updating..." : "Update"}
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Product Details</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-4">
+              <div>
+                <Label className="font-medium">Name:</Label>
+                <p className="text-gray-600">{selectedProduct.name}</p>
+              </div>
+              <div>
+                <Label className="font-medium">Description:</Label>
+                <p className="text-gray-600">{selectedProduct.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-medium">Price:</Label>
+                  <p className="text-gray-600">${selectedProduct.price}</p>
+                </div>
+                <div>
+                  <Label className="font-medium">Quantity:</Label>
+                  <p className="text-gray-600">{selectedProduct.quantity}</p>
+                </div>
+              </div>
+              <div>
+                <Label className="font-medium">Low Stock Threshold:</Label>
+                <p className="text-gray-600">
+                  {selectedProduct.low_stock_threshold}
+                </p>
+              </div>
+              <div>
+                <Label className="font-medium">Created:</Label>
+                <p className="text-gray-600">
+                  {new Date(selectedProduct.created_at).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
