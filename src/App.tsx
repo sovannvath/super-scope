@@ -18,7 +18,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import CustomerDashboard from "./pages/CustomerDashboard";
-import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminDashboard from "./pages/AdminDashboard";
 import StaffOrderProcessing from "./pages/StaffOrderProcessing";
 import ProductManagement from "./pages/ProductManagement";
 import LowStockAlerts from "./pages/LowStockAlerts";
@@ -69,7 +69,7 @@ const App = () => (
                 path="/dashboard/admin"
                 element={
                   <ProtectedRoute allowedRoles={["admin"]}>
-                    <AdminAnalytics />
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />
