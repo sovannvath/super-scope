@@ -171,8 +171,16 @@ const ProductManagement: React.FC = () => {
       };
 
       console.log("🔄 Creating product:", productData);
+      console.log("🔐 User auth:", { user: user?.name, role: user?.role });
+      console.log("🔗 API call to:", productApi);
+
       const response = await productApi.create(productData);
-      console.log("📡 Create response:", response);
+      console.log("📡 Create response:", {
+        status: response.status,
+        data: response.data,
+        message: response.message,
+        errors: response.errors,
+      });
 
       if (response.status === 200 || response.status === 201) {
         toast({
