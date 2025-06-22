@@ -224,35 +224,42 @@ const ProductManagement: React.FC = () => {
     setIsSubmitting(true);
     try {
       const updateData = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
-        low_stock_threshold: parseInt(formData.low_stock_threshold),
+        low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
       };
 
+      console.log("🔄 Updating product:", selectedProduct.id, updateData);
       const response = await productApi.update(selectedProduct.id, updateData);
+      console.log("📡 Update response:", response);
 
       if (response.status === 200) {
         toast({
-          title: "Success",
-          description: "Product updated successfully",
+          title: "Success!",
+          description: `Product "${updateData.name}" updated successfully`,
         });
         setIsEditDialogOpen(false);
         resetForm();
         setSelectedProduct(null);
-        loadProducts();
+        // Refresh the product list
+        await loadProducts();
       } else {
         toast({
-          title: "Error",
-          description: response.data?.message || "Failed to update product",
+          title: "Update Failed",
+          description:
+            response.data?.message ||
+            response.message ||
+            "Failed to update product",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Update error:", error);
       toast({
         title: "Error",
-        description: "Failed to update product",
+        description: error.message || "Failed to update product",
         variant: "destructive",
       });
     } finally {
