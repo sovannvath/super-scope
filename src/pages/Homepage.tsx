@@ -37,15 +37,35 @@ const Homepage: React.FC = () => {
   }, []);
 
   const loadProducts = async () => {
+    console.log("🔄 Starting to load products from API...");
     try {
       const response = await productApi.list();
+      console.log("📡 API Response:", response);
+
       if (response.status === 200) {
+        console.log("✅ Products loaded successfully:", response.data);
         setProducts(response.data);
         // Set first 6 products as featured
         setFeaturedProducts(response.data.slice(0, 6));
+        toast({
+          title: "Products Loaded",
+          description: `Successfully loaded ${response.data.length} products`,
+        });
+      } else {
+        console.error("❌ API Error:", response);
+        toast({
+          title: "API Error",
+          description: `Failed to load products. Status: ${response.status}`,
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error("Failed to load products:", error);
+      console.error("❌ Failed to load products:", error);
+      toast({
+        title: "Network Error",
+        description: "Failed to connect to the API server",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
