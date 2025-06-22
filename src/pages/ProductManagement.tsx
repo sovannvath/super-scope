@@ -889,6 +889,12 @@ const ProductManagement: React.FC = () => {
                 </p>
               </div>
               <div>
+                <Label className="font-medium">Status:</Label>
+                <p className="text-gray-600 capitalize">
+                  {(selectedProduct as any).status || "active"}
+                </p>
+              </div>
+              <div>
                 <Label className="font-medium">Created:</Label>
                 <p className="text-gray-600">
                   {new Date(selectedProduct.created_at).toLocaleString()}
