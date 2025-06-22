@@ -72,37 +72,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearAuth();
         setUser(null);
       } else {
-        // For any other case (404, 500, network error), create a basic user object
-        // This prevents the app from getting stuck in loading state
+        // For any other case (404, 500, network error), don't override existing user
         console.log(
-          "⚠️ Cannot validate user from backend, creating basic user object",
+          "⚠️ Cannot validate user from backend, keeping existing user data",
         );
 
-        // Create a basic user object so the app can function
-        // In a real app, you might decode the JWT token to get user info
-        const basicUser = {
+        // Don't create a fallback user if we already have one from login
+        // This prevents overwriting the role from successful login
+        if (!user) {
+          const basicUser = {
+            id: 1,
+            name: "User",
+            email: "user@example.com",
+            role: "customer", // Default role only for completely new users
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          setUser(basicUser);
+        }
+      }
+    } catch (error) {
+      console.log(
+        "📡 Backend connection failed, keeping existing user if available",
+      );
+
+      // Only create offline user if we don't have one already
+      if (!user) {
+        const offlineUser = {
           id: 1,
           name: "User",
           email: "user@example.com",
-          role: "customer", // Default role
+          role: "customer", // Default role only for new users
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
-        setUser(basicUser);
+        setUser(offlineUser);
       }
-    } catch (error) {
-      console.log("📡 Backend connection failed, creating offline user");
-
-      // Create a basic user object for offline mode
-      const offlineUser = {
-        id: 1,
-        name: "User",
-        email: "user@example.com",
-        role: "customer", // Default role
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setUser(offlineUser);
     } finally {
       setIsLoading(false);
     }
@@ -117,8 +122,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (token) {
       saveToken(token);
     }
+    console.log("🔍 AuthContext login - received user:", user);
+    console.log("🔍 AuthContext login - user role:", user.role);
     setUser(user);
-    console.log("✅ User logged in:", user.name);
+    console.log("✅ User logged in:", user.name, "with role:", user.role);
   };
 
   const loginWithCredentials = async (

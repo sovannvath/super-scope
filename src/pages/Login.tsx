@@ -49,11 +49,108 @@ const Login: React.FC = () => {
 
     console.log("🔑 Login form data:", loginForm);
 
+    // Check for mock accounts first
+    const mockAccounts = {
+      "admin@test.com": {
+        email: "admin@test.com",
+        password: "password123",
+        user: {
+          id: 1,
+          name: "Admin User",
+          email: "admin@test.com",
+          role: "admin",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-admin",
+      },
+      "warehouse@test.com": {
+        email: "warehouse@test.com",
+        password: "password123",
+        user: {
+          id: 2,
+          name: "Warehouse Manager",
+          email: "warehouse@test.com",
+          role: "warehouse_manager",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-warehouse",
+      },
+      "staff@test.com": {
+        email: "staff@test.com",
+        password: "password123",
+        user: {
+          id: 3,
+          name: "Staff Member",
+          email: "staff@test.com",
+          role: "staff",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-staff",
+      },
+      "customer@test.com": {
+        email: "customer@test.com",
+        password: "password123",
+        user: {
+          id: 4,
+          name: "Customer User",
+          email: "customer@test.com",
+          role: "customer",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        token: "mock-token-customer",
+      },
+    };
+
+    // Check if this is a mock account
+    const mockAccount =
+      mockAccounts[loginForm.email as keyof typeof mockAccounts];
+    if (mockAccount && mockAccount.password === loginForm.password) {
+      console.log("🎭 Using mock account for", loginForm.email);
+
+      saveToken(mockAccount.token);
+      login(mockAccount.user);
+
+      toast({
+        title: "Login Successful (Mock)",
+        description: `Welcome back, ${mockAccount.user.name}!`,
+      });
+
+      // Navigate based on role
+      const userRole = mockAccount.user.role;
+      switch (userRole) {
+        case "admin":
+          navigate("/dashboard/admin");
+          break;
+        case "staff":
+          navigate("/dashboard/staff");
+          break;
+        case "warehouse_manager":
+          navigate("/dashboard/warehouse");
+          break;
+        default:
+          navigate("/dashboard/customer");
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    // If not a mock account, try real backend
     try {
       const response = await authApi.login(loginForm);
 
       if (response.status === 200) {
         const { user, token } = response.data;
+        console.log("🔍 Raw API response:", response.data);
+        console.log("🔍 User object from backend:", user);
+        console.log("🔍 All user properties:", Object.keys(user));
+        console.log("🔍 User role field:", user.role);
+        console.log("🔍 User user_type field:", user.user_type);
+        console.log("🔍 User type field:", user.type);
+
         saveToken(token);
         login(user);
 
@@ -62,8 +159,11 @@ const Login: React.FC = () => {
           description: `Welcome back, ${user.name}!`,
         });
 
-        // Redirect based on role
-        switch (user.role) {
+        // Redirect based on role (handle different possible role names)
+        const userRole = user.role || user.user_type || user.type;
+        console.log("🔍 Using role for navigation:", userRole);
+
+        switch (userRole) {
           case "admin":
             navigate("/dashboard/admin");
             break;
@@ -71,8 +171,10 @@ const Login: React.FC = () => {
             navigate("/dashboard/staff");
             break;
           case "warehouse":
+          case "warehouse_manager":
             navigate("/dashboard/warehouse");
             break;
+          case "customer":
           default:
             navigate("/dashboard/customer");
         }
@@ -185,6 +287,19 @@ const Login: React.FC = () => {
             >
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
+
+            {/* Mock Account Info */}
+            <div className="border-t border-metallic-light pt-4 mt-4">
+              <p className="text-center text-sm text-metallic-tertiary mb-2">
+                🎭 Test Accounts Available:
+              </p>
+              <div className="text-xs text-metallic-tertiary space-y-1">
+                <div>👑 admin@test.com / password123</div>
+                <div>📦 warehouse@test.com / password123</div>
+                <div>👨‍💼 staff@test.com / password123</div>
+                <div>🛒 customer@test.com / password123</div>
+              </div>
+            </div>
 
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
