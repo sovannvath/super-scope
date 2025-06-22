@@ -84,7 +84,30 @@ const ApiTest: React.FC = () => {
         {
           name: "Get Single Product",
           endpoint: "GET /products/{id}",
-          test: () => productApi.show(1),
+          test: async () => {
+            // First get all products to find a valid ID
+            const productsResponse = await productApi.index();
+            if (
+              productsResponse.status === 200 &&
+              productsResponse.data &&
+              productsResponse.data.length > 0
+            ) {
+              const firstProduct = Array.isArray(productsResponse.data)
+                ? productsResponse.data[0]
+                : productsResponse.data.data?.[0] ||
+                  productsResponse.data.products?.[0];
+
+              if (firstProduct && firstProduct.id) {
+                return productApi.show(firstProduct.id);
+              }
+            }
+            // If no products exist, return a mock response indicating this
+            return {
+              status: 404,
+              data: null,
+              message: "No products available to test with",
+            };
+          },
         },
       ],
     },
