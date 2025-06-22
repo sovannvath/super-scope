@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardRouter from "@/components/DashboardRouter";
+import NetworkStatus from "@/components/NetworkStatus";
 
 // Import pages matching Laravel backend routes exactly
 import Homepage from "./pages/Homepage";
@@ -45,6 +46,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        <NetworkStatus />
         <BrowserRouter>
           <Layout>
             <Routes>
