@@ -216,31 +216,35 @@ export const authApi = {
   me: async () => makeApiCall(() => apiClient.get("/user")), // Alias for compatibility
 };
 
-// Product API
+// Product API - Aligned with Laravel backend routes
 export const productApi = {
-  // Get all products
+  // GET /products - Get all products (public route)
   index: async () => makeApiCall(() => apiClient.get("/products")),
 
-  // Alternative list endpoint
-  list: async () => makeApiCall(() => apiClient.get("/products")),
-
-  // Get single product
+  // GET /products/{id} - Get single product (public route)
   show: async (id: number) =>
     makeApiCall(() => apiClient.get(`/products/${id}`)),
 
-  // Create new product
+  // POST /products - Create new product (protected route)
   create: async (productData: Partial<Product>) =>
     makeApiCall(() => apiClient.post("/products", productData)),
 
-  // Update product
+  // PUT /products/{id} - Update product (protected route)
   update: async (id: number, productData: Partial<Product>) =>
     makeApiCall(() => apiClient.put(`/products/${id}`, productData)),
 
-  // Delete product
+  // DELETE /products/{id} - Delete product (protected route)
   delete: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/products/${id}`)),
 
-  // Search products
+  // DELETE alias for destroy method
+  destroy: async (id: number) =>
+    makeApiCall(() => apiClient.delete(`/products/${id}`)),
+
+  // Alternative list endpoint (alias for index)
+  list: async () => makeApiCall(() => apiClient.get("/products")),
+
+  // Search products (if backend supports it)
   search: async (query: string) =>
     makeApiCall(() =>
       apiClient.get(`/products/search?q=${encodeURIComponent(query)}`),
