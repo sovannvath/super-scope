@@ -92,18 +92,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.log("📡 Backend connection failed, creating offline user");
+      console.log(
+        "📡 Backend connection failed, keeping existing user if available",
+      );
 
-      // Create a basic user object for offline mode
-      const offlineUser = {
-        id: 1,
-        name: "User",
-        email: "user@example.com",
-        role: "customer", // Default role
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setUser(offlineUser);
+      // Only create offline user if we don't have one already
+      if (!user) {
+        const offlineUser = {
+          id: 1,
+          name: "User",
+          email: "user@example.com",
+          role: "customer", // Default role only for new users
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setUser(offlineUser);
+      }
     } finally {
       setIsLoading(false);
     }
