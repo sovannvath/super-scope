@@ -137,6 +137,11 @@ const AdminDashboard: React.FC = () => {
           ? reorderResponse.data
           : reorderResponse.data?.data || [];
         setReorderRequests(reorderData);
+      } else if (reorderResponse.status === 401) {
+        console.warn(
+          "Reorder requests API: Authentication required, using empty array",
+        );
+        setReorderRequests([]);
       } else {
         console.warn("Reorder requests API failed:", reorderResponse);
         setReorderRequests([]);
