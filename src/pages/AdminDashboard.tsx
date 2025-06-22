@@ -343,62 +343,7 @@ const AdminDashboard: React.FC = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Low Stock Alerts */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <AlertTriangle className="mr-2 h-5 w-5 text-red-600" />
-                Low Stock Alerts
-                {lowStockProducts.length > 0 && (
-                  <Badge className="ml-2 bg-red-100 text-red-800">
-                    {lowStockProducts.length}
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="max-h-96 overflow-y-auto">
-              {!Array.isArray(lowStockProducts) ||
-              lowStockProducts.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  No low stock items
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {lowStockProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="flex items-center justify-between p-3 bg-red-50 rounded-lg"
-                    >
-                      <div>
-                        <h4 className="font-semibold text-red-900">
-                          {product.name}
-                        </h4>
-                        <p className="text-sm text-red-600">
-                          Stock: {product.quantity} / Threshold:{" "}
-                          {product.low_stock_threshold}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          handleReorderProduct(
-                            product.id,
-                            product.low_stock_threshold * 2,
-                          )
-                        }
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        <RefreshCw className="mr-1 h-3 w-3" />
-                        Reorder
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
+        <div className="grid grid-cols-1 gap-6">
           {/* Reorder Requests */}
           <Card>
             <CardHeader>
