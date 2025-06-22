@@ -88,15 +88,24 @@ const Homepage: React.FC = () => {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("🚨 API connection failed:", error);
       setProducts([]);
       setFeaturedProducts([]);
 
-      // Don't show error toast for network failures - just log them
-      console.log(
-        "Backend appears to be unavailable. App will continue to work without data.",
-      );
+      // Show helpful message for timeout (backend cold start)
+      if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+        toast({
+          title: "Loading...",
+          description: "Backend is starting up, please wait a moment",
+          variant: "default",
+        });
+      } else {
+        // Don't show error toast for other network failures - just log them
+        console.log(
+          "Backend appears to be unavailable. App will continue to work without data.",
+        );
+      }
     } finally {
       setIsLoading(false);
     }
