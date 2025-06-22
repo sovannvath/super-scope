@@ -68,6 +68,7 @@ const ApiTest: React.FC = () => {
     passwordConfirmation: "password123",
   });
   const [authToken, setAuthToken] = useState<string>(getToken() || "");
+  const [testState, setTestState] = useState<TestState>({});
 
   // Test configuration
   const testCategories = {
