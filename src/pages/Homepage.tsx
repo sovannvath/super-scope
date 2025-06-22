@@ -33,61 +33,159 @@ const Homepage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
-    loadProducts();
+    // Use mock data for now due to CORS issues
+    loadMockProducts();
+    // Uncomment this when API CORS is fixed:
+    // loadProducts();
   }, []);
+
+  const loadMockProducts = () => {
+    // Mock product data for demonstration
+    const mockProducts: Product[] = [
+      {
+        id: 1,
+        name: "Premium Laptop",
+        description:
+          "High-performance laptop with latest processor and graphics card",
+        price: 1299.99,
+        quantity: 15,
+        low_stock_threshold: 5,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+      {
+        id: 2,
+        name: "Wireless Headphones",
+        description:
+          "Noise-cancelling wireless headphones with premium sound quality",
+        price: 199.99,
+        quantity: 8,
+        low_stock_threshold: 10,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+      {
+        id: 3,
+        name: "Smart Watch",
+        description: "Advanced fitness tracking and smart notifications",
+        price: 399.99,
+        quantity: 25,
+        low_stock_threshold: 10,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+      {
+        id: 4,
+        name: "Gaming Mouse",
+        description:
+          "Professional gaming mouse with RGB lighting and precision sensor",
+        price: 79.99,
+        quantity: 3,
+        low_stock_threshold: 5,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+      {
+        id: 5,
+        name: "4K Monitor",
+        description:
+          "Ultra-high definition monitor for professional work and gaming",
+        price: 549.99,
+        quantity: 12,
+        low_stock_threshold: 8,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+      {
+        id: 6,
+        name: "Mechanical Keyboard",
+        description: "RGB backlit mechanical keyboard with blue switches",
+        price: 129.99,
+        quantity: 18,
+        low_stock_threshold: 10,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+      {
+        id: 7,
+        name: "USB-C Hub",
+        description:
+          "Multi-port USB-C hub with HDMI, USB 3.0, and charging support",
+        price: 49.99,
+        quantity: 30,
+        low_stock_threshold: 15,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+      {
+        id: 8,
+        name: "Bluetooth Speaker",
+        description: "Portable waterproof Bluetooth speaker with 360° sound",
+        price: 89.99,
+        quantity: 22,
+        low_stock_threshold: 12,
+        status: true,
+        created_at: "2024-01-01",
+        updated_at: "2024-01-01",
+      },
+    ];
+
+    setProducts(mockProducts);
+    setFeaturedProducts(mockProducts.slice(0, 6));
+    setIsLoading(false);
+
+    toast({
+      title: "Demo Mode",
+      description: "Showing mock products due to API connection issues",
+      variant: "default",
+    });
+  };
 
   const loadProducts = async () => {
     console.log("🔄 Starting to load products from API...");
     try {
       const response = await productApi.list();
       console.log("📡 API Response:", response);
-      console.log("📦 Response Data Type:", typeof response.data);
-      console.log("📦 Response Data:", response.data);
 
       if (response.status === 200) {
         // Handle different possible response structures
         let productsArray: Product[] = [];
 
         if (Array.isArray(response.data)) {
-          // Direct array
           productsArray = response.data;
         } else if (response.data && Array.isArray(response.data.data)) {
-          // Nested in data property
           productsArray = response.data.data;
         } else if (response.data && Array.isArray(response.data.products)) {
-          // Nested in products property
           productsArray = response.data.products;
         } else {
           console.warn("⚠️ Unexpected API response structure:", response.data);
           productsArray = [];
         }
 
-        console.log("✅ Products array:", productsArray);
+        console.log("✅ Products loaded:", productsArray.length);
         setProducts(productsArray);
-        // Set first 6 products as featured
         setFeaturedProducts(productsArray.slice(0, 6));
 
         toast({
           title: "Products Loaded",
-          description: `Successfully loaded ${productsArray.length} products`,
+          description: `Successfully loaded ${productsArray.length} real products from API`,
         });
       } else {
-        console.error("❌ API Error:", response);
-        const errorMsg = response.data?.message || `HTTP ${response.status}`;
-        toast({
-          title: "API Error",
-          description: `Failed to load products: ${errorMsg}`,
-          variant: "destructive",
-        });
+        console.error("❌ API Error:", response.status);
+        // Fallback to mock data instead of showing error
+        loadMockProducts();
       }
     } catch (error) {
-      console.error("❌ Failed to load products:", error);
-      const errorMsg = error instanceof Error ? error.message : "Unknown error";
-      toast({
-        title: "Network Error",
-        description: `Failed to connect: ${errorMsg}`,
-        variant: "destructive",
-      });
+      console.error("❌ API connection failed (CORS/Network):", error);
+      // Fallback to mock data instead of showing error
+      loadMockProducts();
     } finally {
       setIsLoading(false);
     }
