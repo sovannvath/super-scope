@@ -41,11 +41,11 @@ const Homepage: React.FC = () => {
     try {
       const response = await productApi.list();
       console.log("📡 API Response:", response);
-      
+
       if (response.status === 200) {
         // Handle Laravel API response structure
         let productsArray: Product[] = [];
-        
+
         if (Array.isArray(response.data)) {
           productsArray = response.data;
         } else if (response.data && Array.isArray(response.data.data)) {
@@ -54,7 +54,7 @@ const Homepage: React.FC = () => {
           console.warn("⚠️ Unexpected API response structure:", response.data);
           productsArray = [];
         }
-        
+
         console.log("✅ Products loaded:", productsArray.length);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
@@ -82,7 +82,7 @@ const Homepage: React.FC = () => {
     }
   };
 
-  const filteredProducts = Array.isArray(products) 
+  const filteredProducts = Array.isArray(products)
     ? products.filter(
         (product) =>
           product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -600,8 +600,8 @@ const Homepage: React.FC = () => {
             <p>&copy; 2024 EcommerceHub. All rights reserved.</p>
           </div>
         </div>
-      </div>
-    </footer>
+        </div>
+      </footer>
     </div>
   );
 };
