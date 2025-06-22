@@ -282,6 +282,21 @@ const ProductManagement: React.FC = () => {
           "🚫 Response Data:",
           JSON.stringify(response.data, null, 2),
         );
+
+        // Try to understand what fields are required by testing minimal data
+        console.log("🧪 Testing minimal product data...");
+        const minimalProduct = {
+          name: "Test Product",
+          description: "Test Description",
+          price: 10.0,
+        };
+
+        try {
+          const minimalResponse = await productApi.create(minimalProduct);
+          console.log("🧪 Minimal test response:", minimalResponse);
+        } catch (minError) {
+          console.log("🧪 Minimal test also failed:", minError);
+        }
       }
 
       if (response.status === 200 || response.status === 201) {
