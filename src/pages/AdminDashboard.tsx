@@ -69,6 +69,7 @@ const AdminDashboard: React.FC = () => {
   );
   const [reorderRequests, setReorderRequests] = useState<ReorderRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [filterDate, setFilterDate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
