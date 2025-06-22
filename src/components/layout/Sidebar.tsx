@@ -66,7 +66,7 @@ const navigationItems: NavItem[] = [
   },
   {
     label: "Low Stock Alerts",
-    href: "/low-stock",
+    href: "/admin/low-stock",
     icon: AlertTriangle,
     roles: ["admin"],
   },
