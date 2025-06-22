@@ -53,7 +53,13 @@ const navigationItems: NavItem[] = [
     label: "Orders",
     href: "/orders",
     icon: ClipboardList,
-    roles: ["admin", "staff", "customer"],
+    roles: ["staff"],
+  },
+  {
+    label: "Order Processing",
+    href: "/orders",
+    icon: ClipboardList,
+    roles: ["admin", "staff"],
   },
   {
     label: "Shopping Cart",
@@ -80,7 +86,7 @@ const navigationItems: NavItem[] = [
     roles: ["admin", "warehouse"],
   },
   {
-    label: "Analytics",
+    label: "Admin Analytics",
     href: "/analytics",
     icon: TrendingUp,
     roles: ["admin"],
