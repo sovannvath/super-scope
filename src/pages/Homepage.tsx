@@ -52,22 +52,64 @@ const Homepage: React.FC = () => {
     console.log("🔄 Loading products from API...");
     try {
       const response = await productApi.index();
-      console.log("📡 API Response:", response);
+      console.log("📡 Full API Response:", response);
+      console.log("📡 Response Status:", response.status);
+      console.log("📡 Response Data:", response.data);
+      console.log("📡 Response Data Type:", typeof response.data);
+      console.log("📡 Is Array?:", Array.isArray(response.data));
+
+      if (response.data) {
+        console.log("📡 Data Keys:", Object.keys(response.data));
+        if (response.data.data) {
+          console.log("📡 Nested Data:", response.data.data);
+          console.log("📡 Nested Data Type:", typeof response.data.data);
+          console.log(
+            "📡 Nested Is Array?:",
+            Array.isArray(response.data.data),
+          );
+        }
+      }
 
       if (response.status === 200) {
         // Handle Laravel API response structure
         let productsArray: Product[] = [];
 
         if (Array.isArray(response.data)) {
+          console.log("✅ Using direct array from response.data");
           productsArray = response.data;
         } else if (response.data && Array.isArray(response.data.data)) {
+          console.log("✅ Using nested array from response.data.data");
           productsArray = response.data.data;
+        } else if (
+          response.data &&
+          response.data.products &&
+          Array.isArray(response.data.products)
+        ) {
+          console.log("✅ Using response.data.products");
+          productsArray = response.data.products;
         } else {
           console.warn("⚠️ Unexpected API response structure:", response.data);
-          productsArray = [];
+          console.warn("⚠️ Trying to extract any array from response...");
+
+          // Try to find any array in the response
+          const findArray = (obj: any): any[] => {
+            if (Array.isArray(obj)) return obj;
+            if (typeof obj === "object" && obj !== null) {
+              for (const key in obj) {
+                if (Array.isArray(obj[key])) {
+                  console.log(`⚠️ Found array at key: ${key}`);
+                  return obj[key];
+                }
+              }
+            }
+            return [];
+          };
+
+          productsArray = findArray(response.data);
         }
 
-        console.log("✅ Products loaded:", productsArray.length);
+        console.log("✅ Final products array:", productsArray);
+        console.log("✅ Products count:", productsArray.length);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
 
