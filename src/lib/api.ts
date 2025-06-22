@@ -116,7 +116,13 @@ async function makeApiCall<T>(
   } catch (error: any) {
     console.error("API Error:", error);
 
-    if (error.response) {
+    if (error.code === "ECONNABORTED" && error.message.includes("timeout")) {
+      // Timeout error - backend might be cold starting
+      return {
+        status: 0,
+        message: "Server is starting up, please wait a moment and try again",
+      };
+    } else if (error.response) {
       // Server responded with error status
       return {
         status: error.response.status,
