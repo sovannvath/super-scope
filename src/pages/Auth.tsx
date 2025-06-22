@@ -87,17 +87,29 @@ const Auth: React.FC = () => {
             navigate("/dashboard/customer");
         }
       } else {
-        // Handle Laravel validation errors
+        // Handle different error types
+        let errorTitle = "Login Failed";
         let errorMessage = response.message || "Invalid credentials";
 
-        if (response.data && response.data.errors) {
+        if (response.status === 401) {
+          errorTitle = "Invalid Credentials";
+          errorMessage =
+            "Email or password is incorrect. Please check your credentials and try again.";
+        } else if (
+          response.status === 422 &&
+          response.data &&
+          response.data.errors
+        ) {
+          errorTitle = "Validation Error";
           const errors = response.data.errors;
           const errorMessages = Object.values(errors).flat();
           errorMessage = errorMessages.join(", ");
         }
 
+        console.error(`🚨 Login Error ${response.status}:`, response.data);
+
         toast({
-          title: "Login Failed",
+          title: errorTitle,
           description: errorMessage,
           variant: "destructive",
         });
@@ -176,17 +188,28 @@ const Auth: React.FC = () => {
 
         navigate("/dashboard/customer");
       } else {
-        // Handle Laravel validation errors
+        // Handle different error types
+        let errorTitle = "Registration Failed";
         let errorMessage = response.message || "Failed to create account";
 
-        if (response.data && response.data.errors) {
+        if (response.status === 422 && response.data && response.data.errors) {
+          errorTitle = "Validation Error";
           const errors = response.data.errors;
           const errorMessages = Object.values(errors).flat();
           errorMessage = errorMessages.join(", ");
+        } else if (response.status === 409) {
+          errorTitle = "Account Already Exists";
+          errorMessage =
+            "An account with this email already exists. Please try logging in instead.";
         }
 
+        console.error(
+          `🚨 Registration Error ${response.status}:`,
+          response.data,
+        );
+
         toast({
-          title: "Registration Failed",
+          title: errorTitle,
           description: errorMessage,
           variant: "destructive",
         });
