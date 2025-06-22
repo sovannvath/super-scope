@@ -19,7 +19,7 @@ import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import StaffOrderProcessing from "./pages/StaffOrderProcessing";
+import StaffDashboard from "./pages/StaffDashboard";
 import ProductManagement from "./pages/ProductManagement";
 import LowStockAlerts from "./pages/LowStockAlerts";
 import WarehouseDashboard from "./pages/WarehouseDashboard";
@@ -129,7 +129,7 @@ const App = () => (
                 path="/dashboard/staff"
                 element={
                   <ProtectedRoute allowedRoles={["staff"]}>
-                    <StaffOrderProcessing />
+                    <StaffDashboard />
                   </ProtectedRoute>
                 }
               />
