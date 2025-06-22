@@ -191,12 +191,12 @@ const ApiTest: React.FC = () => {
           test: () => orderApi.index(),
         },
         {
-          name: "Create Order",
+          name: "Create Order (may fail if cart empty)",
           endpoint: "POST /orders",
           test: () => orderApi.store(),
         },
         {
-          name: "Get Single Order",
+          name: "Get Single Order (may fail if no orders)",
           endpoint: "GET /orders/{id}",
           test: () => orderApi.show(1),
         },
