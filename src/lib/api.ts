@@ -251,6 +251,10 @@ export const requestOrderApi = {
   create: async (orderData: any) =>
     makeApiCall(() => apiClient.post("/request-orders", orderData)),
 
+  // Alias for create method for backward compatibility
+  store: async (orderData: any) =>
+    makeApiCall(() => apiClient.post("/request-orders", orderData)),
+
   // Admin approval
   adminApproval: async (id: number, data: any) =>
     makeApiCall(() =>
