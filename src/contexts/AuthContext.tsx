@@ -79,8 +79,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Simple method to set authenticated user (used by Login/Register components)
-  const login = (user: User) => {
+  const login = (user: User, token?: string) => {
+    if (token) {
+      saveToken(token);
+    }
     setUser(user);
+    console.log("✅ User logged in:", user.name);
   };
 
   const loginWithCredentials = async (
