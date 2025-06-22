@@ -29,6 +29,10 @@ export const removeToken = () => {
   delete apiClient.defaults.headers.common["Authorization"];
 };
 
+// Aliases for backward compatibility
+export const saveToken = setToken;
+export const clearAuth = removeToken;
+
 // Initialize token on app start
 const token = getToken();
 if (token) {
