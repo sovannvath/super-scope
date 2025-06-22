@@ -247,18 +247,6 @@ const AdminDashboard: React.FC = () => {
             </Card>
           </Link>
 
-          <Link to="/admin/low-stock">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-4 text-center">
-                <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-red-600" />
-                <h3 className="font-semibold">Low Stock Alerts</h3>
-                <p className="text-sm text-gray-600">
-                  Monitor inventory levels
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
           <Link to="/reorder-requests">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-4 text-center">
