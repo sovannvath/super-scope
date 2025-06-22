@@ -150,9 +150,14 @@ const ProductManagement: React.FC = () => {
           description: response.message || "Failed to load products",
           variant: "destructive",
         });
+        // Set empty products array on error
+        setProducts([]);
       }
     } catch (error: any) {
       console.error("❌ Error loading products:", error);
+
+      // Always set empty array on error to prevent infinite loading
+      setProducts([]);
 
       // Handle timeout errors gracefully
       if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
@@ -168,6 +173,7 @@ const ProductManagement: React.FC = () => {
         });
       }
     } finally {
+      // Always stop loading
       setIsLoading(false);
     }
   };
