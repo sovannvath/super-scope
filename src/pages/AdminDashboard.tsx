@@ -115,7 +115,7 @@ const AdminDashboard: React.FC = () => {
         const fallbackStats = {
           total_revenue: 0,
           total_orders: 0,
-          total_products: 0,
+          total_products: totalProducts || 0, // Use actual products count
           total_customers: 0,
           recent_orders: [],
           pending_reorders: [],
