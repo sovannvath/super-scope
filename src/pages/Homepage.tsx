@@ -89,7 +89,6 @@ const Homepage: React.FC = () => {
         description: `Failed to connect: ${errorMsg}`,
         variant: "destructive",
       });
-    }
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +98,9 @@ const Homepage: React.FC = () => {
     ? products.filter(
         (product) =>
           product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+          product.description
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()),
       )
     : [];
 
@@ -410,7 +411,9 @@ const Homepage: React.FC = () => {
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-4xl font-bold mb-2">{Array.isArray(products) ? products.length : 0}+</div>
+            <div className="text-4xl font-bold mb-2">
+              {Array.isArray(products) ? products.length : 0}+
+            </div>
             <div className="text-metallic-background/80">
               Products Available
             </div>
@@ -447,7 +450,7 @@ const Homepage: React.FC = () => {
               {isLoading ? "Testing..." : "🔄 Test Products API"}
             </Button>
             <div className="text-xs text-gray-600">
-              Products: {Array.isArray(products) ? products.length : 'Invalid'}
+              Products: {Array.isArray(products) ? products.length : "Invalid"}
             </div>
           </CardContent>
         </Card>
