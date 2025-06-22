@@ -356,48 +356,16 @@ const Login: React.FC = () => {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
 
-            {/* Demo Mode - Test All Roles */}
+            {/* Mock Account Info */}
             <div className="border-t border-metallic-light pt-4 mt-4">
-              <p className="text-center text-sm text-metallic-tertiary mb-3">
-                🎭 Demo Mode - Test All Roles
+              <p className="text-center text-sm text-metallic-tertiary mb-2">
+                🎭 Test Accounts Available:
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin("admin")}
-                  className="text-xs"
-                >
-                  👑 Admin
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin("warehouse_manager")}
-                  className="text-xs"
-                >
-                  📦 Warehouse
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin("staff")}
-                  className="text-xs"
-                >
-                  👨‍💼 Staff
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin("customer")}
-                  className="text-xs"
-                >
-                  🛒 Customer
-                </Button>
+              <div className="text-xs text-metallic-tertiary space-y-1">
+                <div>👑 admin@test.com / password123</div>
+                <div>📦 warehouse@test.com / password123</div>
+                <div>👨‍💼 staff@test.com / password123</div>
+                <div>🛒 customer@test.com / password123</div>
               </div>
             </div>
 
