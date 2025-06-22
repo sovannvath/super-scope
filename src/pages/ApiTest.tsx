@@ -132,19 +132,19 @@ const ApiTest: React.FC = () => {
           test: () => cartApi.addItem({ product_id: 1, quantity: 2 }),
         },
         {
-          name: "Update Cart Item",
+          name: "Clear Cart (Safe Test)",
+          endpoint: "DELETE /cart/clear",
+          test: () => cartApi.clear(),
+        },
+        {
+          name: "Update Cart Item (May fail if no items)",
           endpoint: "PUT /cart/items/{id}",
           test: () => cartApi.updateItem(1, 3),
         },
         {
-          name: "Remove Cart Item",
+          name: "Remove Cart Item (May fail if no items)",
           endpoint: "DELETE /cart/items/{id}",
           test: () => cartApi.removeItem(1),
-        },
-        {
-          name: "Clear Cart",
-          endpoint: "DELETE /cart/clear",
-          test: () => cartApi.clear(),
         },
       ],
     },
