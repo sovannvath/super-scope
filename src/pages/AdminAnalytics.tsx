@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
+import { dashboardApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import {
   TrendingUp,
