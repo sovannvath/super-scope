@@ -393,16 +393,16 @@ const Login: React.FC = () => {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
 
-            {/* Mock Account Info */}
+            {/* Test Account Info */}
             <div className="border-t border-metallic-light pt-4 mt-4">
               <p className="text-center text-sm text-metallic-tertiary mb-2">
-                🎭 Test Accounts Available:
+                🔑 Test Accounts Available:
               </p>
               <div className="text-xs text-metallic-tertiary space-y-1">
-                <div>👑 admin@test.com / password123</div>
-                <div>📦 warehouse@test.com / password123</div>
-                <div>👨‍💼 staff@test.com / password123</div>
-                <div>🛒 customer@test.com / password123</div>
+                <div>👑 admin@example.com / seng1234</div>
+                <div>📦 warehouse@example.com / seng1234</div>
+                <div>👨‍💼 staff@example.com / seng1234</div>
+                <div>🛒 customer@example.com / seng1234</div>
               </div>
             </div>
 
