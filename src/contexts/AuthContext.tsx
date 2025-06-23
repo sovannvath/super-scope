@@ -105,17 +105,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("🚨 Force stopping loading state after timeout");
         setIsLoading(false);
 
-        // Create fallback admin user if still no user
+        // Don't create any fallback user - let the app handle no user state
         if (!user) {
-          const emergencyUser = {
-            id: 1,
-            name: "Admin User",
-            email: "admin@example.com",
-            role: "admin",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setUser(emergencyUser);
+          console.log(
+            "🚨 No user found after timeout, app will handle logged out state",
+          );
         }
       }
     }, 15000);
