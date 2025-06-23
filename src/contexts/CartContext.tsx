@@ -1,7 +1,18 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useEffect } from "react";
 import { useCart, UseCartReturn } from "@/hooks/use-cart";
+import { useAuth } from "@/contexts/AuthContext";
 
-const CartContext = createContext<UseCartReturn | undefined>(undefined);
+interface CartContextType extends UseCartReturn {
+  isCartEmpty: boolean;
+  hasItems: boolean;
+  cartSummary: {
+    itemCount: number;
+    totalAmount: number;
+    lastUpdated: string | null;
+  };
+}
+
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const useCartContext = () => {
   const context = useContext(CartContext);
@@ -17,8 +28,66 @@ interface CartProviderProps {
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const cartState = useCart();
+  const { isAuthenticated } = useAuth();
+
+  // Enhanced cart state
+  const isCartEmpty = cartState.itemCount === 0;
+  const hasItems = cartState.itemCount > 0;
+
+  const cartSummary = {
+    itemCount: cartState.itemCount,
+    totalAmount: cartState.totalAmount,
+    lastUpdated: cartState.cart?.updated_at || null,
+  };
+
+  // Auto-sync cart when authentication changes
+  useEffect(() => {
+    if (isAuthenticated && cartState.refetch) {
+      cartState.refetch();
+    }
+  }, [isAuthenticated]);
+
+  // Persist cart summary to localStorage
+  useEffect(() => {
+    if (hasItems && isAuthenticated) {
+      localStorage.setItem(
+        "cart_summary",
+        JSON.stringify({
+          ...cartSummary,
+          timestamp: new Date().toISOString(),
+        }),
+      );
+    } else if (!isAuthenticated) {
+      localStorage.removeItem("cart_summary");
+    }
+  }, [cartSummary, hasItems, isAuthenticated]);
+
+  // Auto-refresh cart periodically when items exist
+  useEffect(() => {
+    if (!hasItems || !isAuthenticated) return;
+
+    const interval = setInterval(
+      () => {
+        if (cartState.refetch) {
+          cartState.refetch();
+        }
+      },
+      5 * 60 * 1000,
+    ); // Refresh every 5 minutes
+
+    return () => clearInterval(interval);
+  }, [hasItems, isAuthenticated, cartState.refetch]);
+
+  const enhancedCartState: CartContextType = {
+    ...cartState,
+    isCartEmpty,
+    hasItems,
+    cartSummary,
+  };
 
   return (
-    <CartContext.Provider value={cartState}>{children}</CartContext.Provider>
+    <CartContext.Provider value={enhancedCartState}>
+      {children}
+    </CartContext.Provider>
   );
 };
