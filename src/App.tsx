@@ -66,6 +66,7 @@ const App = () => {
                     <Route path="/register" element={<Register />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/products/:id" element={<ProductDetail />} />
+                    <Route path="/test" element={<TestPage />} />
 
                     {/* Import new components */}
                     <Route
