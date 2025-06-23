@@ -112,11 +112,7 @@ const App = () => (
               />
               <Route
                 path="/dashboard/customer"
-                element={
-                  <ProtectedRoute allowedRoles={["customer"]}>
-                    <CustomerDashboard />
-                  </ProtectedRoute>
-                }
+                element={<CustomerDashboard />}
               />
               <Route
                 path="/purchase-history"
