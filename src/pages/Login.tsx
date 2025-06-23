@@ -69,46 +69,50 @@ const Login: React.FC = () => {
           description: `Welcome back, ${user.name}!`,
         });
 
-        // Map role_id from Laravel backend to role names
-        let userRole = user.role || user.user_type || user.type;
+        // Always map role_id to role name for consistent navigation
+        console.log("🔍 Backend user object:", user);
+        console.log("🔍 user.role_id:", user.role_id, typeof user.role_id);
+        console.log("🔍 user.role:", user.role);
 
-        console.log("🔍 Before mapping - user.role:", user.role);
-        console.log("🔍 Before mapping - user.role_id:", user.role_id);
-        console.log("🔍 Before mapping - userRole:", userRole);
+        // Force role mapping based on role_id (backend uses role_id)
+        const roleMapping = {
+          1: "admin",
+          2: "warehouse_manager",
+          3: "customer",
+          4: "staff",
+        };
 
-        // If we have role_id instead of role name, map it
-        if (user.role_id && !userRole) {
-          const roleMapping = {
-            1: "admin",
-            2: "warehouse_manager",
-            3: "customer",
-            4: "staff",
-          };
-          userRole =
-            roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
-          user.role = userRole;
-          console.log("🔍 Mapped role_id", user.role_id, "to role:", userRole);
-        }
+        const userRole =
+          roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
+        user.role = userRole; // Update user object with mapped role
 
-        console.log("🔍 Final userRole for navigation:", userRole);
+        console.log(
+          "🔍 Mapped role_id",
+          user.role_id,
+          "to userRole:",
+          userRole,
+        );
 
+        // Navigate based on role
         let targetRoute = "/dashboard/customer"; // default
 
         switch (userRole) {
           case "admin":
             targetRoute = "/dashboard/admin";
             break;
-          case "staff":
-            targetRoute = "/dashboard/staff";
-            break;
-          case "warehouse":
           case "warehouse_manager":
             targetRoute = "/dashboard/warehouse";
+            break;
+          case "staff":
+            targetRoute = "/dashboard/staff";
             break;
           case "customer":
           default:
             targetRoute = "/dashboard/customer";
+            break;
         }
+
+        console.log("🔍 Target route for role", userRole, ":", targetRoute);
 
         // Use window.location to force a full page reload and ensure correct dashboard loads
         window.location.href = targetRoute;
