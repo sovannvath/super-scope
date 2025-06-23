@@ -13,13 +13,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
 
   // Public routes that don't need authentication layout
-  const publicRoutes = ["/", "/auth", "/login", "/register", "/products"];
+  const publicRoutes = ["/", "/login", "/register"];
   const isPublicRoute =
     publicRoutes.includes(location.pathname) ||
-    location.pathname.startsWith("/products/");
+    location.pathname.startsWith("/products");
 
-  // If it's a public route or user is not authenticated, show simple layout
-  if (isPublicRoute || !isAuthenticated) {
+  // Routes that should use simple layout regardless of auth status
+  const alwaysSimpleLayout = ["/", "/login", "/register", "/products"];
+  const useSimpleLayout = alwaysSimpleLayout.some(
+    (route) =>
+      location.pathname === route || location.pathname.startsWith(route + "/"),
+  );
+
+  // Use simple layout for public routes and specific pages
+  if (useSimpleLayout) {
     return <div className="min-h-screen bg-background">{children}</div>;
   }
 
