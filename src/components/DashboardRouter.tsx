@@ -27,6 +27,8 @@ export const DashboardRouter: React.FC = () => {
   // Get role from different possible field names
   const userRole = user?.role || user?.user_type || user?.type;
   console.log("🔄 DashboardRouter using role:", userRole);
+  console.log("🔄 DashboardRouter user object:", user);
+  console.log("🔄 DashboardRouter role_id:", user?.role_id);
 
   // Determine the correct dashboard route for this user
   let correctRoute = "/dashboard/customer"; // default
