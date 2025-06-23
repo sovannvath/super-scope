@@ -112,6 +112,8 @@ const Products: React.FC = () => {
     : [];
 
   const handleAddToCart = async (productId: number) => {
+    console.log("🛒 Add to cart clicked for product:", productId);
+
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -123,27 +125,36 @@ const Products: React.FC = () => {
     }
 
     try {
+      console.log("🔄 Adding item to cart...");
       const response = await cartApi.addItem({
         product_id: productId,
         quantity: 1,
       });
 
+      console.log("📡 Cart API Response:", response);
+
       if (response.status === 200 || response.status === 201) {
         toast({
-          title: "Added to Cart",
+          title: "Added to Cart ✅",
           description: "Product has been added to your cart",
         });
+        console.log("✅ Item added to cart successfully");
       } else {
+        console.error("❌ Cart API Error:", response);
         toast({
           title: "Error",
-          description: response.data?.message || "Failed to add to cart",
+          description:
+            response.data?.message ||
+            response.message ||
+            "Failed to add to cart",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Cart add error:", error);
       toast({
         title: "Error",
-        description: "Failed to add item to cart",
+        description: error.message || "Failed to add item to cart",
         variant: "destructive",
       });
     }
