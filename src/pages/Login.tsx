@@ -49,55 +49,127 @@ const Login: React.FC = () => {
 
     console.log("🔑 Login form data:", loginForm);
 
-    // Check for mock accounts first
+    // Check for backend accounts first - always try real backend authentication
+    console.log("🔑 Attempting real backend authentication...");
+
+    // Try real backend authentication first
+    try {
+      const response = await authApi.login(loginForm);
+      console.log("🔍 Backend login response:", response);
+
+      if (response.status === 200 && response.data) {
+        const { user, token } = response.data;
+        console.log("🔍 Backend user:", user);
+
+        saveToken(token);
+        login(user);
+
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${user.name}!`,
+        });
+
+        // Map role_id from Laravel backend to role names
+        let userRole = user.role || user.user_type || user.type;
+
+        // If we have role_id instead of role name, map it
+        if (user.role_id && !userRole) {
+          const roleMapping = {
+            1: "admin",
+            2: "warehouse_manager",
+            3: "customer",
+            4: "staff",
+          };
+          userRole =
+            roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
+          user.role = userRole;
+        }
+
+        console.log("🔍 Final userRole for navigation:", userRole);
+
+        let targetRoute = "/dashboard/customer"; // default
+
+        switch (userRole) {
+          case "admin":
+            targetRoute = "/dashboard/admin";
+            break;
+          case "staff":
+            targetRoute = "/dashboard/staff";
+            break;
+          case "warehouse":
+          case "warehouse_manager":
+            targetRoute = "/dashboard/warehouse";
+            break;
+          case "customer":
+          default:
+            targetRoute = "/dashboard/customer";
+        }
+
+        // Use window.location to force a full page reload and ensure correct dashboard loads
+        window.location.href = targetRoute;
+        setIsLoading(false);
+        return;
+      }
+    } catch (backendError) {
+      console.log(
+        "⚠️ Backend authentication failed, trying fallback mock accounts:",
+        backendError,
+      );
+    }
+
+    // Fallback mock accounts (matching real backend credentials for testing)
     const mockAccounts = {
-      "admin@test.com": {
-        email: "admin@test.com",
-        password: "password123",
+      "admin@example.com": {
+        email: "admin@example.com",
+        password: "seng1234",
         user: {
           id: 1,
           name: "Admin User",
-          email: "admin@test.com",
+          email: "admin@example.com",
           role: "admin",
+          role_id: 1,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         token: "mock-token-admin",
       },
-      "warehouse@test.com": {
-        email: "warehouse@test.com",
-        password: "password123",
+      "warehouse@example.com": {
+        email: "warehouse@example.com",
+        password: "seng1234",
         user: {
           id: 2,
-          name: "Warehouse Manager",
-          email: "warehouse@test.com",
+          name: "Warehouse User",
+          email: "warehouse@example.com",
           role: "warehouse_manager",
+          role_id: 2,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         token: "mock-token-warehouse",
       },
-      "staff@test.com": {
-        email: "staff@test.com",
-        password: "password123",
+      "staff@example.com": {
+        email: "staff@example.com",
+        password: "seng1234",
         user: {
           id: 3,
-          name: "Staff Member",
-          email: "staff@test.com",
+          name: "Staff User",
+          email: "staff@example.com",
           role: "staff",
+          role_id: 4,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         token: "mock-token-staff",
       },
-      "customer@test.com": {
-        email: "customer@test.com",
-        password: "password123",
+      "customer@example.com": {
+        email: "customer@example.com",
+        password: "seng1234",
         user: {
           id: 4,
           name: "Customer User",
-          email: "customer@test.com",
+          email: "customer@example.com",
           role: "customer",
+          role_id: 3,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
