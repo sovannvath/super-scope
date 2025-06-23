@@ -71,7 +71,10 @@ const Cart: React.FC = () => {
       const response = await cartApi.get();
 
       if (response.status === 200 && response.data) {
-        setCart(response.data);
+        setCart({
+          ...response.data,
+          items: response.data.items || [],
+        });
         setLastUpdated(new Date());
 
         // Store cart summary in localStorage for persistence
