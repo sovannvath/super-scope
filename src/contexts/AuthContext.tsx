@@ -272,6 +272,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isStaff = () => user?.role === "staff";
   const hasRole = (role: string) => user?.role === role;
 
+  // Get correct dashboard path for current user
+  const getCorrectDashboardPath = () => {
+    if (!user) return "/dashboard/customer";
+
+    const userRole = user.role || user.user_type || user.type || "customer";
+
+    switch (userRole) {
+      case "admin":
+        return "/dashboard/admin";
+      case "staff":
+        return "/dashboard/staff";
+      case "warehouse":
+      case "warehouse_manager":
+        return "/dashboard/warehouse";
+      case "customer":
+      default:
+        return "/dashboard/customer";
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user || !!getToken(),
