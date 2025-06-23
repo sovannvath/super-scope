@@ -187,7 +187,6 @@ export function useCart(): UseCartReturn {
   }, [fetchCart, toast]);
 
   useEffect(() => {
-    // Only fetch cart when auth loading is complete and user is authenticated
     if (!authLoading) {
       if (isAuthenticated) {
         fetchCart();
@@ -198,7 +197,7 @@ export function useCart(): UseCartReturn {
         setError(null);
       }
     }
-  }, [authLoading, isAuthenticated, fetchCart]);
+  }, [authLoading, isAuthenticated]);
 
   const itemCount = cart?.total_items || 0;
   const totalAmount = cart?.total_amount || 0;
