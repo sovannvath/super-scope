@@ -145,7 +145,7 @@ export interface User {
 }
 
 // Generic API call wrapper
-async function makeApiCall<T>(
+export async function makeApiCall<T>(
   apiCall: () => Promise<AxiosResponse<T>>,
 ): Promise<ApiResponse<T>> {
   try {
