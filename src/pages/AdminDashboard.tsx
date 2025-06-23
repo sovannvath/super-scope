@@ -118,43 +118,15 @@ const AdminDashboard: React.FC = () => {
           );
         }
       } catch (dashboardError) {
-        console.warn(
-          "⚠️ Dashboard API failed, using fallback data:",
-          dashboardError,
-        );
-
-        // Create comprehensive fallback stats
-        const fallbackStats = {
-          total_revenue: 12450,
-          total_orders: 48,
-          total_products: totalProducts || 15, // Use actual products count or fallback
-          total_customers: 23,
-          low_stock_products: [],
-          recent_orders: [
-            {
-              id: 1,
-              customer_name: "John Doe",
-              total_amount: 150,
-              status: "completed",
-              created_at: new Date().toISOString(),
-            },
-            {
-              id: 2,
-              customer_name: "Jane Smith",
-              total_amount: 250,
-              status: "pending",
-              created_at: new Date().toISOString(),
-            },
-          ],
-          pending_reorders: [],
-        };
-        setStats(fallbackStats);
+        console.error("❌ Dashboard API failed:", dashboardError);
+        setStats(null);
+        setHasError(true);
 
         toast({
-          title: "Using Sample Data",
+          title: "Dashboard Error",
           description:
-            "Dashboard running with sample data due to backend issues.",
-          variant: "default",
+            "Failed to load dashboard data. Please try logging in again.",
+          variant: "destructive",
         });
       }
 
