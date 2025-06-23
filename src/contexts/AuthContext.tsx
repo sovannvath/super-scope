@@ -261,18 +261,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Get correct dashboard path for current user
   const getCorrectDashboardPath = () => {
-    if (!user) return "/dashboard/customer";
-
-    const userRole = user.role || user.user_type || user.type || "customer";
+    const userRole = getUserRole();
 
     switch (userRole) {
       case "admin":
         return "/dashboard/admin";
-      case "staff":
-        return "/dashboard/staff";
-      case "warehouse":
       case "warehouse_manager":
         return "/dashboard/warehouse";
+      case "staff":
+        return "/dashboard/staff";
       case "customer":
       default:
         return "/dashboard/customer";
