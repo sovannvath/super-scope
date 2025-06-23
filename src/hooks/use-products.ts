@@ -64,11 +64,12 @@ export function useProducts(filters?: ProductFilters): UseProductsReturn {
           error: error.message || "Failed to fetch products",
         }));
 
-        if (!loadMore) {
+        // Only show toast for non-timeout errors to avoid spam
+        if (!loadMore && !error.message?.includes("timeout")) {
           toast({
-            title: "Error",
-            description: error.message || "Failed to fetch products",
-            variant: "destructive",
+            title: "Products Unavailable",
+            description: "Unable to load products at the moment",
+            variant: "default",
           });
         }
       }
