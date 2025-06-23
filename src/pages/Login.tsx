@@ -119,21 +119,26 @@ const Login: React.FC = () => {
         description: `Welcome back, ${mockAccount.user.name}!`,
       });
 
-      // Navigate based on role
+      // Navigate based on role - use window.location for full page reload
       const userRole = mockAccount.user.role;
+      let targetRoute = "/dashboard/customer"; // default
+
       switch (userRole) {
         case "admin":
-          navigate("/dashboard/admin");
+          targetRoute = "/dashboard/admin";
           break;
         case "staff":
-          navigate("/dashboard/staff");
+          targetRoute = "/dashboard/staff";
           break;
         case "warehouse_manager":
-          navigate("/dashboard/warehouse");
+          targetRoute = "/dashboard/warehouse";
           break;
         default:
-          navigate("/dashboard/customer");
+          targetRoute = "/dashboard/customer";
       }
+
+      // Use window.location to force a full page reload and ensure correct dashboard loads
+      window.location.href = targetRoute;
       setIsLoading(false);
       return;
     }
