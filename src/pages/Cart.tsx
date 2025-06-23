@@ -70,8 +70,10 @@ const Cart: React.FC = () => {
       setError(null);
       console.log("🛒 Fetching cart from API...");
       const response = await cartApi.get();
+      console.log("📡 Cart API Response:", response);
 
       if (response.status === 200 && response.data) {
+        console.log("✅ Cart data received:", response.data);
         setCart({
           ...response.data,
           items: response.data.items || [],
