@@ -3,16 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { cartApi, orderApi } from "@/lib/api";
+import { cartApi, ordersApi } from "@/api/cart";
 import { useToast } from "@/hooks/use-toast";
+import {
+  LoadingSpinner,
+  EmptyCart,
+  ErrorState,
+} from "@/components/atoms/LoadingStates";
 import {
   ShoppingCart,
   Plus,
   Minus,
   Trash2,
-  Package,
   CreditCard,
+  Package,
   ArrowRight,
 } from "lucide-react";
 
@@ -20,417 +27,341 @@ interface CartItem {
   id: number;
   product_id: number;
   quantity: number;
+  price: number;
+  subtotal: number;
   product: {
     id: number;
     name: string;
     description: string;
     price: number;
-    quantity: number;
+    image_url?: string;
   };
 }
 
-interface PaymentMethod {
-  id: string;
-  name: string;
-  type: string;
+interface Cart {
+  id: number;
+  items: CartItem[];
+  total_items: number;
+  total_amount: number;
 }
 
 const Cart: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState<number | null>(null);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadCart();
-      loadPaymentMethods();
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
     }
-  }, [isAuthenticated]);
+    fetchCart();
+  }, [isAuthenticated, navigate]);
 
-  const loadCart = async () => {
+  const fetchCart = async () => {
     try {
-      setIsLoading(true);
-      const response = await cartApi.index();
+      setLoading(true);
+      setError(null);
+      const response = await cartApi.get();
 
-      if (response.status === 200) {
-        let itemsArray: CartItem[] = [];
-        if (Array.isArray(response.data)) {
-          itemsArray = response.data;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          itemsArray = response.data.data;
-        }
-        setCartItems(itemsArray);
+      if (response.status === 200 && response.data) {
+        setCart(response.data);
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to load cart",
-          variant: "destructive",
-        });
+        throw new Error(response.message || "Failed to fetch cart");
       }
-    } catch (error) {
-      console.error("Cart error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to connect to cart service",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      setError(error.message || "Failed to load cart");
+      console.error("Cart fetch error:", error);
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadPaymentMethods = async () => {
-    try {
-      const response = await orderApi.getPaymentMethods();
-      if (response.status === 200) {
-        let methodsArray: PaymentMethod[] = [];
-        if (Array.isArray(response.data)) {
-          methodsArray = response.data;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          methodsArray = response.data.data;
-        }
-        setPaymentMethods(methodsArray);
-        if (methodsArray.length > 0) {
-          setSelectedPaymentMethod(methodsArray[0].id);
-        }
-      }
-    } catch (error) {
-      console.error("Payment methods error:", error);
+      setLoading(false);
     }
   };
 
   const updateQuantity = async (itemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
+    if (newQuantity < 1) {
+      removeItem(itemId);
+      return;
+    }
 
     try {
-      setIsUpdating(itemId);
+      setUpdatingItems((prev) => new Set(prev).add(itemId));
       const response = await cartApi.updateItem(itemId, {
         quantity: newQuantity,
       });
 
       if (response.status === 200) {
-        setCartItems((prev) =>
-          prev.map((item) =>
-            item.id === itemId ? { ...item, quantity: newQuantity } : item,
-          ),
-        );
+        await fetchCart(); // Refresh cart
         toast({
           title: "Cart Updated",
-          description: "Item quantity updated successfully",
+          description: "Item quantity has been updated",
         });
       } else {
-        toast({
-          title: "Update Failed",
-          description: "Failed to update item quantity",
-          variant: "destructive",
-        });
+        throw new Error(response.message || "Failed to update item");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to update cart item",
+        title: "Update Failed",
+        description: error.message || "Failed to update item quantity",
         variant: "destructive",
       });
     } finally {
-      setIsUpdating(null);
+      setUpdatingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
     }
   };
 
   const removeItem = async (itemId: number) => {
     try {
+      setUpdatingItems((prev) => new Set(prev).add(itemId));
       const response = await cartApi.removeItem(itemId);
 
       if (response.status === 200) {
-        setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+        await fetchCart(); // Refresh cart
         toast({
           title: "Item Removed",
-          description: "Item removed from cart",
+          description: "Item has been removed from your cart",
         });
       } else {
-        toast({
-          title: "Remove Failed",
-          description: "Failed to remove item from cart",
-          variant: "destructive",
-        });
+        throw new Error(response.message || "Failed to remove item");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to remove cart item",
+        title: "Remove Failed",
+        description: error.message || "Failed to remove item",
         variant: "destructive",
+      });
+    } finally {
+      setUpdatingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
       });
     }
   };
 
   const clearCart = async () => {
     try {
+      setLoading(true);
       const response = await cartApi.clear();
 
       if (response.status === 200) {
-        setCartItems([]);
+        await fetchCart(); // Refresh cart
         toast({
           title: "Cart Cleared",
-          description: "All items removed from cart",
+          description: "All items have been removed from your cart",
         });
       } else {
-        toast({
-          title: "Clear Failed",
-          description: "Failed to clear cart",
-          variant: "destructive",
-        });
+        throw new Error(response.message || "Failed to clear cart");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to clear cart",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCheckout = async () => {
-    if (!selectedPaymentMethod) {
-      toast({
-        title: "Payment Method Required",
-        description: "Please select a payment method",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsCheckingOut(true);
-      const response = await orderApi.store({
-        payment_method: selectedPaymentMethod,
-        items: cartItems.map((item) => ({
-          product_id: item.product_id,
-          quantity: item.quantity,
-        })),
-      });
-
-      if (response.status === 200 || response.status === 201) {
-        toast({
-          title: "Order Placed Successfully",
-          description: `Order #${response.data.id} has been created`,
-        });
-        setCartItems([]);
-        navigate("/orders");
-      } else {
-        toast({
-          title: "Checkout Failed",
-          description: response.message || "Failed to place order",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Checkout Error",
-        description: "Failed to process order",
+        title: "Clear Failed",
+        description: error.message || "Failed to clear cart",
         variant: "destructive",
       });
     } finally {
-      setIsCheckingOut(false);
+      setLoading(false);
     }
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.product.price * item.quantity,
-      0,
-    );
-  };
-
-  if (!isAuthenticated) {
+  if (loading) {
     return (
-      <div className="text-center py-12">
-        <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
-        <h3 className="text-lg font-semibold text-metallic-primary mb-2">
-          Please Log In
-        </h3>
-        <p className="text-metallic-tertiary mb-4">
-          You need to be logged in to view your cart
-        </p>
-        <Button onClick={() => navigate("/auth")}>Go to Login</Button>
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex items-center justify-center min-h-96">
+          <LoadingSpinner size="lg" />
+        </div>
       </div>
     );
   }
 
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-metallic-primary"></div>
+      <div className="container mx-auto py-8 px-4">
+        <ErrorState
+          description={error}
+          action={<Button onClick={fetchCart}>Try Again</Button>}
+        />
+      </div>
+    );
+  }
+
+  if (!cart || cart.items.length === 0) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <EmptyCart />
+        <div className="text-center mt-6">
+          <Button onClick={() => navigate("/products")}>
+            Continue Shopping
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-metallic-primary">
-          Shopping Cart
-        </h1>
-        {cartItems.length > 0 && (
-          <Button variant="outline" onClick={clearCart}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Clear Cart
-          </Button>
-        )}
+    <div className="container mx-auto py-8 px-4 max-w-6xl">
+      <div className="flex items-center mb-8">
+        <ShoppingCart className="h-8 w-8 mr-3" />
+        <h1 className="text-3xl font-bold">Shopping Cart</h1>
+        <Badge variant="secondary" className="ml-3">
+          {cart.total_items} items
+        </Badge>
       </div>
 
-      {cartItems.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
-            <h3 className="text-lg font-semibold text-metallic-primary mb-2">
-              Your cart is empty
-            </h3>
-            <p className="text-metallic-tertiary mb-4">
-              Add some products to get started
-            </p>
-            <Button onClick={() => navigate("/")}>Continue Shopping</Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
-            {cartItems.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-metallic-light to-metallic-background rounded-lg flex items-center justify-center">
-                      <Package className="h-8 w-8 text-metallic-primary/30" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-metallic-primary">
-                        {item.product.name}
-                      </h3>
-                      <p className="text-sm text-metallic-tertiary">
-                        {item.product.description}
-                      </p>
-                      <p className="text-lg font-bold text-metallic-primary">
-                        ${item.product.price}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        disabled={item.quantity <= 1 || isUpdating === item.id}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateQuantity(item.id, parseInt(e.target.value))
-                        }
-                        className="w-20 text-center"
-                        min="1"
-                        disabled={isUpdating === item.id}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Cart Items */}
+        <div className="lg:col-span-2 space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Cart Items</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearCart}
+                disabled={loading}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear Cart
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {cart.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center space-x-4 p-4 border rounded-lg"
+                >
+                  {/* Product Image */}
+                  <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                    {item.product.image_url ? (
+                      <img
+                        src={item.product.image_url}
+                        alt={item.product.name}
+                        className="w-full h-full object-cover rounded-lg"
                       />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        disabled={isUpdating === item.id}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">
-                        ${(item.product.price * item.quantity).toFixed(2)}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeItem(item.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    ) : (
+                      <Package className="h-8 w-8 text-gray-400" />
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
 
-          {/* Order Summary */}
-          <Card className="h-fit">
+                  {/* Product Details */}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">
+                      {item.product.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {item.product.description}
+                    </p>
+                    <p className="font-medium text-lg">
+                      ${item.price.toFixed(2)} each
+                    </p>
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      disabled={
+                        updatingItems.has(item.id) || item.quantity <= 1
+                      }
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-12 text-center font-medium">
+                      {updatingItems.has(item.id) ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        item.quantity
+                      )}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      disabled={updatingItems.has(item.id)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Subtotal and Remove */}
+                  <div className="text-right">
+                    <p className="font-bold text-lg">
+                      ${item.subtotal.toFixed(2)}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeItem(item.id)}
+                      disabled={updatingItems.has(item.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Order Summary */}
+        <div className="lg:col-span-1">
+          <Card className="sticky top-4">
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <CreditCard className="mr-2 h-5 w-5" />
-                Order Summary
-              </CardTitle>
+              <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>${calculateTotal().toFixed(2)}</span>
+                  <span>Items ({cart.total_items}):</span>
+                  <span>${cart.total_amount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Shipping</span>
+                  <span>Shipping:</span>
                   <span>Free</span>
                 </div>
-                <div className="border-t pt-2">
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
-                  </div>
+                <div className="flex justify-between">
+                  <span>Tax:</span>
+                  <span>${(cart.total_amount * 0.1).toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total:</span>
+                  <span>${(cart.total_amount * 1.1).toFixed(2)}</span>
                 </div>
               </div>
 
-              {paymentMethods.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Payment Method</label>
-                  <select
-                    value={selectedPaymentMethod}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    {paymentMethods.map((method) => (
-                      <option key={method.id} value={method.id}>
-                        {method.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={() => navigate("/checkout")}
+              >
+                <CreditCard className="h-5 w-5 mr-2" />
+                Proceed to Checkout
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
 
               <Button
-                className="w-full bg-metallic-primary hover:bg-metallic-primary/90"
-                onClick={handleCheckout}
-                disabled={isCheckingOut || cartItems.length === 0}
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate("/products")}
               >
-                {isCheckingOut ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    Proceed to Checkout
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
+                Continue Shopping
               </Button>
             </CardContent>
           </Card>
         </div>
-      )}
+      </div>
     </div>
   );
 };
