@@ -45,18 +45,20 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <AppProvider>
-          <CartProvider>
-            <Toaster />
-            <Sonner />
-            <NetworkStatus />
-            <BrowserRouter>
-              <Layout>
-                <Routes>
+const App = () => {
+  console.log("🚀 App component loaded");
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <AppProvider>
+            <CartProvider>
+              <Toaster />
+              <Sonner />
+              <NetworkStatus />
+              <BrowserRouter>
+                <Layout>
+                  <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Homepage />} />
                   <Route path="/login" element={<Login />} />
