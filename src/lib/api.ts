@@ -69,10 +69,13 @@ apiClient.interceptors.response.use(
   (response) => {
     // Debug logging for successful responses
     console.log(
-      `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
+      `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.baseURL}${response.config.url}`,
       {
         status: response.status,
-        data: response.data,
+        dataType: Array.isArray(response.data)
+          ? `Array[${response.data.length}]`
+          : typeof response.data,
+        hasData: !!response.data,
       },
     );
     return response;
