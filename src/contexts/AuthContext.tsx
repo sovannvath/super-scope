@@ -307,6 +307,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isWarehouseManager,
     isStaff,
     hasRole,
+    getCorrectDashboardPath,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
