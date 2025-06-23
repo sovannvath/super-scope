@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { getToken, setToken, removeToken } from "@/lib/api";
+import { getToken, setToken, removeToken, authApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 export interface User {
@@ -13,6 +13,7 @@ export interface User {
   name: string;
   email: string;
   role: string;
+  role_id?: number;
   created_at: string;
   updated_at: string;
 }
@@ -21,7 +22,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, token: string) => void;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAdmin: () => boolean;
   isCustomer: () => boolean;
@@ -43,76 +44,48 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Mock users for development
-const MOCK_USERS: Record<string, { user: User; token: string }> = {
-  "admin@test.com": {
-    user: {
-      id: 1,
-      name: "Admin User",
-      email: "admin@test.com",
-      role: "admin",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    token: "mock-admin-token",
-  },
-  "customer@test.com": {
-    user: {
-      id: 2,
-      name: "Customer User",
-      email: "customer@test.com",
-      role: "customer",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    token: "mock-customer-token",
-  },
-  "staff@test.com": {
-    user: {
-      id: 3,
-      name: "Staff Member",
-      email: "staff@test.com",
-      role: "staff",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    token: "mock-staff-token",
-  },
-  "warehouse@test.com": {
-    user: {
-      id: 4,
-      name: "Warehouse Manager",
-      email: "warehouse@test.com",
-      role: "warehouse_manager",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    token: "mock-warehouse-token",
-  },
-};
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from token
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       const token = getToken();
       if (token) {
-        // Check if it's a mock token
-        const mockEntry = Object.values(MOCK_USERS).find(
-          (entry) => entry.token === token,
-        );
+        try {
+          const response = await authApi.user();
+          if (response.status === 200 && response.data) {
+            let userData = response.data;
 
-        if (mockEntry) {
-          setUser(mockEntry.user);
-          console.log("✅ Restored mock user session:", mockEntry.user.name);
-        } else {
-          // For real tokens, we could validate with backend here
-          // For now, clear invalid tokens
+            // Map role_id to role name if needed
+            if (userData.role_id && !userData.role) {
+              const roleMapping: Record<number, string> = {
+                1: "admin",
+                2: "warehouse_manager",
+                3: "customer",
+                4: "staff",
+              };
+              userData.role = roleMapping[userData.role_id] || "customer";
+            }
+
+            setUser(userData);
+            console.log(
+              "✅ User authenticated:",
+              userData.name,
+              "Role:",
+              userData.role,
+            );
+          } else {
+            // Token is invalid, remove it
+            removeToken();
+            setUser(null);
+          }
+        } catch (error) {
+          console.log("Token validation failed, clearing auth");
           removeToken();
+          setUser(null);
         }
       }
       setIsLoading(false);
@@ -121,20 +94,77 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = (userData: User, token: string) => {
-    setToken(token);
-    setUser(userData);
-    console.log("✅ User logged in:", userData.name, "Role:", userData.role);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const response = await authApi.login({ email, password });
+
+      if (response.status === 200 && response.data) {
+        const { user: userData, token } = response.data;
+
+        // Map role_id to role name if needed
+        if (userData.role_id && !userData.role) {
+          const roleMapping: Record<number, string> = {
+            1: "admin",
+            2: "warehouse_manager",
+            3: "customer",
+            4: "staff",
+          };
+          userData.role = roleMapping[userData.role_id] || "customer";
+        }
+
+        setToken(token);
+        setUser(userData);
+
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${userData.name}!`,
+        });
+
+        console.log(
+          "✅ User logged in:",
+          userData.name,
+          "Role:",
+          userData.role,
+        );
+        return true;
+      } else {
+        toast({
+          title: "Login Failed",
+          description: response.message || "Invalid credentials",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Login failed. Please try again.";
+      toast({
+        title: "Login Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logout = () => {
-    removeToken();
-    setUser(null);
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out",
-    });
-    console.log("👋 User logged out");
+  const logout = async () => {
+    try {
+      // Try to logout from server
+      await authApi.logout();
+    } catch (error) {
+      console.log("Logout API call failed, but clearing local auth anyway");
+    } finally {
+      removeToken();
+      setUser(null);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
+      console.log("👋 User logged out");
+    }
   };
 
   // Role check helpers
@@ -159,6 +189,3 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-// Export mock users for login form
-export { MOCK_USERS };

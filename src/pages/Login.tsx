@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, MOCK_USERS } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 
@@ -22,7 +22,6 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
     // Basic validation
     if (!formData.email || !formData.password) {
@@ -31,45 +30,33 @@ const Login: React.FC = () => {
         description: "Please fill in all fields",
         variant: "destructive",
       });
-      setIsLoading(false);
       return;
     }
 
-    // Check mock users
-    const mockUser = MOCK_USERS[formData.email];
-    if (mockUser && formData.password === "password123") {
-      // Successful login
-      login(mockUser.user, mockUser.token);
-
+    if (!formData.email.includes("@")) {
       toast({
-        title: "Login Successful",
-        description: `Welcome back, ${mockUser.user.name}!`,
-      });
-
-      // Redirect based on role
-      switch (mockUser.user.role) {
-        case "admin":
-          navigate("/dashboard/admin");
-          break;
-        case "warehouse_manager":
-          navigate("/dashboard/warehouse");
-          break;
-        case "staff":
-          navigate("/dashboard/staff");
-          break;
-        default:
-          navigate("/dashboard/customer");
-      }
-    } else {
-      // Invalid credentials
-      toast({
-        title: "Login Failed",
-        description: "Invalid email or password",
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
+      return;
     }
 
-    setIsLoading(false);
+    setIsLoading(true);
+
+    try {
+      const success = await login(formData.email, formData.password);
+
+      if (success) {
+        // Redirect to appropriate dashboard (this will be handled by routing)
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      // Error handling is done in the auth context
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -105,6 +92,7 @@ const Login: React.FC = () => {
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -120,6 +108,7 @@ const Login: React.FC = () => {
                     handleInputChange("password", e.target.value)
                   }
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -127,6 +116,7 @@ const Login: React.FC = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -145,32 +135,6 @@ const Login: React.FC = () => {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
 
-            {/* Test Accounts */}
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <p className="text-center text-sm text-gray-600 mb-3 font-medium">
-                🧪 Test Accounts (password: password123)
-              </p>
-              <div className="space-y-2">
-                {Object.entries(MOCK_USERS).map(([email, data]) => (
-                  <button
-                    key={email}
-                    type="button"
-                    className="w-full text-left text-xs bg-gray-50 hover:bg-gray-100 p-2 rounded border transition-colors"
-                    onClick={() =>
-                      setFormData({ email, password: "password123" })
-                    }
-                  >
-                    <div className="font-medium text-gray-800">
-                      {data.user.name}
-                    </div>
-                    <div className="text-gray-600">
-                      {email} • {data.user.role}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="text-center space-y-2">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
@@ -178,6 +142,7 @@ const Login: React.FC = () => {
                   variant="link"
                   className="p-0 h-auto text-blue-600"
                   onClick={() => navigate("/register")}
+                  disabled={isLoading}
                 >
                   Register here
                 </Button>
@@ -186,6 +151,7 @@ const Login: React.FC = () => {
                 variant="link"
                 className="p-0 h-auto text-gray-600"
                 onClick={() => navigate("/")}
+                disabled={isLoading}
               >
                 Back to Homepage
               </Button>
