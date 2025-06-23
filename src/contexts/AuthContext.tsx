@@ -237,12 +237,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Role-based access helpers
-  const isAdmin = () => user?.role === "admin";
-  const isCustomer = () => user?.role === "customer";
-  const isWarehouseManager = () => user?.role === "warehouse_manager";
-  const isStaff = () => user?.role === "staff";
-  const hasRole = (role: string) => user?.role === role;
+  // Role-based access helpers with role_id mapping
+  const getUserRole = () => {
+    if (!user) return null;
+
+    const roleMapping = {
+      1: "admin",
+      2: "warehouse_manager",
+      3: "customer",
+      4: "staff",
+    };
+
+    return user.role_id
+      ? roleMapping[user.role_id as keyof typeof roleMapping] || "customer"
+      : user.role || user.user_type || user.type || "customer";
+  };
+
+  const isAdmin = () => getUserRole() === "admin";
+  const isCustomer = () => getUserRole() === "customer";
+  const isWarehouseManager = () => getUserRole() === "warehouse_manager";
+  const isStaff = () => getUserRole() === "staff";
+  const hasRole = (role: string) => getUserRole() === role;
 
   // Get correct dashboard path for current user
   const getCorrectDashboardPath = () => {
