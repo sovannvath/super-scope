@@ -20,6 +20,7 @@ import Register from "./pages/Register";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -61,6 +62,16 @@ const App = () => (
                   <Route path="/register" element={<Register />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/products/:id" element={<ProductDetail />} />
+
+                  {/* Import new components */}
+                  <Route
+                    path="/checkout"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer"]}>
+                        <Checkout />
+                      </ProtectedRoute>
+                    }
+                  />
 
                   {/* Dashboard Router - Redirects to appropriate dashboard based on role */}
                   <Route
@@ -109,6 +120,14 @@ const App = () => (
                   />
                   <Route
                     path="/orders"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer"]}>
+                        <Orders />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/orders/:id"
                     element={
                       <ProtectedRoute allowedRoles={["customer"]}>
                         <Orders />

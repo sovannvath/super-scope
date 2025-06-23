@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Product } from "@/api/products";
-import { useCartContext } from "@/contexts/CartContext";
+import { cartApi } from "@/api/cart";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { RoleGuard } from "@/components/atoms/RoleGuard";
 import {
   ShoppingCart,
@@ -41,13 +43,44 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onEdit,
   onView,
 }) => {
-  const { addItem, loading: cartLoading } = useCartContext();
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const handleAddToCart = async () => {
-    await addItem({
-      product_id: product.id,
-      quantity: 1,
-    });
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add items to your cart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setAddingToCart(true);
+      const response = await cartApi.addItem({
+        product_id: product.id,
+        quantity: 1,
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        toast({
+          title: "Added to Cart",
+          description: `${product.name} has been added to your cart`,
+        });
+      } else {
+        throw new Error(response.message || "Failed to add to cart");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add item to cart",
+        variant: "destructive",
+      });
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   const isLowStock = product.quantity < product.low_stock_threshold;
@@ -230,12 +263,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <RoleGuard roles={["customer"]} fallback={null}>
               <Button
                 onClick={handleAddToCart}
-                disabled={isOutOfStock || cartLoading}
+                disabled={isOutOfStock || addingToCart}
                 className="flex-1"
                 size={variant === "featured" ? "default" : "sm"}
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
-                {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                {addingToCart
+                  ? "Adding..."
+                  : isOutOfStock
+                    ? "Out of Stock"
+                    : "Add to Cart"}
               </Button>
             </RoleGuard>
 
