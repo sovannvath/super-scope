@@ -151,31 +151,14 @@ const AdminDashboard: React.FC = () => {
           );
         }
       } catch (reorderError) {
-        console.warn(
-          "⚠️ Reorder requests API failed, using sample data:",
-          reorderError,
-        );
+        console.error("❌ Reorder requests API failed:", reorderError);
+        setReorderRequests([]);
 
-        // Create sample reorder requests for demonstration
-        const sampleReorders = [
-          {
-            id: 1,
-            product_id: 1,
-            quantity: 50,
-            status: "pending",
-            created_at: new Date().toISOString(),
-            product: { name: "Sample Product A" },
-          },
-          {
-            id: 2,
-            product_id: 2,
-            quantity: 25,
-            status: "pending",
-            created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-            product: { name: "Sample Product B" },
-          },
-        ];
-        setReorderRequests(sampleReorders);
+        toast({
+          title: "Reorder Requests Error",
+          description: "Failed to load reorder requests.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("🚨 Failed to load dashboard data:", error);
