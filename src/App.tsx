@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { CartProvider } from "@/contexts/CartContext";
-import { NotificationProvider } from "@/contexts/NotificationContext";
+
 import { Layout } from "@/components/layout/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardRouter from "@/components/DashboardRouter";
@@ -49,128 +49,126 @@ const App = () => (
       <AuthProvider>
         <AppProvider>
           <CartProvider>
-            <NotificationProvider>
-              <Toaster />
-              <Sonner />
-              <NetworkStatus />
-              <BrowserRouter>
-                <Layout>
-                  <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<Homepage />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/products/:id" element={<ProductDetail />} />
+            <Toaster />
+            <Sonner />
+            <NetworkStatus />
+            <BrowserRouter>
+              <Layout>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Homepage />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/:id" element={<ProductDetail />} />
 
-                    {/* Dashboard Router - Redirects to appropriate dashboard based on role */}
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute requireAuth={true}>
-                          <DashboardRouter />
-                        </ProtectedRoute>
-                      }
-                    />
+                  {/* Dashboard Router - Redirects to appropriate dashboard based on role */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute requireAuth={true}>
+                        <DashboardRouter />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                    {/* Admin Routes */}
-                    <Route
-                      path="/dashboard/admin"
-                      element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                          <AdminDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/product-management"
-                      element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                          <ProductManagement />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/low-stock"
-                      element={
-                        <ProtectedRoute allowedRoles={["admin"]}>
-                          <LowStockAlerts />
-                        </ProtectedRoute>
-                      }
-                    />
+                  {/* Admin Routes */}
+                  <Route
+                    path="/dashboard/admin"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin"]}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/product-management"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin"]}>
+                        <ProductManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/low-stock"
+                    element={
+                      <ProtectedRoute allowedRoles={["admin"]}>
+                        <LowStockAlerts />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                    {/* Customer Routes */}
-                    <Route
-                      path="/cart"
-                      element={
-                        <ProtectedRoute allowedRoles={["customer"]}>
-                          <Cart />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/orders"
-                      element={
-                        <ProtectedRoute allowedRoles={["customer"]}>
-                          <Orders />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/dashboard/customer"
-                      element={
-                        <ProtectedRoute allowedRoles={["customer"]}>
-                          <CustomerDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/purchase-history"
-                      element={
-                        <ProtectedRoute allowedRoles={["customer"]}>
-                          <PurchaseHistory />
-                        </ProtectedRoute>
-                      }
-                    />
+                  {/* Customer Routes */}
+                  <Route
+                    path="/cart"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer"]}>
+                        <Cart />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/orders"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer"]}>
+                        <Orders />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard/customer"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer"]}>
+                        <CustomerDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/purchase-history"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer"]}>
+                        <PurchaseHistory />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                    {/* Staff Routes */}
-                    <Route
-                      path="/dashboard/staff"
-                      element={
-                        <ProtectedRoute allowedRoles={["staff"]}>
-                          <StaffDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
+                  {/* Staff Routes */}
+                  <Route
+                    path="/dashboard/staff"
+                    element={
+                      <ProtectedRoute allowedRoles={["staff"]}>
+                        <StaffDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                    {/* Warehouse Manager Routes */}
-                    <Route
-                      path="/dashboard/warehouse"
-                      element={
-                        <ProtectedRoute allowedRoles={["warehouse_manager"]}>
-                          <WarehouseDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
+                  {/* Warehouse Manager Routes */}
+                  <Route
+                    path="/dashboard/warehouse"
+                    element={
+                      <ProtectedRoute allowedRoles={["warehouse_manager"]}>
+                        <WarehouseDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                    {/* Shared Protected Routes (multiple roles) */}
-                    <Route
-                      path="/reorder-requests"
-                      element={
-                        <ProtectedRoute
-                          allowedRoles={["admin", "warehouse_manager"]}
-                        >
-                          <WarehouseDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
+                  {/* Shared Protected Routes (multiple roles) */}
+                  <Route
+                    path="/reorder-requests"
+                    element={
+                      <ProtectedRoute
+                        allowedRoles={["admin", "warehouse_manager"]}
+                      >
+                        <WarehouseDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                    {/* Catch-all route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Layout>
-              </BrowserRouter>
-            </NotificationProvider>
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </BrowserRouter>
           </CartProvider>
         </AppProvider>
       </AuthProvider>
