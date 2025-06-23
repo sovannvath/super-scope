@@ -208,15 +208,19 @@ const Login: React.FC = () => {
         case "admin":
           targetRoute = "/dashboard/admin";
           break;
-        case "staff":
-          targetRoute = "/dashboard/staff";
-          break;
         case "warehouse_manager":
           targetRoute = "/dashboard/warehouse";
           break;
+        case "staff":
+          targetRoute = "/dashboard/staff";
+          break;
+        case "customer":
         default:
           targetRoute = "/dashboard/customer";
+          break;
       }
+
+      console.log("🔍 Mock account - role:", userRole, "target:", targetRoute);
 
       // Use window.location to force a full page reload and ensure correct dashboard loads
       window.location.href = targetRoute;
