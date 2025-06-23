@@ -32,6 +32,7 @@ interface Product {
 }
 
 const Products: React.FC = () => {
+  console.log("🟢 Products component is rendering!");
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
