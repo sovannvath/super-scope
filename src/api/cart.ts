@@ -49,17 +49,4 @@ export const cartApi = {
 
   clear: async (): Promise<ApiResponse<void>> =>
     makeApiCall(() => apiClient.delete("/cart/clear")),
-
-  getCount: async (): Promise<ApiResponse<{ count: number }>> =>
-    makeApiCall(() => apiClient.get("/cart/count")),
-
-  applyCoupon: async (couponCode: string): Promise<ApiResponse<Cart>> =>
-    makeApiCall(() => apiClient.post("/cart/coupon", { code: couponCode })),
-
-  removeCoupon: async (): Promise<ApiResponse<Cart>> =>
-    makeApiCall(() => apiClient.delete("/cart/coupon")),
-
-  validateItems: async (): Promise<
-    ApiResponse<{ valid: boolean; issues?: string[] }>
-  > => makeApiCall(() => apiClient.get("/cart/validate")),
 };

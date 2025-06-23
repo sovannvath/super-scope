@@ -92,32 +92,7 @@ export const ordersApi = {
   ): Promise<ApiResponse<Order>> =>
     makeApiCall(() => apiClient.put(`/orders/${id}/payment`, paymentData)),
 
-  cancel: async (id: number, reason?: string): Promise<ApiResponse<Order>> =>
-    makeApiCall(() => apiClient.put(`/orders/${id}/cancel`, { reason })),
-
   getPaymentMethods: async (): Promise<
     ApiResponse<{ id: string; name: string; description?: string }[]>
   > => makeApiCall(() => apiClient.get("/payment-methods")),
-
-  getOrderStatuses: async (): Promise<
-    ApiResponse<{ value: string; label: string; description?: string }[]>
-  > => makeApiCall(() => apiClient.get("/order-statuses")),
-
-  exportOrders: async (
-    filters?: OrderFilters,
-  ): Promise<ApiResponse<{ download_url: string }>> => {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, value.toString());
-        }
-      });
-    }
-    const queryString = params.toString();
-    const url = queryString
-      ? `/orders/export?${queryString}`
-      : "/orders/export";
-    return makeApiCall(() => apiClient.get(url));
-  },
 };
