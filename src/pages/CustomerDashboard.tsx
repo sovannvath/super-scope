@@ -102,20 +102,13 @@ const CustomerDashboard: React.FC = () => {
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="text-center py-12">
-        <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
-        <h3 className="text-lg font-semibold text-metallic-primary mb-2">
-          Please Log In
-        </h3>
-        <p className="text-metallic-tertiary mb-4">
-          You need to be logged in to access your customer dashboard.
-        </p>
-        <Button onClick={() => navigate("/login")}>Go to Login</Button>
-      </div>
-    );
-  }
+  // TEMPORARY: Skip authentication check to debug
+  console.log(
+    "🔧 SKIPPING AUTH CHECK - isAuthenticated:",
+    isAuthenticated,
+    "user:",
+    !!user,
+  );
 
   // DEBUG: Show full user object to understand the issue
   console.log(
