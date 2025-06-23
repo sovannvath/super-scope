@@ -289,7 +289,7 @@ const Cart: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {cart.items.map((item) => (
+              {cart.items?.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center space-x-4 p-4 border rounded-lg"
