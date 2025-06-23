@@ -80,11 +80,16 @@ export const Navbar: React.FC = () => {
               variant="ghost"
               size="sm"
               className="relative hover:bg-metallic-light/20"
+              asChild
             >
-              <ShoppingCart className="h-5 w-5 text-metallic-primary" />
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-metallic-secondary text-white text-xs">
-                2
-              </Badge>
+              <Link to="/cart">
+                <ShoppingCart className="h-5 w-5 text-metallic-primary" />
+                {itemCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-metallic-secondary text-white text-xs">
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </Badge>
+                )}
+              </Link>
             </Button>
           )}
 
