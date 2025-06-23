@@ -117,29 +117,20 @@ const CustomerDashboard: React.FC = () => {
     );
   }
 
-  // Simplified role checking - allow access if role is "customer" OR role_id is 3
-  const isCustomer = user.role === "customer" || user.role_id === 3;
+  // DEBUG: Show full user object to understand the issue
+  console.log(
+    "🔍 CustomerDashboard - FULL USER OBJECT:",
+    JSON.stringify(user, null, 2),
+  );
+  console.log("🔍 CustomerDashboard - user.role:", user.role, typeof user.role);
+  console.log(
+    "🔍 CustomerDashboard - user.role_id:",
+    user.role_id,
+    typeof user.role_id,
+  );
 
-  console.log("🔍 CustomerDashboard - user.role:", user.role);
-  console.log("🔍 CustomerDashboard - user.role_id:", user.role_id);
-  console.log("🔍 CustomerDashboard - isCustomer check:", isCustomer);
-
-  if (!isCustomer) {
-    console.log("🚨 CustomerDashboard - Access denied");
-    return (
-      <div className="text-center py-12">
-        <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
-        <h3 className="text-lg font-semibold text-metallic-primary mb-2">
-          Customer Access Only
-        </h3>
-        <p className="text-metallic-tertiary mb-4">
-          This dashboard is only available for customers. Role: {user.role}, ID:{" "}
-          {user.role_id}
-        </p>
-        <Button onClick={() => navigate("/")}>Go to Homepage</Button>
-      </div>
-    );
-  }
+  // TEMPORARY: Remove role check to debug - show dashboard for any authenticated user
+  console.log("🔧 TEMPORARY: Allowing access to debug user object");
 
   if (isLoading) {
     return (
