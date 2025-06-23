@@ -49,11 +49,13 @@ apiClient.interceptors.request.use(
 
     // Debug logging for API requests
     console.log(
-      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      `🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
       {
-        baseURL: config.baseURL,
-        headers: config.headers,
-        data: config.data,
+        headers: config.headers?.Authorization
+          ? "🔒 Authenticated"
+          : "🔓 Public",
+        hasData: !!config.data,
+        timeout: config.timeout,
       },
     );
 
