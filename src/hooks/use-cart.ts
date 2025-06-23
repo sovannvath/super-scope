@@ -191,8 +191,16 @@ export function useCart(): UseCartReturn {
       if (isAuthenticated) {
         fetchCart();
       } else {
-        // Clear cart state when not authenticated
-        setCart(null);
+        // Clear cart state completely when not authenticated
+        setCart({
+          id: 0,
+          user_id: 0,
+          items: [],
+          total_items: 0,
+          total_amount: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
         setLoading(false);
         setError(null);
       }
