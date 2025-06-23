@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { productApi, cartApi } from "@/lib/api";
+import { productsApi } from "@/api/products";
+import { cartApi } from "@/api/cart";
 import {
   ShoppingCart,
   Search,
