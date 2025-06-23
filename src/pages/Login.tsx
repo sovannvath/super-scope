@@ -215,111 +215,13 @@ const Login: React.FC = () => {
       return;
     }
 
-    // If not a mock account, try real backend
-    try {
-      const response = await authApi.login(loginForm);
-
-      if (response.status === 200) {
-        const { user, token } = response.data;
-        console.log("🔍 Raw API response:", response.data);
-        console.log("🔍 User object from backend:", user);
-        console.log("🔍 All user properties:", Object.keys(user));
-        console.log("🔍 User role field:", user.role);
-        console.log("🔍 User user_type field:", user.user_type);
-        console.log("🔍 User type field:", user.type);
-
-        saveToken(token);
-        login(user);
-
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${user.name}!`,
-        });
-
-        // Map role_id from Laravel backend to role names
-        let userRole = user.role || user.user_type || user.type;
-
-        console.log("🔍 Original user object:", user);
-        console.log("🔍 Original userRole:", userRole);
-        console.log("🔍 User role_id:", user.role_id);
-
-        // If we have role_id instead of role name, map it
-        if (user.role_id && !userRole) {
-          const roleMapping = {
-            1: "admin",
-            2: "warehouse_manager",
-            3: "customer",
-            4: "staff",
-          };
-          userRole =
-            roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
-
-          console.log("🔍 Mapped role_id", user.role_id, "to role:", userRole);
-
-          // Update the user object with the role name for context
-          user.role = userRole;
-        }
-
-        console.log("🔍 Final userRole for navigation:", userRole);
-        console.log("🔍 Updated user object:", user);
-
-        let targetRoute = "/dashboard/customer"; // default
-
-        switch (userRole) {
-          case "admin":
-            targetRoute = "/dashboard/admin";
-            break;
-          case "staff":
-            targetRoute = "/dashboard/staff";
-            break;
-          case "warehouse":
-          case "warehouse_manager":
-            targetRoute = "/dashboard/warehouse";
-            break;
-          case "customer":
-          default:
-            targetRoute = "/dashboard/customer";
-        }
-
-        // Use window.location to force a full page reload and ensure correct dashboard loads
-        window.location.href = targetRoute;
-      } else {
-        // Handle different error types
-        let errorTitle = "Login Failed";
-        let errorMessage = response.message || "Invalid credentials";
-
-        if (response.status === 401) {
-          errorTitle = "Invalid Credentials";
-          errorMessage =
-            "Email or password is incorrect. Please check your credentials and try again.";
-        } else if (
-          response.status === 422 &&
-          response.data &&
-          response.data.errors
-        ) {
-          errorTitle = "Validation Error";
-          const errors = response.data.errors;
-          const errorMessages = Object.values(errors).flat();
-          errorMessage = errorMessages.join(", ");
-        }
-
-        console.error(`🚨 Login Error ${response.status}:`, response.data);
-
-        toast({
-          title: errorTitle,
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Login Error",
-        description: "Failed to connect to authentication service",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // If no matching mock account found, show error
+    toast({
+      title: "Invalid Credentials",
+      description: "Please check your email and password",
+      variant: "destructive",
+    });
+    setIsLoading(false);
   };
 
   return (
