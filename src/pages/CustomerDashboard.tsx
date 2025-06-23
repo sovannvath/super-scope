@@ -102,13 +102,15 @@ const CustomerDashboard: React.FC = () => {
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 
-  // TEMPORARY: Skip authentication check to debug
-  console.log(
-    "🔧 SKIPPING AUTH CHECK - isAuthenticated:",
-    isAuthenticated,
-    "user:",
-    !!user,
-  );
+  // Fix null user error with proper checking
+  if (!user) {
+    console.log("🔧 User is null, showing loading state");
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-metallic-primary"></div>
+      </div>
+    );
+  }
 
   // DEBUG: Show full user object to understand the issue
   console.log(
