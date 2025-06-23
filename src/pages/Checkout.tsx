@@ -185,6 +185,29 @@ const Checkout: React.FC = () => {
     return true;
   };
 
+  const simulatePaymentProcessing = async (): Promise<boolean> => {
+    // Simulate payment processing delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Simulate different payment outcomes based on payment method
+    const paymentMethod = orderData.payment_method;
+
+    // For demo purposes, simulate payment success rate
+    if (paymentMethod === "bank_transfer") {
+      // Bank transfers might take longer to process
+      return Math.random() > 0.1; // 90% success rate
+    } else if (
+      paymentMethod === "credit_card" ||
+      paymentMethod === "debit_card"
+    ) {
+      return Math.random() > 0.05; // 95% success rate
+    } else if (paymentMethod === "paypal") {
+      return Math.random() > 0.02; // 98% success rate
+    }
+
+    return true; // Default success
+  };
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -193,27 +216,74 @@ const Checkout: React.FC = () => {
     try {
       setSubmitting(true);
 
+      // Show payment processing status
+      toast({
+        title: "Processing Payment...",
+        description: "Please wait while we process your payment",
+        duration: 3000,
+      });
+
+      // Simulate payment processing
+      const paymentSuccess = await simulatePaymentProcessing();
+
+      if (!paymentSuccess) {
+        throw new Error(
+          "Payment failed. Please check your payment method and try again.",
+        );
+      }
+
+      // Create the order
       const response = await ordersApi.create(orderData);
 
       if (response.status === 200 || response.status === 201) {
+        // Clear cart after successful order
+        try {
+          await cartApi.clear();
+        } catch (cartError) {
+          console.warn("Failed to clear cart:", cartError);
+          // Don't block success flow if cart clear fails
+        }
+
         toast({
-          title: "Order Placed Successfully!",
+          title: "Payment Successful! 🎉",
           description: `Your order #${response.data.order_number || response.data.id} has been placed`,
+          duration: 5000,
         });
 
-        // Redirect to order confirmation
-        navigate(`/orders/${response.data.id}`, {
+        // Redirect to order success page
+        navigate(`/order-success/${response.data.id}`, {
           state: { orderPlaced: true },
         });
       } else {
         throw new Error(response.message || "Failed to place order");
       }
     } catch (error: any) {
+      console.error("Order submission error:", error);
+
+      let errorMessage = "Failed to place order. Please try again.";
+      let errorTitle = "Order Failed";
+
+      // Handle specific error types
+      if (error.message.includes("Payment failed")) {
+        errorTitle = "Payment Failed";
+        errorMessage = error.message;
+      } else if (
+        error.message.includes("network") ||
+        error.message.includes("timeout")
+      ) {
+        errorTitle = "Connection Error";
+        errorMessage = "Please check your internet connection and try again.";
+      } else if (error.message.includes("cart")) {
+        errorTitle = "Cart Error";
+        errorMessage =
+          "Your cart is empty or has been modified. Please refresh and try again.";
+      }
+
       toast({
-        title: "Order Failed",
-        description:
-          error.message || "Failed to place order. Please try again.",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
+        duration: 7000,
       });
     } finally {
       setSubmitting(false);
