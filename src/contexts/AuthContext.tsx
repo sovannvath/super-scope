@@ -157,13 +157,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.log("Logout API call failed, but clearing local auth anyway");
     } finally {
+      // Clear all authentication data
       removeToken();
       setUser(null);
+
+      // Clear all localStorage
+      localStorage.clear();
+
+      // Clear all sessionStorage
+      sessionStorage.clear();
+
+      // Clear any app-specific cached data
+      const keysToRemove = [
+        "auth_token",
+        "user_data",
+        "cart_data",
+        "app_state",
+        "theme",
+        "appSettings",
+      ];
+
+      keysToRemove.forEach((key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
       });
-      console.log("👋 User logged out");
+
+      console.log("👋 User logged out - all session data cleared");
+
+      // Force page reload to ensure complete state reset
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     }
   };
 
