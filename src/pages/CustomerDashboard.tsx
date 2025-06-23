@@ -117,7 +117,39 @@ const CustomerDashboard: React.FC = () => {
     );
   }
 
-  if (user.role !== "customer") {
+  // Debug role checking
+  console.log("🔍 CustomerDashboard - Full user object:", user);
+  console.log("🔍 CustomerDashboard - user.role:", user.role);
+  console.log("🔍 CustomerDashboard - user.role_id:", user.role_id);
+  console.log("🔍 CustomerDashboard - typeof user.role:", typeof user.role);
+  console.log(
+    "🔍 CustomerDashboard - role check result:",
+    user.role !== "customer",
+  );
+
+  // Check role with fallback to role_id mapping
+  let userRole = user.role || user.user_type || user.type;
+
+  // If we have role_id but no role name, map it
+  if (user.role_id && !userRole) {
+    const roleMapping = {
+      1: "admin",
+      2: "warehouse_manager",
+      3: "customer",
+      4: "staff",
+    };
+    userRole =
+      roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
+    console.log(
+      "🔍 CustomerDashboard - Mapped role_id",
+      user.role_id,
+      "to role:",
+      userRole,
+    );
+  }
+
+  if (userRole !== "customer") {
+    console.log("🚨 CustomerDashboard - Access denied for role:", userRole);
     return (
       <div className="text-center py-12">
         <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
@@ -125,7 +157,7 @@ const CustomerDashboard: React.FC = () => {
           Customer Access Only
         </h3>
         <p className="text-metallic-tertiary mb-4">
-          This dashboard is only available for customers.
+          This dashboard is only available for customers. Your role: {userRole}
         </p>
         <Button onClick={() => navigate("/")}>Go to Homepage</Button>
       </div>
