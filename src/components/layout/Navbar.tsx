@@ -10,11 +10,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCartContext } from "@/contexts/CartContext";
 import { LogOut, Settings, User, ShoppingCart, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
+
+  // Safely get cart context with fallback
+  let itemCount = 0;
+  try {
+    const cartContext = useCartContext();
+    itemCount = cartContext?.itemCount || 0;
+  } catch (error) {
+    console.warn("Cart context not available in Navbar:", error);
+  }
 
   const handleLogout = async () => {
     await logout();
@@ -77,11 +88,16 @@ export const Navbar: React.FC = () => {
               variant="ghost"
               size="sm"
               className="relative hover:bg-metallic-light/20"
+              asChild
             >
-              <ShoppingCart className="h-5 w-5 text-metallic-primary" />
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-metallic-secondary text-white text-xs">
-                2
-              </Badge>
+              <Link to="/cart">
+                <ShoppingCart className="h-5 w-5 text-metallic-primary" />
+                {itemCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-metallic-secondary text-white text-xs">
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </Badge>
+                )}
+              </Link>
             </Button>
           )}
 

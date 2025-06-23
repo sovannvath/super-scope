@@ -54,6 +54,7 @@ const Cart: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -67,16 +68,59 @@ const Cart: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log("🛒 Fetching cart from API...");
       const response = await cartApi.get();
+      console.log("📡 Cart API Response:", response);
 
       if (response.status === 200 && response.data) {
-        setCart(response.data);
+        console.log("✅ Cart data received:", response.data);
+        setCart({
+          ...response.data,
+          items: response.data.items || [],
+        });
+        setLastUpdated(new Date());
+
+        // Store cart summary in localStorage for persistence
+        localStorage.setItem(
+          "cart_summary",
+          JSON.stringify({
+            itemCount: response.data.total_items,
+            totalAmount: response.data.total_amount,
+            lastUpdated: new Date().toISOString(),
+          }),
+        );
+      } else if (response.status === 404) {
+        // No cart exists yet
+        setCart({
+          id: 0,
+          items: [],
+          total_items: 0,
+          total_amount: 0,
+        });
+        localStorage.removeItem("cart_summary");
       } else {
         throw new Error(response.message || "Failed to fetch cart");
       }
     } catch (error: any) {
-      setError(error.message || "Failed to load cart");
       console.error("Cart fetch error:", error);
+
+      // Try to load from localStorage as fallback
+      const cachedSummary = localStorage.getItem("cart_summary");
+      if (cachedSummary) {
+        try {
+          const summary = JSON.parse(cachedSummary);
+          toast({
+            title: "Working Offline",
+            description:
+              "Showing cached cart data. Some features may be limited.",
+            variant: "default",
+          });
+        } catch (parseError) {
+          localStorage.removeItem("cart_summary");
+        }
+      }
+
+      setError(error.message || "Failed to load cart");
     } finally {
       setLoading(false);
     }
@@ -193,7 +237,7 @@ const Cart: React.FC = () => {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <div className="container mx-auto py-8 px-4">
         <EmptyCart />
@@ -208,12 +252,30 @@ const Cart: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <div className="flex items-center mb-8">
-        <ShoppingCart className="h-8 w-8 mr-3" />
-        <h1 className="text-3xl font-bold">Shopping Cart</h1>
-        <Badge variant="secondary" className="ml-3">
-          {cart.total_items} items
-        </Badge>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center">
+          <ShoppingCart className="h-8 w-8 mr-3" />
+          <h1 className="text-3xl font-bold">Shopping Cart</h1>
+          <Badge variant="secondary" className="ml-3">
+            {cart.total_items} items
+          </Badge>
+        </div>
+        <div className="flex items-center space-x-2">
+          {lastUpdated && (
+            <span className="text-sm text-gray-500">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchCart}
+            disabled={loading}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            {loading ? <LoadingSpinner size="sm" /> : "Refresh"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
@@ -233,7 +295,7 @@ const Cart: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {cart.items.map((item) => (
+              {(cart.items || []).map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center space-x-4 p-4 border rounded-lg"

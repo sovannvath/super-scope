@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { productApi, cartApi } from "@/lib/api";
+import { productApi } from "@/lib/api";
+import { cartApi } from "@/api/cart";
 import {
   ShoppingCart,
   Search,
@@ -18,6 +19,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { testApi } from "@/utils/api-test";
 
 interface Product {
   id: number;
@@ -31,6 +33,7 @@ interface Product {
 }
 
 const Products: React.FC = () => {
+  console.log("🟢 Products component is rendering!");
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -41,10 +44,20 @@ const Products: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
+
+    // Run API test for debugging
+    console.log("🧪 Running API test...");
+    testApi();
   }, []);
 
   const loadProducts = async () => {
     console.log("🔄 Loading products from API...");
+    console.log("📍 API Base URL:", "https://laravel-wtc.onrender.com/api");
+    console.log(
+      "📍 Full API URL:",
+      "https://laravel-wtc.onrender.com/api/products",
+    );
+
     try {
       const response = await productApi.index();
       console.log("📡 API Response:", response);
@@ -111,6 +124,8 @@ const Products: React.FC = () => {
     : [];
 
   const handleAddToCart = async (productId: number) => {
+    console.log("🛒 Add to cart clicked for product:", productId);
+
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -122,27 +137,36 @@ const Products: React.FC = () => {
     }
 
     try {
+      console.log("🔄 Adding item to cart...");
       const response = await cartApi.addItem({
         product_id: productId,
         quantity: 1,
       });
 
+      console.log("📡 Cart API Response:", response);
+
       if (response.status === 200 || response.status === 201) {
         toast({
-          title: "Added to Cart",
+          title: "Added to Cart ✅",
           description: "Product has been added to your cart",
         });
+        console.log("✅ Item added to cart successfully");
       } else {
+        console.error("❌ Cart API Error:", response);
         toast({
           title: "Error",
-          description: response.data?.message || "Failed to add to cart",
+          description:
+            response.data?.message ||
+            response.message ||
+            "Failed to add to cart",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Cart add error:", error);
       toast({
         title: "Error",
-        description: "Failed to add item to cart",
+        description: error.message || "Failed to add item to cart",
         variant: "destructive",
       });
     }
