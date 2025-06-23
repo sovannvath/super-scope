@@ -31,6 +31,7 @@ import LowStockAlerts from "./pages/LowStockAlerts";
 import WarehouseDashboard from "./pages/WarehouseDashboard";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import NotFound from "./pages/NotFound";
+import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
