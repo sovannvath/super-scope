@@ -17,6 +17,7 @@ import { Link } from "react-router-dom";
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
+  const { itemCount } = useCartContext();
 
   const handleLogout = async () => {
     await logout();
