@@ -136,6 +136,14 @@ const App = () => (
                     }
                   />
                   <Route
+                    path="/order-success/:orderId"
+                    element={
+                      <ProtectedRoute allowedRoles={["customer"]}>
+                        <OrderSuccess />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/dashboard/customer"
                     element={
                       <ProtectedRoute allowedRoles={["customer"]}>
