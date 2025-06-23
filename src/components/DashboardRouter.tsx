@@ -70,6 +70,15 @@ export const DashboardRouter: React.FC = () => {
       correctRoute = "/dashboard/customer";
   }
 
+  // Force immediate redirect for customer role if on wrong dashboard
+  if (userRole === "customer" && location.pathname !== "/dashboard/customer") {
+    console.log(
+      `🚨 CUSTOMER on wrong dashboard! Forcing redirect from ${location.pathname} to /dashboard/customer`,
+    );
+    window.location.href = "/dashboard/customer";
+    return null;
+  }
+
   // If user is on a different dashboard route than their role allows, redirect
   if (
     location.pathname !== correctRoute &&
