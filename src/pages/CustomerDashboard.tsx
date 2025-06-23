@@ -43,6 +43,18 @@ const CustomerDashboard: React.FC = () => {
   const [dashboardData, setDashboardData] =
     useState<CustomerDashboardData | null>(null);
 
+  // EMERGENCY FIX: If customer is on admin page, force redirect immediately
+  React.useEffect(() => {
+    if (user && window.location.pathname.includes("/dashboard/admin")) {
+      const userRole = user.role || (user.role_id === 3 ? "customer" : null);
+      if (userRole === "customer" || user.role_id === 3) {
+        console.log("🚨 CUSTOMER on admin page! Forcing immediate redirect!");
+        window.location.href = "/dashboard/customer";
+        return;
+      }
+    }
+  }, [user]);
+
   useEffect(() => {
     if (isAuthenticated && user) {
       loadDashboard();
