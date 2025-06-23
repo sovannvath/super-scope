@@ -72,51 +72,14 @@ const CustomerDashboard: React.FC = () => {
         throw new Error(`Dashboard API returned status ${response.status}`);
       }
     } catch (error) {
-      console.error("⚠️ Customer dashboard error, using fallback data:", error);
-
-      // Create comprehensive fallback data for customer dashboard
-      const fallbackData = {
-        total_orders: 5,
-        pending_orders: 1,
-        completed_orders: 4,
-        total_spent: 487.5,
-        recent_orders: [
-          {
-            id: 1001,
-            status: "delivered",
-            total: 125.99,
-            created_at: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-            items_count: 3,
-          },
-          {
-            id: 1002,
-            status: "pending",
-            total: 89.5,
-            created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-            items_count: 2,
-          },
-          {
-            id: 1003,
-            status: "delivered",
-            total: 156.0,
-            created_at: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
-            items_count: 4,
-          },
-        ],
-        favorite_categories: [
-          { name: "Electronics", count: 3 },
-          { name: "Books", count: 2 },
-          { name: "Clothing", count: 1 },
-        ],
-      };
-
-      setDashboardData(fallbackData);
+      console.error("❌ Customer dashboard error:", error);
+      setDashboardData(null);
 
       toast({
-        title: "Demo Mode",
+        title: "Dashboard Error",
         description:
-          "Dashboard running with sample data - backend connection issues.",
-        variant: "default",
+          "Failed to load dashboard data. Please try logging in again.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
