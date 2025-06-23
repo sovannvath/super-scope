@@ -179,11 +179,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  // Clear search and filters when user logs out
+  // Clear all app state when user logs out
   useEffect(() => {
     if (!isAuthenticated) {
       setGlobalSearchQuery("");
       setActiveFilters({});
+      setGlobalError(null);
+      setGlobalLoading(false);
+      setSidebarOpen(false);
+      // Reset settings to default
+      setSettings(defaultSettings);
     }
   }, [isAuthenticated]);
 
