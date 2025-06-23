@@ -4,11 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export const DashboardRouter: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
     console.log("🔄 Dashboard Router - Full User:", user);
     console.log("🔄 Dashboard Router - Role:", user?.role);
-  }, [user]);
+    console.log("🔄 Dashboard Router - Current Location:", location.pathname);
+  }, [user, location]);
 
   if (isLoading) {
     return (
