@@ -1,14 +1,16 @@
 import React, { useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const DashboardRouter: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
     console.log("🔄 Dashboard Router - Full User:", user);
     console.log("🔄 Dashboard Router - Role:", user?.role);
-  }, [user]);
+    console.log("🔄 Dashboard Router - Current Location:", location.pathname);
+  }, [user, location]);
 
   if (isLoading) {
     return (
@@ -22,30 +24,72 @@ export const DashboardRouter: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Get role from different possible field names
-  const userRole = user?.role || user?.user_type || user?.type;
-  console.log("🔄 DashboardRouter using role:", userRole);
+  // Always use role_id mapping for consistency
+  const roleMapping = {
+    1: "admin",
+    2: "warehouse_manager",
+    3: "customer",
+    4: "staff",
+  };
 
-  // Redirect based on user role
+  const userRole = user?.role_id
+    ? roleMapping[user.role_id as keyof typeof roleMapping] || "customer"
+    : user?.role || user?.user_type || user?.type || "customer";
+
+  console.log("🔄 DashboardRouter using role:", userRole);
+  console.log("🔄 DashboardRouter user object:", user);
+  console.log("🔄 DashboardRouter role_id:", user?.role_id);
+
+  // Determine the correct dashboard route for this user
+  let correctRoute = "/dashboard/customer"; // default
+
   switch (userRole) {
     case "admin":
-      return <Navigate to="/dashboard/admin" replace />;
+      correctRoute = "/dashboard/admin";
+      break;
     case "customer":
-      return <Navigate to="/dashboard/customer" replace />;
+      correctRoute = "/dashboard/customer";
+      break;
     case "warehouse":
     case "warehouse_manager":
-      return <Navigate to="/dashboard/warehouse" replace />;
+      correctRoute = "/dashboard/warehouse";
+      break;
     case "staff":
-      return <Navigate to="/dashboard/staff" replace />;
+      correctRoute = "/dashboard/staff";
+      break;
     default:
       console.warn(
         "⚠️ Unknown or undefined role:",
         userRole,
         "- defaulting to customer",
       );
-      // Default to customer dashboard for any unknown roles
-      return <Navigate to="/dashboard/customer" replace />;
+      correctRoute = "/dashboard/customer";
   }
+
+  // Force immediate redirect for customer role if on wrong dashboard
+  if (userRole === "customer" && location.pathname !== "/dashboard/customer") {
+    console.log(
+      `🚨 CUSTOMER on wrong dashboard! Forcing redirect from ${location.pathname} to /dashboard/customer`,
+    );
+    window.location.href = "/dashboard/customer";
+    return null;
+  }
+
+  // If user is on a different dashboard route than their role allows, redirect
+  if (
+    location.pathname !== correctRoute &&
+    location.pathname.startsWith("/dashboard/")
+  ) {
+    console.log(
+      `🔄 Redirecting from ${location.pathname} to ${correctRoute} for role ${userRole}`,
+    );
+    // Force navigation to correct route using window.location for clean redirect
+    window.location.href = correctRoute;
+    return null;
+  }
+
+  // Navigate to the correct dashboard
+  return <Navigate to={correctRoute} replace />;
 };
 
 export default DashboardRouter;

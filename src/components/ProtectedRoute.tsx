@@ -33,12 +33,26 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check role-based access
   if (allowedRoles.length > 0 && user) {
-    // Get role from different possible field names
-    const userRole = user.role || user.user_type || user.type || "customer";
+    // Always use role_id mapping for consistency
+    const roleMapping = {
+      1: "admin",
+      2: "warehouse_manager",
+      3: "customer",
+      4: "staff",
+    };
+
+    const userRole = user.role_id
+      ? roleMapping[user.role_id as keyof typeof roleMapping] || "customer"
+      : user.role || user.user_type || user.type || "customer";
+
+    console.log("🔍 ProtectedRoute - user.role_id:", user.role_id);
+    console.log("🔍 ProtectedRoute - Final userRole:", userRole);
+    console.log("🔍 ProtectedRoute - allowedRoles:", allowedRoles);
+
     const hasAccess = allowedRoles.includes(userRole);
 
     if (!hasAccess) {
-      // Instead of showing access denied, redirect to appropriate dashboard
+      // Force window.location redirect for role mismatch
       let redirectPath;
       switch (userRole) {
         case "admin":
@@ -58,10 +72,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       }
 
       console.log(
-        `🔄 Access denied for ${userRole} to ${allowedRoles.join(",")}. Redirecting to ${redirectPath}`,
+        `🚨 FORCING REDIRECT: Access denied for ${userRole} to ${allowedRoles.join(",")}. Forcing redirect to ${redirectPath}`,
       );
 
-      return <Navigate to={redirectPath} replace />;
+      // Force a hard redirect to break any routing cache
+      window.location.href = redirectPath;
+      return null;
     }
   }
 

@@ -28,6 +28,7 @@ interface AuthContextType {
   isWarehouseManager: () => boolean;
   isStaff: () => boolean;
   hasRole: (role: string) => boolean;
+  getCorrectDashboardPath: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,36 +84,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearAuth();
         setUser(null);
       } else {
-        // For any other case (404, 500, network error), create fallback user
-        console.log(
-          "⚠️ Cannot validate user from backend, creating fallback user",
-        );
-
-        const fallbackUser = {
-          id: 1,
-          name: "Admin User",
-          email: "admin@example.com",
-          role: "admin", // Default to admin for product management access
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setUser(fallbackUser);
+        // For any other case (404, 500, network error), just clear the user
+        console.log("⚠️ Cannot validate user from backend, clearing user");
+        setUser(null);
       }
     } catch (error) {
-      console.log(
-        "📡 Auth failed or timed out, creating fallback admin user for development",
-      );
-
-      // Create admin user for development when backend is unavailable
-      const fallbackUser = {
-        id: 1,
-        name: "Admin User",
-        email: "admin@example.com",
-        role: "admin", // Admin role for product management access
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setUser(fallbackUser);
+      console.log("📡 Auth failed or timed out, clearing user");
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -127,17 +105,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("🚨 Force stopping loading state after timeout");
         setIsLoading(false);
 
-        // Create fallback admin user if still no user
+        // Don't create any fallback user - let the app handle no user state
         if (!user) {
-          const emergencyUser = {
-            id: 1,
-            name: "Admin User",
-            email: "admin@example.com",
-            role: "admin",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          setUser(emergencyUser);
+          console.log(
+            "🚨 No user found after timeout, app will handle logged out state",
+          );
         }
       }
     }, 15000);
@@ -254,19 +226,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       clearAuth();
       setUser(null);
+
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
       });
+
+      // Navigate to home page after logout to prevent staying on protected routes
+      window.location.href = "/";
     }
   };
 
-  // Role-based access helpers
-  const isAdmin = () => user?.role === "admin";
-  const isCustomer = () => user?.role === "customer";
-  const isWarehouseManager = () => user?.role === "warehouse_manager";
-  const isStaff = () => user?.role === "staff";
-  const hasRole = (role: string) => user?.role === role;
+  // Role-based access helpers with role_id mapping
+  const getUserRole = () => {
+    if (!user) return null;
+
+    const roleMapping = {
+      1: "admin",
+      2: "warehouse_manager",
+      3: "customer",
+      4: "staff",
+    };
+
+    return user.role_id
+      ? roleMapping[user.role_id as keyof typeof roleMapping] || "customer"
+      : user.role || user.user_type || user.type || "customer";
+  };
+
+  const isAdmin = () => getUserRole() === "admin";
+  const isCustomer = () => getUserRole() === "customer";
+  const isWarehouseManager = () => getUserRole() === "warehouse_manager";
+  const isStaff = () => getUserRole() === "staff";
+  const hasRole = (role: string) => getUserRole() === role;
+
+  // Get correct dashboard path for current user
+  const getCorrectDashboardPath = () => {
+    const userRole = getUserRole();
+
+    switch (userRole) {
+      case "admin":
+        return "/dashboard/admin";
+      case "warehouse_manager":
+        return "/dashboard/warehouse";
+      case "staff":
+        return "/dashboard/staff";
+      case "customer":
+      default:
+        return "/dashboard/customer";
+    }
+  };
 
   const value: AuthContextType = {
     user,
@@ -282,6 +290,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isWarehouseManager,
     isStaff,
     hasRole,
+    getCorrectDashboardPath,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -49,11 +49,13 @@ apiClient.interceptors.request.use(
 
     // Debug logging for API requests
     console.log(
-      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      `🚀 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
       {
-        baseURL: config.baseURL,
-        headers: config.headers,
-        data: config.data,
+        headers: config.headers?.Authorization
+          ? "🔒 Authenticated"
+          : "🔓 Public",
+        hasData: !!config.data,
+        timeout: config.timeout,
       },
     );
 
@@ -67,10 +69,13 @@ apiClient.interceptors.response.use(
   (response) => {
     // Debug logging for successful responses
     console.log(
-      `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
+      `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.baseURL}${response.config.url}`,
       {
         status: response.status,
-        data: response.data,
+        dataType: Array.isArray(response.data)
+          ? `Array[${response.data.length}]`
+          : typeof response.data,
+        hasData: !!response.data,
       },
     );
     return response;

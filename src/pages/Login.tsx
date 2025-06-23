@@ -49,55 +49,136 @@ const Login: React.FC = () => {
 
     console.log("🔑 Login form data:", loginForm);
 
-    // Check for mock accounts first
+    // Check for backend accounts first - always try real backend authentication
+    console.log("🔑 Attempting real backend authentication...");
+
+    // Try real backend authentication first
+    try {
+      const response = await authApi.login(loginForm);
+      console.log("🔍 Backend login response:", response);
+
+      if (response.status === 200 && response.data) {
+        const { user, token } = response.data;
+        console.log("🔍 Backend user:", user);
+
+        saveToken(token);
+        login(user);
+
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${user.name}!`,
+        });
+
+        // Always map role_id to role name for consistent navigation
+        console.log("🔍 Backend user object:", user);
+        console.log("🔍 user.role_id:", user.role_id, typeof user.role_id);
+        console.log("🔍 user.role:", user.role);
+
+        // Force role mapping based on role_id (backend uses role_id)
+        const roleMapping = {
+          1: "admin",
+          2: "warehouse_manager",
+          3: "customer",
+          4: "staff",
+        };
+
+        const userRole =
+          roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
+        user.role = userRole; // Update user object with mapped role
+
+        console.log(
+          "🔍 Mapped role_id",
+          user.role_id,
+          "to userRole:",
+          userRole,
+        );
+
+        // Navigate based on role
+        let targetRoute = "/dashboard/customer"; // default
+
+        switch (userRole) {
+          case "admin":
+            targetRoute = "/dashboard/admin";
+            break;
+          case "warehouse_manager":
+            targetRoute = "/dashboard/warehouse";
+            break;
+          case "staff":
+            targetRoute = "/dashboard/staff";
+            break;
+          case "customer":
+          default:
+            targetRoute = "/dashboard/customer";
+            break;
+        }
+
+        console.log("🔍 Target route for role", userRole, ":", targetRoute);
+
+        // Use window.location to force a full page reload and ensure correct dashboard loads
+        window.location.href = targetRoute;
+        setIsLoading(false);
+        return;
+      }
+    } catch (backendError) {
+      console.log(
+        "⚠️ Backend authentication failed, trying fallback mock accounts:",
+        backendError,
+      );
+    }
+
+    // Fallback mock accounts (matching real backend credentials for testing)
     const mockAccounts = {
-      "admin@test.com": {
-        email: "admin@test.com",
-        password: "password123",
+      "admin@example.com": {
+        email: "admin@example.com",
+        password: "seng1234",
         user: {
           id: 1,
           name: "Admin User",
-          email: "admin@test.com",
+          email: "admin@example.com",
           role: "admin",
+          role_id: 1,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         token: "mock-token-admin",
       },
-      "warehouse@test.com": {
-        email: "warehouse@test.com",
-        password: "password123",
+      "warehouse@example.com": {
+        email: "warehouse@example.com",
+        password: "seng1234",
         user: {
           id: 2,
-          name: "Warehouse Manager",
-          email: "warehouse@test.com",
+          name: "Warehouse User",
+          email: "warehouse@example.com",
           role: "warehouse_manager",
+          role_id: 2,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         token: "mock-token-warehouse",
       },
-      "staff@test.com": {
-        email: "staff@test.com",
-        password: "password123",
+      "staff@example.com": {
+        email: "staff@example.com",
+        password: "seng1234",
         user: {
           id: 3,
-          name: "Staff Member",
-          email: "staff@test.com",
+          name: "Staff User",
+          email: "staff@example.com",
           role: "staff",
+          role_id: 4,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
         token: "mock-token-staff",
       },
-      "customer@test.com": {
-        email: "customer@test.com",
-        password: "password123",
+      "customer@example.com": {
+        email: "customer@example.com",
+        password: "seng1234",
         user: {
           id: 4,
           name: "Customer User",
-          email: "customer@test.com",
+          email: "customer@example.com",
           role: "customer",
+          role_id: 3,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -119,125 +200,41 @@ const Login: React.FC = () => {
         description: `Welcome back, ${mockAccount.user.name}!`,
       });
 
-      // Navigate based on role
+      // Navigate based on role - use window.location for full page reload
       const userRole = mockAccount.user.role;
+      let targetRoute = "/dashboard/customer"; // default
+
       switch (userRole) {
         case "admin":
-          navigate("/dashboard/admin");
-          break;
-        case "staff":
-          navigate("/dashboard/staff");
+          targetRoute = "/dashboard/admin";
           break;
         case "warehouse_manager":
-          navigate("/dashboard/warehouse");
+          targetRoute = "/dashboard/warehouse";
           break;
+        case "staff":
+          targetRoute = "/dashboard/staff";
+          break;
+        case "customer":
         default:
-          navigate("/dashboard/customer");
+          targetRoute = "/dashboard/customer";
+          break;
       }
+
+      console.log("🔍 Mock account - role:", userRole, "target:", targetRoute);
+
+      // Use window.location to force a full page reload and ensure correct dashboard loads
+      window.location.href = targetRoute;
       setIsLoading(false);
       return;
     }
 
-    // If not a mock account, try real backend
-    try {
-      const response = await authApi.login(loginForm);
-
-      if (response.status === 200) {
-        const { user, token } = response.data;
-        console.log("🔍 Raw API response:", response.data);
-        console.log("🔍 User object from backend:", user);
-        console.log("🔍 All user properties:", Object.keys(user));
-        console.log("🔍 User role field:", user.role);
-        console.log("🔍 User user_type field:", user.user_type);
-        console.log("🔍 User type field:", user.type);
-
-        saveToken(token);
-        login(user);
-
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${user.name}!`,
-        });
-
-        // Map role_id from Laravel backend to role names
-        let userRole = user.role || user.user_type || user.type;
-
-        console.log("🔍 Original user object:", user);
-        console.log("🔍 Original userRole:", userRole);
-        console.log("🔍 User role_id:", user.role_id);
-
-        // If we have role_id instead of role name, map it
-        if (user.role_id && !userRole) {
-          const roleMapping = {
-            1: "admin",
-            2: "warehouse_manager",
-            3: "customer",
-            4: "staff",
-          };
-          userRole =
-            roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
-
-          console.log("🔍 Mapped role_id", user.role_id, "to role:", userRole);
-
-          // Update the user object with the role name for context
-          user.role = userRole;
-        }
-
-        console.log("🔍 Final userRole for navigation:", userRole);
-        console.log("🔍 Updated user object:", user);
-
-        switch (userRole) {
-          case "admin":
-            navigate("/dashboard/admin");
-            break;
-          case "staff":
-            navigate("/dashboard/staff");
-            break;
-          case "warehouse":
-          case "warehouse_manager":
-            navigate("/dashboard/warehouse");
-            break;
-          case "customer":
-          default:
-            navigate("/dashboard/customer");
-        }
-      } else {
-        // Handle different error types
-        let errorTitle = "Login Failed";
-        let errorMessage = response.message || "Invalid credentials";
-
-        if (response.status === 401) {
-          errorTitle = "Invalid Credentials";
-          errorMessage =
-            "Email or password is incorrect. Please check your credentials and try again.";
-        } else if (
-          response.status === 422 &&
-          response.data &&
-          response.data.errors
-        ) {
-          errorTitle = "Validation Error";
-          const errors = response.data.errors;
-          const errorMessages = Object.values(errors).flat();
-          errorMessage = errorMessages.join(", ");
-        }
-
-        console.error(`🚨 Login Error ${response.status}:`, response.data);
-
-        toast({
-          title: errorTitle,
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Login Error",
-        description: "Failed to connect to authentication service",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // If no matching mock account found, show error
+    toast({
+      title: "Invalid Credentials",
+      description: "Please check your email and password",
+      variant: "destructive",
+    });
+    setIsLoading(false);
   };
 
   return (
@@ -311,16 +308,16 @@ const Login: React.FC = () => {
               {isLoading ? "Signing In..." : "Sign In"}
             </Button>
 
-            {/* Mock Account Info */}
+            {/* Test Account Info */}
             <div className="border-t border-metallic-light pt-4 mt-4">
               <p className="text-center text-sm text-metallic-tertiary mb-2">
-                🎭 Test Accounts Available:
+                🔑 Test Accounts Available:
               </p>
               <div className="text-xs text-metallic-tertiary space-y-1">
-                <div>👑 admin@test.com / password123</div>
-                <div>📦 warehouse@test.com / password123</div>
-                <div>👨‍💼 staff@test.com / password123</div>
-                <div>🛒 customer@test.com / password123</div>
+                <div>👑 admin@example.com / seng1234</div>
+                <div>📦 warehouse@example.com / seng1234</div>
+                <div>👨‍💼 staff@example.com / seng1234</div>
+                <div>🛒 customer@example.com / seng1234</div>
               </div>
             </div>
 
