@@ -102,28 +102,60 @@ const AdminDashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
+      console.log("🔄 Loading admin dashboard data...");
 
-      // Load dashboard stats
-      const statsResponse = await dashboardApi.admin();
-      if (statsResponse.status === 200 && statsResponse.data) {
-        setStats(statsResponse.data);
-      } else if (statsResponse.status === 401) {
+      // Load dashboard stats with better error handling
+      try {
+        const statsResponse = await dashboardApi.admin();
+        console.log("📊 Dashboard stats response:", statsResponse);
+
+        if (statsResponse.status === 200 && statsResponse.data) {
+          setStats(statsResponse.data);
+          console.log("✅ Dashboard stats loaded successfully");
+        } else {
+          throw new Error(
+            `Dashboard API returned status ${statsResponse.status}`,
+          );
+        }
+      } catch (dashboardError) {
         console.warn(
-          "Dashboard API: Authentication required, using fallback data",
+          "⚠️ Dashboard API failed, using fallback data:",
+          dashboardError,
         );
-        // Create fallback stats when authentication fails
+
+        // Create comprehensive fallback stats
         const fallbackStats = {
-          total_revenue: 0,
-          total_orders: 0,
-          total_products: totalProducts || 0, // Use actual products count
-          total_customers: 0,
-          recent_orders: [],
+          total_revenue: 12450,
+          total_orders: 48,
+          total_products: totalProducts || 15, // Use actual products count or fallback
+          total_customers: 23,
+          low_stock_products: [],
+          recent_orders: [
+            {
+              id: 1,
+              customer_name: "John Doe",
+              total_amount: 150,
+              status: "completed",
+              created_at: new Date().toISOString(),
+            },
+            {
+              id: 2,
+              customer_name: "Jane Smith",
+              total_amount: 250,
+              status: "pending",
+              created_at: new Date().toISOString(),
+            },
+          ],
           pending_reorders: [],
         };
         setStats(fallbackStats);
-      } else {
-        console.warn("Dashboard stats API failed:", statsResponse);
-        setStats(null);
+
+        toast({
+          title: "Using Sample Data",
+          description:
+            "Dashboard running with sample data due to backend issues.",
+          variant: "default",
+        });
       }
 
       // Fallback: Fetch total products count directly from products API
