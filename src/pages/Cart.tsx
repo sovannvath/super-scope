@@ -72,12 +72,49 @@ const Cart: React.FC = () => {
 
       if (response.status === 200 && response.data) {
         setCart(response.data);
+        setLastUpdated(new Date());
+
+        // Store cart summary in localStorage for persistence
+        localStorage.setItem(
+          "cart_summary",
+          JSON.stringify({
+            itemCount: response.data.total_items,
+            totalAmount: response.data.total_amount,
+            lastUpdated: new Date().toISOString(),
+          }),
+        );
+      } else if (response.status === 404) {
+        // No cart exists yet
+        setCart({
+          id: 0,
+          items: [],
+          total_items: 0,
+          total_amount: 0,
+        });
+        localStorage.removeItem("cart_summary");
       } else {
         throw new Error(response.message || "Failed to fetch cart");
       }
     } catch (error: any) {
-      setError(error.message || "Failed to load cart");
       console.error("Cart fetch error:", error);
+
+      // Try to load from localStorage as fallback
+      const cachedSummary = localStorage.getItem("cart_summary");
+      if (cachedSummary) {
+        try {
+          const summary = JSON.parse(cachedSummary);
+          toast({
+            title: "Working Offline",
+            description:
+              "Showing cached cart data. Some features may be limited.",
+            variant: "default",
+          });
+        } catch (parseError) {
+          localStorage.removeItem("cart_summary");
+        }
+      }
+
+      setError(error.message || "Failed to load cart");
     } finally {
       setLoading(false);
     }
