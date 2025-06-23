@@ -246,12 +246,30 @@ const Cart: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <div className="flex items-center mb-8">
-        <ShoppingCart className="h-8 w-8 mr-3" />
-        <h1 className="text-3xl font-bold">Shopping Cart</h1>
-        <Badge variant="secondary" className="ml-3">
-          {cart.total_items} items
-        </Badge>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center">
+          <ShoppingCart className="h-8 w-8 mr-3" />
+          <h1 className="text-3xl font-bold">Shopping Cart</h1>
+          <Badge variant="secondary" className="ml-3">
+            {cart.total_items} items
+          </Badge>
+        </div>
+        <div className="flex items-center space-x-2">
+          {lastUpdated && (
+            <span className="text-sm text-gray-500">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchCart}
+            disabled={loading}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            {loading ? <LoadingSpinner size="sm" /> : "Refresh"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
