@@ -231,7 +231,7 @@ const Cart: React.FC = () => {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <div className="container mx-auto py-8 px-4">
         <EmptyCart />
