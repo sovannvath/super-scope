@@ -28,6 +28,7 @@ interface AuthContextType {
   isWarehouseManager: () => boolean;
   isStaff: () => boolean;
   hasRole: (role: string) => boolean;
+  getCorrectDashboardPath: () => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
