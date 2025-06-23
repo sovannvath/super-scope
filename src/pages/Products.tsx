@@ -44,6 +44,10 @@ const Products: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
+
+    // Run API test for debugging
+    console.log("🧪 Running API test...");
+    testApi();
   }, []);
 
   const loadProducts = async () => {
