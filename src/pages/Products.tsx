@@ -47,6 +47,12 @@ const Products: React.FC = () => {
 
   const loadProducts = async () => {
     console.log("🔄 Loading products from API...");
+    console.log("📍 API Base URL:", "https://laravel-wtc.onrender.com/api");
+    console.log(
+      "📍 Full API URL:",
+      "https://laravel-wtc.onrender.com/api/products",
+    );
+
     try {
       const response = await productApi.index();
       console.log("📡 API Response:", response);
