@@ -13,8 +13,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
 
   // Public routes that don't need authentication layout
-  const publicRoutes = ["/", "/auth"];
-  const isPublicRoute = publicRoutes.includes(location.pathname);
+  const publicRoutes = ["/", "/auth", "/login", "/register", "/products"];
+  const isPublicRoute =
+    publicRoutes.includes(location.pathname) ||
+    location.pathname.startsWith("/products/");
 
   // If it's a public route or user is not authenticated, show simple layout
   if (isPublicRoute || !isAuthenticated) {
