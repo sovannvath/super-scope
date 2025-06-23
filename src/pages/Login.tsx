@@ -191,21 +191,26 @@ const Login: React.FC = () => {
         console.log("🔍 Final userRole for navigation:", userRole);
         console.log("🔍 Updated user object:", user);
 
+        let targetRoute = "/dashboard/customer"; // default
+
         switch (userRole) {
           case "admin":
-            navigate("/dashboard/admin");
+            targetRoute = "/dashboard/admin";
             break;
           case "staff":
-            navigate("/dashboard/staff");
+            targetRoute = "/dashboard/staff";
             break;
           case "warehouse":
           case "warehouse_manager":
-            navigate("/dashboard/warehouse");
+            targetRoute = "/dashboard/warehouse";
             break;
           case "customer":
           default:
-            navigate("/dashboard/customer");
+            targetRoute = "/dashboard/customer";
         }
+
+        // Use window.location to force a full page reload and ensure correct dashboard loads
+        window.location.href = targetRoute;
       } else {
         // Handle different error types
         let errorTitle = "Login Failed";
