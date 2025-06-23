@@ -17,7 +17,15 @@ import { Link } from "react-router-dom";
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
-  const { itemCount } = useCartContext();
+
+  // Safely get cart context with fallback
+  let itemCount = 0;
+  try {
+    const cartContext = useCartContext();
+    itemCount = cartContext?.itemCount || 0;
+  } catch (error) {
+    console.warn("Cart context not available in Navbar:", error);
+  }
 
   const handleLogout = async () => {
     await logout();
