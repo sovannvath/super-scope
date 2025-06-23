@@ -18,13 +18,14 @@ export interface UseCartReturn {
 
 export function useCart(): UseCartReturn {
   const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false, only load when authenticated
   const [error, setError] = useState<string | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const fetchCart = useCallback(async () => {
-    if (!isAuthenticated) {
+    // Double check authentication before making API call
+    if (!isAuthenticated || authLoading) {
       setCart(null);
       setLoading(false);
       return;
@@ -68,7 +69,7 @@ export function useCart(): UseCartReturn {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading]);
 
   const addItem = useCallback(
     async (data: AddToCartData): Promise<boolean> => {
@@ -186,8 +187,18 @@ export function useCart(): UseCartReturn {
   }, [fetchCart, toast]);
 
   useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+    // Only fetch cart when auth loading is complete and user is authenticated
+    if (!authLoading) {
+      if (isAuthenticated) {
+        fetchCart();
+      } else {
+        // Clear cart state when not authenticated
+        setCart(null);
+        setLoading(false);
+        setError(null);
+      }
+    }
+  }, [authLoading, isAuthenticated, fetchCart]);
 
   const itemCount = cart?.total_items || 0;
   const totalAmount = cart?.total_amount || 0;
