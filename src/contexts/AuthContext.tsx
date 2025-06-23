@@ -84,20 +84,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearAuth();
         setUser(null);
       } else {
-        // For any other case (404, 500, network error), create fallback user
-        console.log(
-          "⚠️ Cannot validate user from backend, creating fallback user",
-        );
-
-        const fallbackUser = {
-          id: 1,
-          name: "Admin User",
-          email: "admin@example.com",
-          role: "admin", // Default to admin for product management access
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setUser(fallbackUser);
+        // For any other case (404, 500, network error), just clear the user
+        console.log("⚠️ Cannot validate user from backend, clearing user");
+        setUser(null);
       }
     } catch (error) {
       console.log(
