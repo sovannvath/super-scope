@@ -254,10 +254,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       clearAuth();
       setUser(null);
+
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
       });
+
+      // Navigate to home page after logout to prevent staying on protected routes
+      window.location.href = "/";
     }
   };
 
