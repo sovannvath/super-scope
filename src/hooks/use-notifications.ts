@@ -63,8 +63,11 @@ export function useNotifications(
           throw new Error(response.message || "Failed to fetch notifications");
         }
       } catch (error: any) {
-        setError(error.message || "Failed to fetch notifications");
-        console.error("Notifications fetch error:", error);
+        // Graceful degradation - don't show errors for unsupported features
+        console.log("Notifications not available:", error.message);
+        setNotifications([]);
+        setUnreadCount(0);
+        setError(null); // Don't set error state
       } finally {
         setLoading(false);
       }
@@ -81,7 +84,9 @@ export function useNotifications(
         setUnreadCount(response.data.count);
       }
     } catch (error) {
-      console.error("Failed to fetch unread count:", error);
+      // Silently fail - notifications not supported yet
+      console.log("Unread count not available - feature not implemented yet");
+      setUnreadCount(0);
     }
   }, [isAuthenticated]);
 
@@ -219,9 +224,9 @@ export function useNotifications(
   useEffect(() => {
     if (isAuthenticated) {
       fetchUnreadCount();
-      // Set up polling for real-time updates
-      const interval = setInterval(fetchUnreadCount, 30000); // Poll every 30 seconds
-      return () => clearInterval(interval);
+      // Disable polling until backend supports notifications
+      // const interval = setInterval(fetchUnreadCount, 30000);
+      // return () => clearInterval(interval);
     }
   }, [isAuthenticated, fetchUnreadCount]);
 
