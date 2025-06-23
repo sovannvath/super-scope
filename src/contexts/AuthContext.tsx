@@ -89,20 +89,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
       }
     } catch (error) {
-      console.log(
-        "📡 Auth failed or timed out, creating fallback admin user for development",
-      );
-
-      // Create admin user for development when backend is unavailable
-      const fallbackUser = {
-        id: 1,
-        name: "Admin User",
-        email: "admin@example.com",
-        role: "admin", // Admin role for product management access
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setUser(fallbackUser);
+      console.log("📡 Auth failed or timed out, clearing user");
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
