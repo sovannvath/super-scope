@@ -19,7 +19,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     location.pathname.startsWith("/products");
 
   // Routes that should use simple layout regardless of auth status
-  const alwaysSimpleLayout = ["/", "/login", "/register", "/products", "/test"];
+  const alwaysSimpleLayout = [
+    "/",
+    "/login",
+    "/register",
+    "/products",
+    "/test",
+    "/cart",
+  ];
   const useSimpleLayout = alwaysSimpleLayout.some(
     (route) =>
       location.pathname === route || location.pathname.startsWith(route + "/"),
