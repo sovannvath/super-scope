@@ -24,21 +24,17 @@ export const DashboardRouter: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Get role from different possible field names
-  let userRole = user?.role || user?.user_type || user?.type;
+  // Always use role_id mapping for consistency
+  const roleMapping = {
+    1: "admin",
+    2: "warehouse_manager",
+    3: "customer",
+    4: "staff",
+  };
 
-  // If we have role_id but no role name, map it
-  if (user?.role_id && !userRole) {
-    const roleMapping = {
-      1: "admin",
-      2: "warehouse_manager",
-      3: "customer",
-      4: "staff",
-    };
-    userRole =
-      roleMapping[user.role_id as keyof typeof roleMapping] || "customer";
-    console.log("🔍 Mapped role_id", user.role_id, "to role:", userRole);
-  }
+  const userRole = user?.role_id
+    ? roleMapping[user.role_id as keyof typeof roleMapping] || "customer"
+    : user?.role || user?.user_type || user?.type || "customer";
 
   console.log("🔄 DashboardRouter using role:", userRole);
   console.log("🔄 DashboardRouter user object:", user);
