@@ -47,7 +47,7 @@ const Products: React.FC = () => {
   const loadProducts = async () => {
     console.log("🔄 Loading products from API...");
     try {
-      const response = await productApi.index();
+      const response = await productsApi.getAll();
       console.log("📡 API Response:", response);
 
       if (response.status === 200) {
