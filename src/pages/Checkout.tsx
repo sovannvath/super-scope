@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
-import { cartApi, ordersApi } from "@/api/cart";
+import { cartApi } from "@/api/cart";
+import { ordersApi } from "@/api/orders";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/atoms/LoadingStates";
 import {
