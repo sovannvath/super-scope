@@ -38,7 +38,16 @@ const Cart: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
+    // Debug authentication and user info
+    console.log("🛒 Cart page: Auth status:", {
+      isAuthenticated,
+      user: useAuth().user,
+      userRole: useAuth().user?.role,
+      hasCartContext: !!useCartContext(),
+    });
+
     if (!isAuthenticated) {
+      console.log("🛒 Cart page: User not authenticated, redirecting to login");
       navigate("/login");
       return;
     }
