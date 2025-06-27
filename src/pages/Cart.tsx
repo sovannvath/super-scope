@@ -28,7 +28,7 @@ interface Product {
   id: number;
   name: string;
   description: string;
-  price: number; // API returns price as number
+  price: string; // API returns price as string
   image: string; // Match field from /api/products and /api/products/:id
 }
 
