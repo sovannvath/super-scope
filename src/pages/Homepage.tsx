@@ -317,7 +317,7 @@ const Homepage: React.FC = () => {
                     </p>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-2xl font-bold text-metallic-primary">
-                        ${product.price}
+                        ${parseFloat(product.price).toFixed(2)}
                       </span>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
@@ -433,7 +433,7 @@ const Homepage: React.FC = () => {
                       className={`flex items-center ${viewMode === "list" ? "justify-between" : "justify-between"} mb-3`}
                     >
                       <span className="text-lg font-bold text-metallic-primary">
-                        ${product.price}
+                        ${parseFloat(product.price).toFixed(2)}
                       </span>
                       <Badge variant="outline" className="text-xs">
                         Stock: {product.quantity}
