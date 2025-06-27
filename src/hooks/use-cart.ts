@@ -131,10 +131,13 @@ export function useCart(): UseCartReturn {
       }
 
       try {
+        console.log("🛒 Adding item to cart:", data);
         const response = await cartApi.addItem(data);
+        console.log("🛒 Add to cart response:", response);
 
         if (response.status === 200 || response.status === 201) {
-          await fetchCart(); // Refresh cart
+          console.log("✅ Item added successfully, refreshing cart...");
+          await fetchCart(); // Refresh cart immediately
           toast({
             title: "Added to Cart",
             description: "Product has been added to your cart",
@@ -144,12 +147,30 @@ export function useCart(): UseCartReturn {
           throw new Error(response.message || "Failed to add to cart");
         }
       } catch (error: any) {
-        // For now, just show a message that cart is not available
-        toast({
-          title: "Cart Not Available",
-          description: "Cart functionality is not available at the moment",
-          variant: "default",
-        });
+        console.error("❌ Add to cart error:", error);
+
+        // Check if it's a network/server error
+        if (error.code === "ECONNABORTED" || error.response?.status >= 500) {
+          toast({
+            title: "Server Unavailable",
+            description:
+              "Cart service is temporarily unavailable. Please try again later.",
+            variant: "destructive",
+          });
+        } else if (error.response?.status === 401) {
+          toast({
+            title: "Authentication Error",
+            description: "Please log in again to add items to your cart",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Add to Cart Failed",
+            description:
+              error.message || "Failed to add item to cart. Please try again.",
+            variant: "destructive",
+          });
+        }
         return false;
       }
     },
