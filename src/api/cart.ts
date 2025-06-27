@@ -98,7 +98,28 @@ export const cartApi = {
 
   clear: async (): Promise<ApiResponse<void>> => {
     console.log("🛒 CartAPI: Clearing entire cart");
-    return cartApiWithRetry(() => apiClient.delete("/cart/clear"));
+    try {
+      // Try to use the clear endpoint if it exists
+      return cartApiWithRetry(() => apiClient.delete("/cart/clear"));
+    } catch (error: any) {
+      // If clear endpoint doesn't exist (404), clear items individually
+      if (error.response?.status === 404) {
+        console.log(
+          "🛒 CartAPI: Clear endpoint not available, clearing items individually",
+        );
+        // First get current cart to find all items
+        const cartResponse = await cartApi.get();
+        if (cartResponse.status === 200 && cartResponse.data?.items) {
+          // Remove each item individually
+          const removePromises = cartResponse.data.items.map((item) =>
+            cartApi.removeItem(item.id),
+          );
+          await Promise.all(removePromises);
+          return { status: 200, message: "Cart cleared successfully" };
+        }
+      }
+      throw error;
+    }
   },
 
   // Force refresh cart data (bypasses cache)
