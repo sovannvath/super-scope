@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import AuthDebug from "@/components/AuthDebug";
 
 interface CustomerStats {
   totalOrders: number;
