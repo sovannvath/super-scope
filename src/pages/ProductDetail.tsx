@@ -85,11 +85,6 @@ const ProductDetail: React.FC = () => {
 
         setProduct(productData);
         console.log("✅ Product loaded:", productData);
-
-        toast({
-          title: "Product Loaded",
-          description: `Product details loaded successfully`,
-        });
       } else {
         console.error("❌ API Error:", response.status, response.statusText);
         toast({

@@ -69,13 +69,6 @@ const Homepage: React.FC = () => {
         console.log(`✅ Loaded ${productsArray.length} products`);
         setProducts(productsArray);
         setFeaturedProducts(productsArray.slice(0, 6));
-
-        if (productsArray.length > 0) {
-          toast({
-            title: "Products Loaded",
-            description: `Successfully loaded ${productsArray.length} products`,
-          });
-        }
       } else {
         console.warn(`⚠️ API returned status ${response.status}`);
         setProducts([]);
