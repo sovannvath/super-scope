@@ -211,7 +211,7 @@ const Cart: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={clearCart}
+                onClick={handleClearCart}
                 disabled={loading}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
