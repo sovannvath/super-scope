@@ -193,7 +193,7 @@ const Cart: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={fetchCart}
+            onClick={refetch}
             disabled={loading}
             className="text-gray-500 hover:text-gray-700"
           >
