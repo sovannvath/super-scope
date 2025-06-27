@@ -20,10 +20,10 @@ interface Product {
   id: number;
   name: string;
   description?: string;
-  price: number;
+  price: string; // API returns price as string
   category?: string;
   stock?: number;
-  image_url?: string;
+  image?: string; // Changed from image_url to image
   status?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -40,10 +40,10 @@ const ProductCRUD: React.FC = () => {
   const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
     description: "",
-    price: 0,
+    price: "0",
     category: "",
     stock: 0,
-    image_url: "",
+    image: "",
     status: true,
   });
 
@@ -164,10 +164,10 @@ const ProductCRUD: React.FC = () => {
     setFormData({
       name: "",
       description: "",
-      price: 0,
+      price: "0",
       category: "",
       stock: 0,
-      image_url: "",
+      image: "",
       status: true,
     });
   };
@@ -180,7 +180,7 @@ const ProductCRUD: React.FC = () => {
       price: product.price,
       category: product.category || "",
       stock: product.stock || 0,
-      image_url: product.image_url || "",
+      image: product.image || "",
       status: product.status || true,
     });
     setIsDialogOpen(true);
@@ -273,9 +273,9 @@ const ProductCRUD: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {product.image_url && (
+                  {product.image && (
                     <img
-                      src={product.image_url}
+                      src={product.image}
                       alt={product.name}
                       className="w-full h-32 object-cover rounded-md"
                       onError={(e) => {
@@ -465,9 +465,9 @@ const ProductCRUD: React.FC = () => {
                 <input
                   type="url"
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.image_url}
+                  value={formData.image}
                   onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
+                    setFormData({ ...formData, image: e.target.value })
                   }
                   placeholder="https://example.com/image.jpg"
                 />
