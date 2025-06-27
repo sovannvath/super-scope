@@ -248,7 +248,9 @@ const Dashboard: React.FC = () => {
             <p className="text-metallic-light/80">
               Welcome to your{" "}
               <Badge className="bg-white/20 text-white">
-                {user?.role?.toUpperCase()}
+                {typeof user?.role === "string"
+                  ? user.role.toUpperCase()
+                  : "USER"}
               </Badge>{" "}
               dashboard
             </p>
