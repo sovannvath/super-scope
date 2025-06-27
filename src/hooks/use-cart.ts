@@ -34,14 +34,32 @@ export function useCart(): UseCartReturn {
     try {
       setLoading(true);
       setError(null);
+      console.log("🛒 Fetching cart from API...");
 
       const response = await cartApi.get();
+      console.log("🛒 Cart API Response:", response);
 
       if (response.status === 200 && response.data) {
-        setCart(response.data);
+        console.log("✅ Cart data received:", response.data);
+        // Ensure items is an array even if empty
+        const cartData = {
+          ...response.data,
+          items: Array.isArray(response.data.items) ? response.data.items : [],
+        };
+        setCart(cartData);
+
+        // Cache cart data for offline usage
+        localStorage.setItem(
+          "cart_cache",
+          JSON.stringify({
+            data: cartData,
+            timestamp: Date.now(),
+          }),
+        );
       } else if (response.status === 404) {
+        console.log("ℹ️ No cart exists yet, creating empty cart");
         // No cart exists yet, create empty cart
-        setCart({
+        const emptyCart = {
           id: 0,
           user_id: 0,
           items: [],
@@ -49,14 +67,43 @@ export function useCart(): UseCartReturn {
           total_amount: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        });
+        };
+        setCart(emptyCart);
+        localStorage.setItem(
+          "cart_cache",
+          JSON.stringify({
+            data: emptyCart,
+            timestamp: Date.now(),
+          }),
+        );
       } else {
         throw new Error(response.message || "Failed to fetch cart");
       }
     } catch (error: any) {
+      console.error("❌ Cart fetch error:", error);
+
+      // Try to load from cache as fallback
+      const cachedCart = localStorage.getItem("cart_cache");
+      if (cachedCart) {
+        try {
+          const cached = JSON.parse(cachedCart);
+          const cacheAge = Date.now() - cached.timestamp;
+          // Use cache if it's less than 5 minutes old
+          if (cacheAge < 5 * 60 * 1000) {
+            console.log("📦 Using cached cart data");
+            setCart(cached.data);
+            setError(null);
+            return;
+          }
+        } catch (parseError) {
+          console.error("❌ Failed to parse cached cart:", parseError);
+          localStorage.removeItem("cart_cache");
+        }
+      }
+
       // Graceful degradation for cart functionality
-      console.log("Cart not available:", error.message);
-      setCart({
+      console.log("⚠️ Cart not available, showing empty cart");
+      const fallbackCart = {
         id: 0,
         user_id: 0,
         items: [],
@@ -64,7 +111,8 @@ export function useCart(): UseCartReturn {
         total_amount: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      });
+      };
+      setCart(fallbackCart);
       setError(null); // Don't show error state
     } finally {
       setLoading(false);
