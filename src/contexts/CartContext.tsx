@@ -40,20 +40,18 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     lastUpdated: cartState.cart?.updated_at || null,
   };
 
-  // Auto-sync cart when authentication changes
+  // Auto-sync cart when authentication changes (simplified to prevent loops)
   useEffect(() => {
     console.log("🛒 CartContext: Authentication state changed", {
       isAuthenticated,
-      hasRefetch: !!cartState.refetch,
-      cartLoading: cartState.loading,
     });
 
-    if (isAuthenticated && cartState.refetch && !cartState.loading) {
+    if (isAuthenticated && cartState.refetch) {
       console.log("🛒 CartContext: Refetching cart data due to auth change...");
       // Add a small delay to ensure auth is fully settled
       const timer = setTimeout(() => {
         cartState.refetch();
-      }, 200);
+      }, 500);
       return () => clearTimeout(timer);
     } else if (!isAuthenticated) {
       console.log(
@@ -61,20 +59,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       );
       // Cart state will be cleared by the useCart hook
     }
-  }, [isAuthenticated, cartState.refetch, cartState.loading]);
-
-  // Force initial cart fetch when context is first loaded with authenticated user
-  useEffect(() => {
-    if (
-      isAuthenticated &&
-      cartState.refetch &&
-      !cartState.cart &&
-      !cartState.loading
-    ) {
-      console.log("🛒 CartContext: Initial cart fetch for authenticated user");
-      cartState.refetch();
-    }
-  }, [isAuthenticated, cartState.refetch, cartState.cart, cartState.loading]);
+  }, [isAuthenticated]); // Simplified dependencies
 
   // Persist cart summary to localStorage
   useEffect(() => {
