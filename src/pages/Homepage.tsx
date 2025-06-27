@@ -280,11 +280,21 @@ const Homepage: React.FC = () => {
                 >
                   <div className="relative">
                     <div className="bg-gradient-to-br from-metallic-light to-metallic-background h-48 flex items-center justify-center">
-                      <img
-                        src={product?.image}
-                        className="w-full h-full object-cover"
-                        alt=""
-                      />
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            target.parentElement?.classList.add("flex");
+                          }}
+                        />
+                      ) : (
+                        <Package className="h-12 w-12 text-metallic-primary/30" />
+                      )}
                     </div>
                     <div className="absolute top-3 right-3">
                       <Button
@@ -407,7 +417,21 @@ const Homepage: React.FC = () => {
                 <div
                   className={`${viewMode === "list" ? "w-32 h-32" : "h-32"} bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center relative`}
                 >
-                  <Package className="h-8 w-8 text-metallic-primary/30" />
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        target.parentElement?.classList.add("flex");
+                      }}
+                    />
+                  ) : (
+                    <Package className="h-8 w-8 text-metallic-primary/30" />
+                  )}
                   {product.quantity < product.low_stock_threshold && (
                     <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
                       Low Stock
