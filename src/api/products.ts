@@ -1,26 +1,40 @@
 import { apiClient, makeApiCall, ApiResponse } from "@/lib/api";
 
+export interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  parent_id: number | null;
+  created_at: string;
+  updated_at: string;
+  pivot?: {
+    product_id: number;
+    category_id: number;
+  };
+}
+
 export interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: string; // API returns price as string
   quantity: number;
   low_stock_threshold: number;
-  status: string;
+  image: string; // Added image field from API
+  status: boolean;
   created_at: string;
   updated_at: string;
+  categories: Category[]; // Added categories array
 }
 
 export interface CreateProductData {
   name: string;
-  description?: string;
-  price: number;
-  category_id: number;
+  description: string; // Made required to match API validation
+  price: string; // API expects string
   quantity: number;
   low_stock_threshold: number;
-  image_url?: string;
-  status: boolean;
+  image?: string; // Optional image field
+  status: boolean; // API expects boolean
 }
 
 export interface ProductFilters {

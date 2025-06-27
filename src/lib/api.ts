@@ -112,17 +112,33 @@ export interface ApiResponse<T = any> {
   errors?: any;
 }
 
-// Product interface
+// Category interface for products
+export interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  parent_id: number | null;
+  created_at: string;
+  updated_at: string;
+  pivot?: {
+    product_id: number;
+    category_id: number;
+  };
+}
+
+// Product interface - Updated to match API response format
 export interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: string; // API returns price as string
   quantity: number;
   low_stock_threshold: number;
-  status: boolean; // Changed from string to boolean
+  image: string; // Added image field
+  status: boolean;
   created_at: string;
   updated_at: string;
+  categories: Category[]; // Added categories field
 }
 
 // Cart item interface

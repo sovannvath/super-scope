@@ -55,8 +55,9 @@ const ProductManagement: React.FC = () => {
     description: "",
     price: "",
     quantity: "",
-    low_stock_threshold: "",
-    status: "active", // Default status
+    low_stock_threshold: "5", // Default threshold
+    image: "", // Add image field
+    status: "true", // Boolean string for form
   });
 
   useEffect(() => {
@@ -190,8 +191,9 @@ const ProductManagement: React.FC = () => {
       description: "",
       price: "",
       quantity: "",
-      low_stock_threshold: "",
-      status: "active",
+      low_stock_threshold: "5",
+      image: "",
+      status: "true",
     });
   };
 
@@ -205,12 +207,13 @@ const ProductManagement: React.FC = () => {
         !formData.name.trim() ||
         !formData.description.trim() ||
         !formData.price ||
-        !formData.quantity
+        !formData.quantity ||
+        !formData.low_stock_threshold
       ) {
         toast({
           title: "Validation Error",
           description:
-            "Please fill in all required fields (Name, Description, Price, Quantity)",
+            "Please fill in all required fields (Name, Description, Price, Quantity, Low Stock Threshold)",
           variant: "destructive",
         });
         setIsSubmitting(false);
@@ -241,10 +244,11 @@ const ProductManagement: React.FC = () => {
       const productData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        price: parseFloat(formData.price),
+        price: formData.price, // Keep as string to match API expectation
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
-        status: formData.status || "active",
+        image: formData.image.trim() || undefined, // Include image if provided
+        status: formData.status === "true", // Convert to boolean
       };
 
       console.log("🔄 Creating product:", productData);
@@ -383,10 +387,11 @@ const ProductManagement: React.FC = () => {
     setFormData({
       name: product.name,
       description: product.description,
-      price: product.price.toString(),
+      price: product.price,
       quantity: product.quantity.toString(),
       low_stock_threshold: product.low_stock_threshold.toString(),
-      status: (product as any).status || "active",
+      image: product.image || "",
+      status: product.status ? "true" : "false",
     });
     setIsEditDialogOpen(true);
   };
@@ -400,10 +405,11 @@ const ProductManagement: React.FC = () => {
       const updateData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        price: parseFloat(formData.price),
+        price: formData.price, // Keep as string to match API expectation
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
-        status: formData.status || "active",
+        image: formData.image.trim() || undefined, // Include image if provided
+        status: formData.status === "true", // Convert to boolean
       };
 
       console.log("🔄 Updating product:", selectedProduct.id, updateData);
@@ -611,9 +617,8 @@ const ProductManagement: React.FC = () => {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="draft">Draft</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
                 </select>
               </div>
               <DialogFooter>
@@ -852,9 +857,8 @@ const ProductManagement: React.FC = () => {
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="draft">Draft</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
               </select>
             </div>
             <DialogFooter>
@@ -907,8 +911,8 @@ const ProductManagement: React.FC = () => {
               </div>
               <div>
                 <Label className="font-medium">Status:</Label>
-                <p className="text-gray-600 capitalize">
-                  {(selectedProduct as any).status || "active"}
+                <p className="text-gray-600">
+                  {selectedProduct.status ? "Active" : "Inactive"}
                 </p>
               </div>
               <div>
