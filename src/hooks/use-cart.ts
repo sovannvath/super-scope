@@ -287,21 +287,7 @@ export function useCart(): UseCartReturn {
         localStorage.removeItem("cart_summary");
       }
     }
-  }, [authLoading, isAuthenticated, fetchCart]);
-
-  // Additional effect to force cart refresh when component mounts and user is already authenticated
-  useEffect(() => {
-    const forceRefreshCart = async () => {
-      if (isAuthenticated && !authLoading && !loading) {
-        console.log("🛒 useCart: Force refresh cart on mount");
-        await fetchCart();
-      }
-    };
-
-    // Small delay to ensure auth context is fully initialized
-    const timer = setTimeout(forceRefreshCart, 100);
-    return () => clearTimeout(timer);
-  }, []); // Only run once on mount
+  }, [authLoading, isAuthenticated]); // Removed fetchCart from dependencies to prevent loops
 
   const itemCount = cart?.total_items || 0;
   const totalAmount = cart?.total_amount || 0;
