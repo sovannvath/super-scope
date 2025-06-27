@@ -6,9 +6,11 @@ export interface CartItem {
   cart_id: number;
   product_id: number;
   quantity: number;
+  price?: number; // Price per item (API includes this)
+  subtotal?: number; // Total for this item (API includes this)
   created_at: string;
   updated_at: string;
-  product?: Product;
+  product: Product; // Make required since API includes it
 }
 
 export interface Cart {
