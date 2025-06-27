@@ -183,10 +183,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log("🔄 AuthContext: Attempting login for:", email);
+
       const response = await authApi.login({ email, password });
+      console.log("🔄 AuthContext: Login API response:", {
+        status: response.status,
+        hasData: !!response.data,
+        data: response.data,
+      });
 
       if (response.status === 200 && response.data) {
         const { user: userData, token } = response.data;
+        console.log("🔄 AuthContext: Login successful, user data:", userData);
+        console.log("🔄 AuthContext: Token received:", token ? "Yes" : "No");
 
         // Map role_id to role name if needed
         if (userData.role_id && !userData.role) {
@@ -197,6 +206,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             4: "staff",
           };
           userData.role = roleMapping[userData.role_id] || "customer";
+          console.log(
+            `🔄 AuthContext: Mapped role_id ${userData.role_id} to role: ${userData.role}`,
+          );
         }
 
         setToken(token);
@@ -209,13 +221,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         console.log(
-          "✅ User logged in:",
+          "✅ User logged in successfully:",
           userData.name,
           "Role:",
           userData.role,
+          "ID:",
+          userData.id,
+          "Full user:",
+          userData,
         );
         return true;
       } else {
+        console.log("❌ Login failed, invalid response:", response);
         toast({
           title: "Login Failed",
           description: response.message || "Invalid credentials",
