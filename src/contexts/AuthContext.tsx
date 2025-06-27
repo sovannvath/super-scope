@@ -158,6 +158,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         setToken(token);
+        localStorage.setItem("user_data", JSON.stringify(userData));
         setUser(userData);
 
         toast({
