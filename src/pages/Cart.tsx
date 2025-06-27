@@ -288,7 +288,13 @@ const Cart: React.FC = () => {
                       {item.product.description}
                     </p>
                     <p className="font-medium text-lg">
-                      ${item.price.toFixed(2)} each
+                      $
+                      {(
+                        item.price ||
+                        parseFloat(item.product.price) ||
+                        0
+                      ).toFixed(2)}{" "}
+                      each
                     </p>
                   </div>
 
@@ -324,7 +330,12 @@ const Cart: React.FC = () => {
                   {/* Subtotal and Remove */}
                   <div className="text-right">
                     <p className="font-bold text-lg">
-                      ${item.subtotal.toFixed(2)}
+                      $
+                      {(
+                        item.subtotal ||
+                        (item.price || parseFloat(item.product.price) || 0) *
+                          item.quantity
+                      ).toFixed(2)}
                     </p>
                     <Button
                       variant="ghost"
