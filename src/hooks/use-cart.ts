@@ -83,17 +83,16 @@ export function useCart(): UseCartReturn {
         const emptyCart = {
           id: 0,
           user_id: 0,
-          items: [],
-          total_items: 0,
-          total_amount: 0,
+          cart_items: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
         setCart(emptyCart);
+        setTotalAmount(0);
         localStorage.setItem(
           "cart_cache",
           JSON.stringify({
-            data: emptyCart,
+            data: { cart: emptyCart, total_amount: 0 },
             timestamp: Date.now(),
           }),
         );
