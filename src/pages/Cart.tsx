@@ -170,17 +170,19 @@ const Cart: React.FC = () => {
   }
 
   // Debug logging for cart state
+  const cartItems = cart?.cart_items || cart?.items || [];
   console.log("🛒 Cart page render state:", {
     hasCart: !!cart,
-    cartItems: cart?.items,
-    itemsLength: cart?.items?.length,
+    cartItems: cartItems,
+    itemsLength: cartItems.length,
     totalItems: cart?.total_items,
-    isEmptyByItems: !cart?.items || cart.items.length === 0,
+    cartFromAPI: cart,
+    isEmptyByItems: cartItems.length === 0,
     isEmptyByTotalItems: cart?.total_items === 0,
   });
 
   // Check if cart is truly empty
-  const isEmptyCart = !cart || !cart.items || cart.items.length === 0;
+  const isEmptyCart = !cart || cartItems.length === 0;
 
   if (isEmptyCart) {
     return (
@@ -215,7 +217,7 @@ const Cart: React.FC = () => {
           <ShoppingCart className="h-8 w-8 mr-3" />
           <h1 className="text-3xl font-bold">Shopping Cart</h1>
           <Badge variant="secondary" className="ml-3">
-            {cart.total_items} items
+            {cartItems.length} items
           </Badge>
         </div>
         <div className="flex items-center space-x-2">
@@ -259,7 +261,7 @@ const Cart: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {cart.items.map((item) => (
+              {cartItems.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center space-x-4 p-4 border rounded-lg"
@@ -349,8 +351,8 @@ const Cart: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span>Items ({cart.total_items}):</span>
-                  <span>${cart.total_amount.toFixed(2)}</span>
+                  <span>Items ({cartItems.length}):</span>
+                  <span>${totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping:</span>
@@ -358,12 +360,12 @@ const Cart: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Tax:</span>
-                  <span>${(cart.total_amount * 0.1).toFixed(2)}</span>
+                  <span>${(totalAmount * 0.1).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
-                  <span>${(cart.total_amount * 1.1).toFixed(2)}</span>
+                  <span>${(totalAmount * 1.1).toFixed(2)}</span>
                 </div>
               </div>
 
