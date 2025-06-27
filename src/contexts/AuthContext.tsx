@@ -196,9 +196,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (response.status === 200 && response.data) {
-        const { user: userData, token } = response.data;
-        console.log("🔄 AuthContext: Login successful, user data:", userData);
+        const { user: rawUserData, token } = response.data;
+        console.log(
+          "🔄 AuthContext: Login successful, raw user data:",
+          rawUserData,
+        );
         console.log("🔄 AuthContext: Token received:", token ? "Yes" : "No");
+
+        // Handle nested user structure if it exists
+        const userData = rawUserData.user || rawUserData;
+        console.log("🔄 AuthContext: Extracted user data:", userData);
 
         // Map role_id to role name if needed
         if (userData.role_id && !userData.role) {
