@@ -283,9 +283,9 @@ const Orders: React.FC = () => {
                     className="flex items-center space-x-4 p-4 border rounded-lg"
                   >
                     <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                      {item.product.image_url ? (
+                      {item.product.image ? (
                         <img
-                          src={item.product.image_url}
+                          src={item.product.image}
                           alt={item.product.name}
                           className="w-full h-full object-cover rounded-lg"
                         />
