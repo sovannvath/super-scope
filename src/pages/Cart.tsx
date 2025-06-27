@@ -241,12 +241,18 @@ const Cart: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={refetch}
+            onClick={async () => {
+              console.log("🛒 Manual cart refresh triggered");
+              await refetch();
+            }}
             disabled={loading}
             className="text-gray-500 hover:text-gray-700"
           >
             {loading ? <LoadingSpinner size="sm" /> : "Refresh"}
           </Button>
+          {error && (
+            <span className="text-sm text-red-500">Error loading cart</span>
+          )}
         </div>
       </div>
 
