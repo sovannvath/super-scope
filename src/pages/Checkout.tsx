@@ -1,32 +1,38 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
-import { cartApi } from '@/api/cart';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlertTriangle } from "lucide-react";
+import { cartApi, PaymentMethod } from "@/api/cart";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Checkout = () => {
   const { user } = useAuth();
-  const [paymentMethodId, setPaymentMethodId] = useState('');
-  const [notes, setNotes] = useState('');
+  const [paymentMethodId, setPaymentMethodId] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!paymentMethodId) {
-      setError('Payment method ID is required');
+      setError("Payment method ID is required");
       return;
     }
 
     setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       const response = await cartApi.checkout({
@@ -36,14 +42,16 @@ const Checkout = () => {
 
       if (response.status >= 200 && response.status < 300) {
         setSuccess(`Order #${response.data.order.id} created successfully!`);
-        setPaymentMethodId('');
-        setNotes('');
+        setPaymentMethodId("");
+        setNotes("");
       } else {
-        setError(response.data.message || 'Failed to create order');
+        setError(response.data.message || "Failed to create order");
       }
     } catch (error: any) {
-      console.error('Checkout error:', error.response?.data || error.message);
-      setError(error.response?.data?.message || 'An error occurred during checkout');
+      console.error("Checkout error:", error.response?.data || error.message);
+      setError(
+        error.response?.data?.message || "An error occurred during checkout",
+      );
     } finally {
       setLoading(false);
     }
@@ -56,7 +64,8 @@ const Checkout = () => {
           <Alert variant="destructive">
             <AlertTriangle className="w-4 h-4" />
             <AlertDescription>
-              You must be logged in to checkout. Please <Link to="/login">log in</Link>.
+              You must be logged in to checkout. Please{" "}
+              <Link to="/login">log in</Link>.
             </AlertDescription>
           </Alert>
         </div>
@@ -75,7 +84,10 @@ const Checkout = () => {
           <CardContent>
             <form onSubmit={handleCheckout} className="space-y-4">
               <div>
-                <label htmlFor="payment-method-id" className="block text-sm font-medium">
+                <label
+                  htmlFor="payment-method-id"
+                  className="block text-sm font-medium"
+                >
                   Payment Method ID
                 </label>
                 <Input
@@ -110,7 +122,7 @@ const Checkout = () => {
                 </Alert>
               )}
               <Button type="submit" disabled={loading} className="w-full">
-                {loading ? 'Processing...' : 'Place Order'}
+                {loading ? "Processing..." : "Place Order"}
               </Button>
             </form>
           </CardContent>
