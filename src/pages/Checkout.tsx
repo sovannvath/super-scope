@@ -31,7 +31,11 @@ const Checkout = () => {
         setLoadingPaymentMethods(true);
         const response = await cartApi.getPaymentMethods();
         if (response.status === 200 && response.data) {
-          setPaymentMethods(response.data);
+          // Handle both direct array and object with payment_methods key
+          const methods = Array.isArray(response.data)
+            ? response.data
+            : response.data.payment_methods || [];
+          setPaymentMethods(methods);
         } else {
           setError("Failed to load payment methods");
         }
