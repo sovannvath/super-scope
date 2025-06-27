@@ -76,12 +76,12 @@ const cartApiWithRetry = async <T>(
 };
 
 export const cartApi = {
-  get: async (): Promise<ApiResponse<Cart>> => {
+  get: async (): Promise<ApiResponse<CartResponse>> => {
     console.log("🛒 CartAPI: Fetching cart data...");
     return cartApiWithRetry(() => apiClient.get("/cart"));
   },
 
-  addItem: async (data: AddToCartData): Promise<ApiResponse<CartItem>> => {
+  addItem: async (data: AddToCartData): Promise<ApiResponse<CartResponse>> => {
     console.log("🛒 CartAPI: Adding item to cart:", data);
     return cartApiWithRetry(() => apiClient.post("/cart/add", data));
   },
