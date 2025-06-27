@@ -163,7 +163,7 @@ const Cart: React.FC = () => {
       <div className="container mx-auto py-8 px-4">
         <ErrorState
           description={error}
-          action={<Button onClick={fetchCart}>Try Again</Button>}
+          action={<Button onClick={refetch}>Try Again</Button>}
         />
       </div>
     );
