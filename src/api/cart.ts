@@ -3,23 +3,26 @@ import { Product } from "./products";
 
 export interface CartItem {
   id: number;
+  cart_id: number;
   product_id: number;
   quantity: number;
-  price: number;
-  subtotal: number;
-  product?: Product;
   created_at: string;
   updated_at: string;
+  product?: Product;
 }
 
 export interface Cart {
   id: number;
   user_id: number;
-  items: CartItem[];
-  total_items: number;
-  total_amount: number;
+  cart_items: CartItem[]; // Backend uses "cart_items" not "items"
   created_at: string;
   updated_at: string;
+}
+
+export interface CartResponse {
+  message?: string;
+  cart: Cart;
+  total_amount: number; // This is at root level in backend response
 }
 
 export interface AddToCartData {
