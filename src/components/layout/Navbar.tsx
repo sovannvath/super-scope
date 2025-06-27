@@ -20,11 +20,16 @@ export const Navbar: React.FC = () => {
 
   // Safely get cart context with fallback
   let itemCount = 0;
+  let cartLoading = false;
+  let hasCartError = false;
   try {
     const cartContext = useCartContext();
     itemCount = cartContext?.itemCount || 0;
+    cartLoading = cartContext?.loading || false;
+    hasCartError = !!cartContext?.error;
   } catch (error) {
     console.warn("Cart context not available in Navbar:", error);
+    hasCartError = true;
   }
 
   const handleLogout = async () => {
