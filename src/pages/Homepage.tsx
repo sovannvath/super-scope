@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { productApi, getToken } from "@/lib/api";
 import { cartApi } from "@/api/cart";
+import { ProductImage } from "@/components/atoms/ProductImage";
 
 interface Product {
   id: number;
@@ -279,23 +280,12 @@ const Homepage: React.FC = () => {
                   className="group hover:shadow-xl transition-all duration-300 border-metallic-light/20 overflow-hidden"
                 >
                   <div className="relative">
-                    <div className="bg-gradient-to-br from-metallic-light to-metallic-background h-48 flex items-center justify-center">
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                            target.parentElement?.classList.add("flex");
-                          }}
-                        />
-                      ) : (
-                        <Package className="h-12 w-12 text-metallic-primary/30" />
-                      )}
-                    </div>
+                    <ProductImage
+                      src={product.image}
+                      alt={product.name}
+                      className="h-48"
+                      fallbackClassName="bg-gradient-to-br from-metallic-light to-metallic-background"
+                    />
                     <div className="absolute top-3 right-3">
                       <Button
                         size="sm"
@@ -414,24 +404,13 @@ const Homepage: React.FC = () => {
                 key={product.id}
                 className={`hover:shadow-lg transition-all duration-300 border-metallic-light/20 ${viewMode === "list" ? "flex flex-row" : ""}`}
               >
-                <div
-                  className={`${viewMode === "list" ? "w-32 h-32" : "h-32"} bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center relative`}
-                >
-                  {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                        target.parentElement?.classList.add("flex");
-                      }}
-                    />
-                  ) : (
-                    <Package className="h-8 w-8 text-metallic-primary/30" />
-                  )}
+                <div className="relative">
+                  <ProductImage
+                    src={product.image}
+                    alt={product.name}
+                    className={viewMode === "list" ? "w-32 h-32" : "h-32"}
+                    fallbackClassName="bg-gradient-to-br from-metallic-light to-metallic-background"
+                  />
                   {product.quantity < product.low_stock_threshold && (
                     <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
                       Low Stock
