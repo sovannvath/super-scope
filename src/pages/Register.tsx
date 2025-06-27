@@ -78,15 +78,32 @@ const Register: React.FC = () => {
 
       if (response.status === 201 || response.status === 200) {
         const { user, token } = response.data;
+
+        // Save token and set user state directly after successful registration
         saveToken(token);
-        login(user);
 
-        toast({
-          title: "Registration Successful",
-          description: `Welcome to EcommerceHub, ${user.name}!`,
-        });
+        // Manually log the user in using the same credentials
+        const loginSuccess = await login(
+          registerForm.email,
+          registerForm.password,
+        );
 
-        navigate("/dashboard/customer");
+        if (loginSuccess) {
+          toast({
+            title: "Registration Successful",
+            description: `Welcome to EcommerceHub, ${user.name}!`,
+          });
+
+          navigate("/dashboard/customer");
+        } else {
+          toast({
+            title: "Registration Issue",
+            description:
+              "Account created but login failed. Please try logging in manually.",
+            variant: "destructive",
+          });
+          navigate("/login");
+        }
       } else {
         // Handle different error types
         let errorTitle = "Registration Failed";

@@ -95,12 +95,6 @@ const Products: React.FC = () => {
 
         console.log("✅ Products loaded:", productsArray.length);
         setProducts(productsArray);
-
-        // Show success message
-        toast({
-          title: "Products Loaded Successfully",
-          description: `Loaded ${productsArray.length} products from API`,
-        });
       } else {
         console.error("❌ API Error:", response.status);
         setProducts([]);
