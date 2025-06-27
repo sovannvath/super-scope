@@ -64,21 +64,24 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">EC</span>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 flex items-center justify-center p-6">
+      <Card className="w-full max-w-md shadow-lg border-0 bg-white/95 backdrop-blur-sm">
+        <CardHeader className="text-center pb-6">
+          <div className="flex items-center justify-center space-x-2 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 via-pink-400 to-rose-400 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg">EC</span>
             </div>
-            <span className="text-2xl font-bold text-gray-800">
+            <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
               EcommerceHub
             </span>
           </div>
-          <CardTitle className="flex items-center justify-center text-gray-800">
-            <LogIn className="mr-2 h-5 w-5" />
-            Sign In
+          <CardTitle className="flex items-center justify-center text-slate-700 text-xl">
+            <LogIn className="mr-2 h-5 w-5 text-orange-500" />
+            Welcome Back
           </CardTitle>
+          <p className="text-sm text-slate-500 mt-2">
+            Sign in to your account to continue
+          </p>
         </CardHeader>
 
         <CardContent>
