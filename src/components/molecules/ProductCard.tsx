@@ -109,9 +109,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           },
         )}
       >
-        {product.image_url ? (
+        {product.image ? (
           <img
-            src={product.image_url}
+            src={product.image}
             alt={product.name}
             className="object-cover w-full h-full"
             loading="lazy"
@@ -238,7 +238,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               "text-xl": variant === "featured",
             })}
           >
-            ${product.price.toFixed(2)}
+            ${parseFloat(product.price).toFixed(2)}
           </span>
           <Badge variant="outline" className="text-xs">
             Stock: {product.quantity}
