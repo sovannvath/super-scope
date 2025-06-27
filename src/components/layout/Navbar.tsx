@@ -96,10 +96,26 @@ export const Navbar: React.FC = () => {
               asChild
             >
               <Link to="/cart">
-                <ShoppingCart className="h-5 w-5 text-metallic-primary" />
-                {itemCount > 0 && (
+                <ShoppingCart
+                  className={`h-5 w-5 ${
+                    hasCartError
+                      ? "text-red-500"
+                      : cartLoading
+                        ? "text-gray-400"
+                        : "text-metallic-primary"
+                  } ${cartLoading ? "animate-pulse" : ""}`}
+                />
+                {cartLoading && (
+                  <div className="absolute -top-1 -right-1 h-3 w-3 bg-blue-500 rounded-full animate-ping"></div>
+                )}
+                {!cartLoading && itemCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-metallic-secondary text-white text-xs">
                     {itemCount > 99 ? "99+" : itemCount}
+                  </Badge>
+                )}
+                {!cartLoading && hasCartError && (
+                  <Badge className="absolute -top-1 -right-1 h-3 w-3 p-0 bg-red-500 text-white text-xs">
+                    !
                   </Badge>
                 )}
               </Link>
