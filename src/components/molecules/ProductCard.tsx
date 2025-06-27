@@ -44,6 +44,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onView,
 }) => {
   const { isAuthenticated } = useAuth();
+  const { addItem } = useCartContext();
   const { toast } = useToast();
   const [addingToCart, setAddingToCart] = useState(false);
 
@@ -59,23 +60,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
     try {
       setAddingToCart(true);
-      const response = await cartApi.addItem({
+      console.log(`🛒 ProductCard: Adding product ${product.id} to cart`);
+
+      const success = await addItem({
         product_id: product.id,
         quantity: 1,
       });
 
-      if (response.status === 200 || response.status === 201) {
-        toast({
-          title: "Added to Cart",
-          description: `${product.name} has been added to your cart`,
-        });
+      if (success) {
+        console.log(
+          `✅ ProductCard: Successfully added ${product.name} to cart`,
+        );
+        // Toast is already shown by the cart hook
       } else {
-        throw new Error(response.message || "Failed to add to cart");
+        console.log(`❌ ProductCard: Failed to add ${product.name} to cart`);
+        // Error toast is already shown by the cart hook
       }
     } catch (error: any) {
+      console.error("❌ ProductCard: Unexpected error adding to cart:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to add item to cart",
+        title: "Unexpected Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
