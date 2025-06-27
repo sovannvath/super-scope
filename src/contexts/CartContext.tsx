@@ -42,10 +42,19 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   // Auto-sync cart when authentication changes
   useEffect(() => {
+    console.log("🛒 CartContext: Authentication state changed", {
+      isAuthenticated,
+    });
     if (isAuthenticated && cartState.refetch) {
+      console.log("🛒 CartContext: Refetching cart data...");
       cartState.refetch();
+    } else if (!isAuthenticated) {
+      console.log(
+        "🛒 CartContext: User not authenticated, clearing cart state",
+      );
+      // Cart state will be cleared by the useCart hook
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, cartState.refetch]);
 
   // Persist cart summary to localStorage
   useEffect(() => {
