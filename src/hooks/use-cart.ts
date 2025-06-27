@@ -111,7 +111,18 @@ export function useCart(): UseCartReturn {
           // Use cache if it's less than 5 minutes old
           if (cacheAge < 5 * 60 * 1000) {
             console.log("📦 Using cached cart data");
-            setCart(cached.data);
+            if (cached.data.cart) {
+              // New cache format
+              setCart(cached.data.cart);
+              setTotalAmount(cached.data.total_amount || 0);
+            } else {
+              // Old cache format - convert to new structure
+              setCart({
+                ...cached.data,
+                cart_items: cached.data.items || cached.data.cart_items || [],
+              });
+              setTotalAmount(cached.data.total_amount || 0);
+            }
             setError(null);
             return;
           }
