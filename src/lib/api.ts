@@ -43,6 +43,12 @@ if (token) {
 // Request interceptor to add token
 apiClient.interceptors.request.use(
   (config) => {
+    // Ensure required headers are always present
+    config.headers = config.headers || {};
+    config.headers["Content-Type"] = "application/json";
+    config.headers["Accept"] = "application/json";
+    config.headers["X-Requested-With"] = "XMLHttpRequest";
+
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
