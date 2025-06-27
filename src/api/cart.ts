@@ -3,23 +3,26 @@ import { Product } from "./products";
 
 export interface CartItem {
   id: number;
+  cart_id: number;
   product_id: number;
   quantity: number;
-  price: number;
-  subtotal: number;
-  product?: Product;
   created_at: string;
   updated_at: string;
+  product?: Product;
 }
 
 export interface Cart {
   id: number;
   user_id: number;
-  items: CartItem[];
-  total_items: number;
-  total_amount: number;
+  cart_items: CartItem[]; // Backend uses "cart_items" not "items"
   created_at: string;
   updated_at: string;
+}
+
+export interface CartResponse {
+  message?: string;
+  cart: Cart;
+  total_amount: number; // This is at root level in backend response
 }
 
 export interface AddToCartData {
@@ -31,26 +34,105 @@ export interface UpdateCartItemData {
   quantity: number;
 }
 
-export const cartApi = {
-  get: async (): Promise<ApiResponse<Cart>> =>
-    makeApiCall(() => apiClient.get("/cart")),
+// Enhanced cart API with retry logic and better error handling
+const cartApiWithRetry = async <T>(
+  apiCall: () => Promise<any>,
+  retries: number = 2,
+): Promise<ApiResponse<T>> => {
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      const result = await makeApiCall(apiCall);
 
-  addItem: async (data: AddToCartData): Promise<ApiResponse<CartItem>> =>
-    makeApiCall(() => apiClient.post("/cart/add", data)),
+      // If successful, return the result
+      if (result.status >= 200 && result.status < 300) {
+        return result;
+      }
+
+      // If it's a server error and we have retries left, try again
+      if (result.status >= 500 && attempt <= retries) {
+        console.log(
+          `🔄 Cart API retry ${attempt}/${retries} due to server error`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+        continue;
+      }
+
+      return result;
+    } catch (error) {
+      if (attempt <= retries) {
+        console.log(
+          `🔄 Cart API retry ${attempt}/${retries} due to error:`,
+          error,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  // This should never be reached, but just in case
+  return { status: 500, message: "Max retries exceeded" };
+};
+
+export const cartApi = {
+  get: async (): Promise<ApiResponse<CartResponse>> => {
+    console.log("🛒 CartAPI: Fetching cart data...");
+    return cartApiWithRetry(() => apiClient.get("/cart"));
+  },
+
+  addItem: async (data: AddToCartData): Promise<ApiResponse<CartResponse>> => {
+    console.log("🛒 CartAPI: Adding item to cart:", data);
+    return cartApiWithRetry(() => apiClient.post("/cart/add", data));
+  },
 
   updateItem: async (
     itemId: number,
     data: UpdateCartItemData,
-  ): Promise<ApiResponse<CartItem>> =>
-    makeApiCall(() => apiClient.put(`/cart/items/${itemId}`, data)),
+  ): Promise<ApiResponse<CartResponse>> => {
+    console.log("🛒 CartAPI: Updating cart item:", itemId, data);
+    return cartApiWithRetry(() => apiClient.put(`/cart/items/${itemId}`, data));
+  },
 
-  removeItem: async (itemId: number): Promise<ApiResponse<void>> =>
-    makeApiCall(() => apiClient.delete(`/cart/items/${itemId}`)),
+  removeItem: async (itemId: number): Promise<ApiResponse<CartResponse>> => {
+    console.log("🛒 CartAPI: Removing cart item:", itemId);
+    return cartApiWithRetry(() => apiClient.delete(`/cart/items/${itemId}`));
+  },
 
-  clear: async (): Promise<ApiResponse<void>> =>
-    makeApiCall(() => apiClient.delete("/cart/clear")),
+  clear: async (): Promise<ApiResponse<void>> => {
+    console.log("🛒 CartAPI: Clearing entire cart");
+    try {
+      // Try to use the clear endpoint if it exists
+      return cartApiWithRetry(() => apiClient.delete("/cart/clear"));
+    } catch (error: any) {
+      // If clear endpoint doesn't exist (404), clear items individually
+      if (error.response?.status === 404) {
+        console.log(
+          "🛒 CartAPI: Clear endpoint not available, clearing items individually",
+        );
+        // First get current cart to find all items
+        const cartResponse = await cartApi.get();
+        if (cartResponse.status === 200 && cartResponse.data?.items) {
+          // Remove each item individually
+          const removePromises = cartResponse.data.items.map((item) =>
+            cartApi.removeItem(item.id),
+          );
+          await Promise.all(removePromises);
+          return { status: 200, message: "Cart cleared successfully" };
+        }
+      }
+      throw error;
+    }
+  },
+
+  // Force refresh cart data (bypasses cache)
+  refresh: async (): Promise<ApiResponse<CartResponse>> => {
+    console.log("🛒 CartAPI: Force refreshing cart data...");
+    return cartApiWithRetry(() => apiClient.get("/cart?_t=" + Date.now()));
+  },
 
   // Aliases for backward compatibility
-  index: async (): Promise<ApiResponse<Cart>> =>
-    makeApiCall(() => apiClient.get("/cart")),
+  index: async (): Promise<ApiResponse<CartResponse>> => {
+    return cartApi.get();
+  },
 };

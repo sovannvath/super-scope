@@ -44,9 +44,7 @@ interface CartItem {
 interface Cart {
   id: number;
   user_id: number; // Added to match API response
-  items: CartItem[];
-  total_items: number;
-  total_amount: number; // API returns total_amount as number
+  cart_items: CartItem[]; // Backend uses cart_items
   created_at: string; // Added to match API response
   updated_at: string; // Added to match API response
 }
@@ -69,7 +67,17 @@ const Cart: React.FC = () => {
     console.log(
       "🛒 Cart page: User authenticated, cart will be fetched by context",
     );
-  }, [isAuthenticated, navigate]);
+
+    // Force refresh cart when cart page is visited (only once)
+    if (refetch && !loading) {
+      console.log("🛒 Cart page: Force refreshing cart on page visit");
+      const timer = setTimeout(() => {
+        refetch();
+      }, 500); // Small delay to ensure context is ready
+
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, navigate]); // Removed refetch and loading from dependencies
 
   // Update last updated timestamp when cart changes
   useEffect(() => {
@@ -177,46 +185,24 @@ const Cart: React.FC = () => {
   if (isEmptyCart) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <div className="text-center mb-4 p-4 bg-gray-50 rounded-lg">
-          <h2 className="text-xl font-semibold mb-2">Cart Debug Information</h2>
-          <div className="text-sm text-gray-600 space-y-1">
-            <p>Cart exists: {cart ? "Yes" : "No"}</p>
-            <p>Cart items array: {cart?.items?.length || 0}</p>
-            <p>Total items field: {cart?.total_items || 0}</p>
-            <p>
-              Total amount field: ${cart?.total_amount?.toFixed(2) || "0.00"}
-            </p>
-            <p>Loading: {loading ? "Yes" : "No"}</p>
-            <p>Error: {error || "None"}</p>
-            <p>Authentication: {isAuthenticated ? "Yes" : "No"}</p>
-            {cart?.total_amount > 0 && cart?.items?.length === 0 && (
-              <p className="text-orange-600 font-medium">
-                ⚠️ Data inconsistency detected: Total amount without items
-              </p>
-            )}
-          </div>
-          <Button
-            onClick={refetch}
-            className="mt-3 mr-2"
-            variant="outline"
-            size="sm"
-          >
-            Refresh Cart
-          </Button>
-          <Button
-            onClick={handleClearCart}
-            className="mt-3"
-            variant="outline"
-            size="sm"
-          >
-            Clear Cart Data
-          </Button>
-        </div>
         <EmptyCart />
-        <div className="text-center mt-6">
+        <div className="text-center mt-6 space-y-4">
           <Button onClick={() => navigate("/products")}>
             Continue Shopping
           </Button>
+          <div className="text-center">
+            <Button
+              onClick={async () => {
+                console.log("🛒 Manual cart refresh triggered");
+                await refetch();
+              }}
+              variant="outline"
+              size="sm"
+              disabled={loading}
+            >
+              {loading ? <LoadingSpinner size="sm" /> : "Refresh Cart"}
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -241,12 +227,18 @@ const Cart: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={refetch}
+            onClick={async () => {
+              console.log("🛒 Manual cart refresh triggered");
+              await refetch();
+            }}
             disabled={loading}
             className="text-gray-500 hover:text-gray-700"
           >
             {loading ? <LoadingSpinner size="sm" /> : "Refresh"}
           </Button>
+          {error && (
+            <span className="text-sm text-red-500">Error loading cart</span>
+          )}
         </div>
       </div>
 

@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { cartApi, Cart, CartItem, AddToCartData } from "@/api/cart";
+import {
+  cartApi,
+  Cart,
+  CartItem,
+  AddToCartData,
+  CartResponse,
+} from "@/api/cart";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,8 +22,15 @@ export interface UseCartReturn {
   refetch: () => Promise<void>;
 }
 
+// Internal cart state that includes total_amount
+interface CartState {
+  cart: Cart | null;
+  total_amount: number;
+}
+
 export function useCart(): UseCartReturn {
   const [cart, setCart] = useState<Cart | null>(null);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
   const [loading, setLoading] = useState(false); // Start as false, only load when authenticated
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -41,26 +54,26 @@ export function useCart(): UseCartReturn {
 
       if (response.status === 200 && response.data) {
         console.log("✅ Cart data received:", response.data);
-        // Ensure items is an array even if empty
-        const cartData = {
-          ...response.data,
-          items: Array.isArray(response.data.items) ? response.data.items : [],
+
+        // Extract cart and total_amount from backend response
+        const { cart: cartData, total_amount } = response.data;
+
+        // Ensure cart_items is an array even if empty
+        const processedCart = {
+          ...cartData,
+          cart_items: Array.isArray(cartData.cart_items)
+            ? cartData.cart_items
+            : [],
         };
 
-        // Fix inconsistent cart data - if no items but has total_amount, reset totals
-        if (cartData.items.length === 0 && cartData.total_amount > 0) {
-          console.log("⚠️ Inconsistent cart data detected - fixing totals");
-          cartData.total_items = 0;
-          cartData.total_amount = 0;
-        }
-
-        setCart(cartData);
+        setCart(processedCart);
+        setTotalAmount(total_amount || 0);
 
         // Cache cart data for offline usage
         localStorage.setItem(
           "cart_cache",
           JSON.stringify({
-            data: cartData,
+            data: { cart: processedCart, total_amount },
             timestamp: Date.now(),
           }),
         );
@@ -70,17 +83,16 @@ export function useCart(): UseCartReturn {
         const emptyCart = {
           id: 0,
           user_id: 0,
-          items: [],
-          total_items: 0,
-          total_amount: 0,
+          cart_items: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
         setCart(emptyCart);
+        setTotalAmount(0);
         localStorage.setItem(
           "cart_cache",
           JSON.stringify({
-            data: emptyCart,
+            data: { cart: emptyCart, total_amount: 0 },
             timestamp: Date.now(),
           }),
         );
@@ -99,7 +111,18 @@ export function useCart(): UseCartReturn {
           // Use cache if it's less than 5 minutes old
           if (cacheAge < 5 * 60 * 1000) {
             console.log("📦 Using cached cart data");
-            setCart(cached.data);
+            if (cached.data.cart) {
+              // New cache format
+              setCart(cached.data.cart);
+              setTotalAmount(cached.data.total_amount || 0);
+            } else {
+              // Old cache format - convert to new structure
+              setCart({
+                ...cached.data,
+                cart_items: cached.data.items || cached.data.cart_items || [],
+              });
+              setTotalAmount(cached.data.total_amount || 0);
+            }
             setError(null);
             return;
           }
@@ -114,13 +137,12 @@ export function useCart(): UseCartReturn {
       const fallbackCart = {
         id: 0,
         user_id: 0,
-        items: [],
-        total_items: 0,
-        total_amount: 0,
+        cart_items: [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       setCart(fallbackCart);
+      setTotalAmount(0);
       setError(null); // Don't show error state
     } finally {
       setLoading(false);
@@ -266,26 +288,30 @@ export function useCart(): UseCartReturn {
   useEffect(() => {
     if (!authLoading) {
       if (isAuthenticated) {
+        console.log("🛒 useCart: User authenticated, fetching cart...");
         fetchCart();
       } else {
+        console.log("🛒 useCart: User not authenticated, clearing cart state");
         // Clear cart state completely when not authenticated
         setCart({
           id: 0,
           user_id: 0,
-          items: [],
-          total_items: 0,
-          total_amount: 0,
+          cart_items: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
+        setTotalAmount(0);
         setLoading(false);
         setError(null);
+        // Clear cached cart data when user logs out
+        localStorage.removeItem("cart_cache");
+        localStorage.removeItem("cart_summary");
       }
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated]); // Removed fetchCart from dependencies to prevent loops
 
-  const itemCount = cart?.total_items || 0;
-  const totalAmount = cart?.total_amount || 0;
+  const itemCount =
+    cart?.cart_items?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   return {
     cart,
