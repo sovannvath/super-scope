@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Product } from "@/api/products";
-import { cartApi } from "@/api/cart";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCartContext } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { RoleGuard } from "@/components/atoms/RoleGuard";
 import { ProductImage } from "@/components/atoms/ProductImage";
