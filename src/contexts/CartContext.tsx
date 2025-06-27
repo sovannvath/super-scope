@@ -105,7 +105,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     ); // Refresh every 5 minutes
 
     return () => clearInterval(interval);
-  }, [hasItems, isAuthenticated, cartState.refetch]);
+  }, [hasItems, isAuthenticated]); // Removed cartState.refetch from dependencies
 
   const enhancedCartState: CartContextType = {
     ...cartState,
