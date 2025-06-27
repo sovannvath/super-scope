@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (token) {
         try {
           // Try to get fresh user data from server
-          const response = await authApi.getCurrentUser();
+          const response = await authApi.user();
           if (response.status === 200 && response.data) {
             let userData = response.data;
 
