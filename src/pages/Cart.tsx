@@ -29,9 +29,17 @@ import { Product } from "@/api/products";
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const { cart, loading, error, updateItem, removeItem, clearCart, refetch } =
-    useCartContext();
+  const { isAuthenticated, user } = useAuth();
+  const {
+    cart,
+    loading,
+    error,
+    updateItem,
+    removeItem,
+    clearCart,
+    refetch,
+    totalAmount,
+  } = useCartContext();
   const { toast } = useToast();
 
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
@@ -41,9 +49,10 @@ const Cart: React.FC = () => {
     // Debug authentication and user info
     console.log("🛒 Cart page: Auth status:", {
       isAuthenticated,
-      user: useAuth().user,
-      userRole: useAuth().user?.role,
-      hasCartContext: !!useCartContext(),
+      user: user,
+      userRole: user?.role,
+      hasCart: !!cart,
+      cartItems: cart?.cart_items?.length || 0,
     });
 
     if (!isAuthenticated) {
