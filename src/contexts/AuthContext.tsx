@@ -67,8 +67,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const response = await authApi.user();
 
           if (response.status === 200 && response.data) {
-            let userData = response.data;
-            console.log("🔄 AuthContext: Raw user data from server:", userData);
+            let rawData = response.data;
+            console.log("🔄 AuthContext: Raw user data from server:", rawData);
+
+            // Handle nested user structure - extract user data from nested object
+            let userData = rawData.user || rawData;
+            console.log("🔄 AuthContext: Extracted user data:", userData);
 
             // Map role_id to role name if needed
             if (userData.role_id && !userData.role) {
@@ -83,7 +87,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 `🔄 AuthContext: Mapped role_id ${userData.role_id} to role: ${userData.role}`,
               );
             }
-
             // Store user data in localStorage for persistence
             localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
