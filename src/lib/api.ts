@@ -10,6 +10,7 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest", // Required by Laravel for API validation
   },
   timeout: 30000, // 30 second timeout for cold starts
 });
@@ -42,6 +43,12 @@ if (token) {
 // Request interceptor to add token
 apiClient.interceptors.request.use(
   (config) => {
+    // Ensure required headers are always present
+    config.headers = config.headers || {};
+    config.headers["Content-Type"] = "application/json";
+    config.headers["Accept"] = "application/json";
+    config.headers["X-Requested-With"] = "XMLHttpRequest";
+
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -399,6 +406,17 @@ export const notificationApi = {
   // Delete notification
   destroy: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/notifications/${id}`)),
+};
+
+// CSRF Token handling (in case Laravel requires it)
+export const csrfApi = {
+  // Get CSRF cookie (for Laravel Sanctum)
+  getCsrfCookie: async () =>
+    makeApiCall(() =>
+      axios.get(`${BASE_URL.replace("/api", "")}/sanctum/csrf-cookie`, {
+        withCredentials: true,
+      }),
+    ),
 };
 
 // Export the axios instance for custom requests
