@@ -58,12 +58,14 @@ export function useCart(): UseCartReturn {
         // Extract cart and total_amount from backend response
         const { cart: cartData, total_amount } = response.data;
 
-        // Ensure cart_items is an array even if empty
+        // Ensure cart_items is an array and add items alias for compatibility
         const processedCart = {
           ...cartData,
           cart_items: Array.isArray(cartData.cart_items)
             ? cartData.cart_items
             : [],
+          // Add items alias for backward compatibility
+          items: Array.isArray(cartData.cart_items) ? cartData.cart_items : [],
         };
 
         setCart(processedCart);
@@ -84,6 +86,7 @@ export function useCart(): UseCartReturn {
           id: 0,
           user_id: 0,
           cart_items: [],
+          items: [], // Add items alias for compatibility
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -138,6 +141,7 @@ export function useCart(): UseCartReturn {
         id: 0,
         user_id: 0,
         cart_items: [],
+        items: [], // Add items alias for compatibility
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -297,6 +301,7 @@ export function useCart(): UseCartReturn {
           id: 0,
           user_id: 0,
           cart_items: [],
+          items: [], // Add items alias for compatibility
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -311,7 +316,10 @@ export function useCart(): UseCartReturn {
   }, [authLoading, isAuthenticated]); // Removed fetchCart from dependencies to prevent loops
 
   const itemCount =
-    cart?.cart_items?.reduce((total, item) => total + item.quantity, 0) || 0;
+    (cart?.cart_items || cart?.items || []).reduce(
+      (total, item) => total + item.quantity,
+      0,
+    ) || 0;
 
   return {
     cart,

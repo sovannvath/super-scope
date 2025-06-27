@@ -126,7 +126,7 @@ const App = () => {
                     <Route
                       path="/cart"
                       element={
-                        <ProtectedRoute allowedRoles={["customer"]}>
+                        <ProtectedRoute requireAuth={true}>
                           <Cart />
                         </ProtectedRoute>
                       }

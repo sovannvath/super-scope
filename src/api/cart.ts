@@ -6,15 +6,18 @@ export interface CartItem {
   cart_id: number;
   product_id: number;
   quantity: number;
+  price?: number; // Price per item (API includes this)
+  subtotal?: number; // Total for this item (API includes this)
   created_at: string;
   updated_at: string;
-  product?: Product;
+  product: Product; // Make required since API includes it
 }
 
 export interface Cart {
   id: number;
   user_id: number;
   cart_items: CartItem[]; // Backend uses "cart_items" not "items"
+  items?: CartItem[]; // Alias for backward compatibility
   created_at: string;
   updated_at: string;
 }
@@ -112,12 +115,18 @@ export const cartApi = {
         );
         // First get current cart to find all items
         const cartResponse = await cartApi.get();
-        if (cartResponse.status === 200 && cartResponse.data?.items) {
-          // Remove each item individually
-          const removePromises = cartResponse.data.items.map((item) =>
-            cartApi.removeItem(item.id),
-          );
-          await Promise.all(removePromises);
+        if (cartResponse.status === 200 && cartResponse.data?.cart) {
+          const items =
+            cartResponse.data.cart.cart_items ||
+            cartResponse.data.cart.items ||
+            [];
+          if (items.length > 0) {
+            // Remove each item individually
+            const removePromises = items.map((item) =>
+              cartApi.removeItem(item.id),
+            );
+            await Promise.all(removePromises);
+          }
           return { status: 200, message: "Cart cleared successfully" };
         }
       }

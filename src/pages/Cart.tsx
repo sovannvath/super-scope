@@ -23,44 +23,40 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-// Define interfaces to match API response
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: string; // API returns price as string
-  image: string; // Match field from /api/products and /api/products/:id
-}
-
-interface CartItem {
-  id: number;
-  product_id: number;
-  quantity: number;
-  price: number; // API returns price as number
-  subtotal: number; // API returns subtotal as number
-  product: Product;
-}
-
-interface Cart {
-  id: number;
-  user_id: number; // Added to match API response
-  cart_items: CartItem[]; // Backend uses cart_items
-  created_at: string; // Added to match API response
-  updated_at: string; // Added to match API response
-}
+// Import types from API
+import { Cart, CartItem } from "@/api/cart";
+import { Product } from "@/api/products";
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const { cart, loading, error, updateItem, removeItem, clearCart, refetch } =
-    useCartContext();
+  const { isAuthenticated, user } = useAuth();
+  const {
+    cart,
+    loading,
+    error,
+    updateItem,
+    removeItem,
+    clearCart,
+    refetch,
+    totalAmount,
+  } = useCartContext();
   const { toast } = useToast();
 
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
+    // Debug authentication and user info
+    console.log("🛒 Cart page: Auth status:", {
+      isAuthenticated,
+      user: user,
+      userRole: user?.role,
+      hasCart: !!cart,
+      cartItems: cart?.cart_items?.length || 0,
+    });
+
     if (!isAuthenticated) {
+      console.log("🛒 Cart page: User not authenticated, redirecting to login");
       navigate("/login");
       return;
     }
@@ -163,24 +159,26 @@ const Cart: React.FC = () => {
       <div className="container mx-auto py-8 px-4">
         <ErrorState
           description={error}
-          action={<Button onClick={fetchCart}>Try Again</Button>}
+          action={<Button onClick={refetch}>Try Again</Button>}
         />
       </div>
     );
   }
 
   // Debug logging for cart state
+  const cartItems = cart?.cart_items || cart?.items || [];
   console.log("🛒 Cart page render state:", {
     hasCart: !!cart,
-    cartItems: cart?.items,
-    itemsLength: cart?.items?.length,
+    cartItems: cartItems,
+    itemsLength: cartItems.length,
     totalItems: cart?.total_items,
-    isEmptyByItems: !cart?.items || cart.items.length === 0,
+    cartFromAPI: cart,
+    isEmptyByItems: cartItems.length === 0,
     isEmptyByTotalItems: cart?.total_items === 0,
   });
 
   // Check if cart is truly empty
-  const isEmptyCart = !cart || !cart.items || cart.items.length === 0;
+  const isEmptyCart = !cart || cartItems.length === 0;
 
   if (isEmptyCart) {
     return (
@@ -215,7 +213,7 @@ const Cart: React.FC = () => {
           <ShoppingCart className="h-8 w-8 mr-3" />
           <h1 className="text-3xl font-bold">Shopping Cart</h1>
           <Badge variant="secondary" className="ml-3">
-            {cart.total_items} items
+            {cartItems.length} items
           </Badge>
         </div>
         <div className="flex items-center space-x-2">
@@ -259,7 +257,7 @@ const Cart: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {cart.items.map((item) => (
+              {cartItems.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center space-x-4 p-4 border rounded-lg"
@@ -286,7 +284,13 @@ const Cart: React.FC = () => {
                       {item.product.description}
                     </p>
                     <p className="font-medium text-lg">
-                      ${item.price.toFixed(2)} each
+                      $
+                      {(
+                        item.price ||
+                        parseFloat(item.product.price) ||
+                        0
+                      ).toFixed(2)}{" "}
+                      each
                     </p>
                   </div>
 
@@ -322,7 +326,12 @@ const Cart: React.FC = () => {
                   {/* Subtotal and Remove */}
                   <div className="text-right">
                     <p className="font-bold text-lg">
-                      ${item.subtotal.toFixed(2)}
+                      $
+                      {(
+                        item.subtotal ||
+                        (item.price || parseFloat(item.product.price) || 0) *
+                          item.quantity
+                      ).toFixed(2)}
                     </p>
                     <Button
                       variant="ghost"
@@ -349,8 +358,8 @@ const Cart: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span>Items ({cart.total_items}):</span>
-                  <span>${cart.total_amount.toFixed(2)}</span>
+                  <span>Items ({cartItems.length}):</span>
+                  <span>${totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping:</span>
@@ -358,12 +367,12 @@ const Cart: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Tax:</span>
-                  <span>${(cart.total_amount * 0.1).toFixed(2)}</span>
+                  <span>${(totalAmount * 0.1).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
-                  <span>${(cart.total_amount * 1.1).toFixed(2)}</span>
+                  <span>${(totalAmount * 1.1).toFixed(2)}</span>
                 </div>
               </div>
 

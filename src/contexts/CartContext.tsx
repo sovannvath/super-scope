@@ -30,12 +30,17 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const cartState = useCart();
   const { isAuthenticated } = useAuth();
 
-  // Enhanced cart state
-  const isCartEmpty = cartState.itemCount === 0;
-  const hasItems = cartState.itemCount > 0;
+  // Enhanced cart state - use correct item count calculation
+  const actualItemCount =
+    (cartState.cart?.cart_items || cartState.cart?.items || []).reduce(
+      (total, item) => total + item.quantity,
+      0,
+    ) || 0;
+  const isCartEmpty = actualItemCount === 0;
+  const hasItems = actualItemCount > 0;
 
   const cartSummary = {
-    itemCount: cartState.itemCount,
+    itemCount: actualItemCount,
     totalAmount: cartState.totalAmount,
     lastUpdated: cartState.cart?.updated_at || null,
   };
