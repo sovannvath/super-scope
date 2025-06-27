@@ -25,6 +25,29 @@ const Checkout = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      try {
+        setLoadingPaymentMethods(true);
+        const response = await cartApi.getPaymentMethods();
+        if (response.status === 200 && response.data) {
+          setPaymentMethods(response.data);
+        } else {
+          setError("Failed to load payment methods");
+        }
+      } catch (error: any) {
+        console.error("Error fetching payment methods:", error);
+        setError("Failed to load payment methods");
+      } finally {
+        setLoadingPaymentMethods(false);
+      }
+    };
+
+    if (user) {
+      fetchPaymentMethods();
+    }
+  }, [user]);
+
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!paymentMethodId) {
