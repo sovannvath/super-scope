@@ -115,12 +115,18 @@ export const cartApi = {
         );
         // First get current cart to find all items
         const cartResponse = await cartApi.get();
-        if (cartResponse.status === 200 && cartResponse.data?.items) {
-          // Remove each item individually
-          const removePromises = cartResponse.data.items.map((item) =>
-            cartApi.removeItem(item.id),
-          );
-          await Promise.all(removePromises);
+        if (cartResponse.status === 200 && cartResponse.data?.cart) {
+          const items =
+            cartResponse.data.cart.cart_items ||
+            cartResponse.data.cart.items ||
+            [];
+          if (items.length > 0) {
+            // Remove each item individually
+            const removePromises = items.map((item) =>
+              cartApi.removeItem(item.id),
+            );
+            await Promise.all(removePromises);
+          }
           return { status: 200, message: "Cart cleared successfully" };
         }
       }
