@@ -46,6 +46,14 @@ export function useCart(): UseCartReturn {
           ...response.data,
           items: Array.isArray(response.data.items) ? response.data.items : [],
         };
+
+        // Fix inconsistent cart data - if no items but has total_amount, reset totals
+        if (cartData.items.length === 0 && cartData.total_amount > 0) {
+          console.log("⚠️ Inconsistent cart data detected - fixing totals");
+          cartData.total_items = 0;
+          cartData.total_amount = 0;
+        }
+
         setCart(cartData);
 
         // Cache cart data for offline usage
