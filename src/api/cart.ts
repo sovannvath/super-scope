@@ -15,6 +15,7 @@ export interface Cart {
   id: number;
   user_id: number;
   cart_items: CartItem[]; // Backend uses "cart_items" not "items"
+  items?: CartItem[]; // Alias for backward compatibility
   created_at: string;
   updated_at: string;
 }
