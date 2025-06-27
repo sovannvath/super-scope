@@ -310,8 +310,8 @@ export function useCart(): UseCartReturn {
     }
   }, [authLoading, isAuthenticated]); // Removed fetchCart from dependencies to prevent loops
 
-  const itemCount = cart?.total_items || 0;
-  const totalAmount = cart?.total_amount || 0;
+  const itemCount =
+    cart?.cart_items?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   return {
     cart,
