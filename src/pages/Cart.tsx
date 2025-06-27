@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { cartApi } from "@/api/cart";
+import { useCartContext } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   LoadingSpinner,
