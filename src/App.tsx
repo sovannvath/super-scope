@@ -98,6 +98,14 @@ const App = () => {
                       }
                     />
                     <Route
+                      path="/admin/products"
+                      element={
+                        <ProtectedRoute allowedRoles={["admin"]}>
+                          <ProductManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/product-management"
                       element={
                         <ProtectedRoute allowedRoles={["admin"]}>
