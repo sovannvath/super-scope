@@ -66,13 +66,21 @@ const Cart: React.FC = () => {
       navigate("/login");
       return;
     }
-    console.log("🛒 Cart page: User authenticated, fetching cart...");
-    fetchCart();
+    console.log(
+      "🛒 Cart page: User authenticated, cart will be fetched by context",
+    );
   }, [isAuthenticated, navigate]);
+
+  // Update last updated timestamp when cart changes
+  useEffect(() => {
+    if (cart && cart.updated_at) {
+      setLastUpdated(new Date(cart.updated_at));
+    }
+  }, [cart]);
 
   // Debug logging for cart state changes
   useEffect(() => {
-    console.log("🛒 Cart state updated:", {
+    console.log("🛒 Cart page state updated:", {
       cart,
       loading,
       error,
