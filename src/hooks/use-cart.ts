@@ -22,6 +22,12 @@ export interface UseCartReturn {
   refetch: () => Promise<void>;
 }
 
+// Internal cart state that includes total_amount
+interface CartState {
+  cart: Cart | null;
+  total_amount: number;
+}
+
 export function useCart(): UseCartReturn {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false); // Start as false, only load when authenticated
