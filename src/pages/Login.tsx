@@ -84,23 +84,28 @@ const Login: React.FC = () => {
           </p>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="pt-0">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-slate-600 font-medium">
+                Email Address
+              </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your email address"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
                 disabled={isLoading}
+                className="border-slate-200 focus:border-orange-300 focus:ring-orange-200 bg-white/80 h-11"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-slate-600 font-medium">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -112,12 +117,13 @@ const Login: React.FC = () => {
                   }
                   required
                   disabled={isLoading}
+                  className="border-slate-200 focus:border-orange-300 focus:ring-orange-200 bg-white/80 h-11 pr-12"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-orange-50 text-slate-400 hover:text-orange-500"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
@@ -132,10 +138,17 @@ const Login: React.FC = () => {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white h-11 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
               disabled={isLoading}
             >
-              {isLoading ? "Signing In..." : "Sign In"}
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Signing In...</span>
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </Button>
 
             <div className="text-center space-y-2">
