@@ -408,6 +408,17 @@ export const notificationApi = {
     makeApiCall(() => apiClient.delete(`/notifications/${id}`)),
 };
 
+// CSRF Token handling (in case Laravel requires it)
+export const csrfApi = {
+  // Get CSRF cookie (for Laravel Sanctum)
+  getCsrfCookie: async () =>
+    makeApiCall(() =>
+      axios.get(`${BASE_URL.replace("/api", "")}/sanctum/csrf-cookie`, {
+        withCredentials: true,
+      }),
+    ),
+};
+
 // Export the axios instance for custom requests
 export { apiClient };
 
