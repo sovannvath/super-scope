@@ -170,7 +170,15 @@ const Checkout = () => {
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" disabled={loading} className="w-full">
+              <Button
+                type="submit"
+                disabled={
+                  loading ||
+                  loadingPaymentMethods ||
+                  paymentMethods.length === 0
+                }
+                className="w-full"
+              >
                 {loading ? "Processing..." : "Place Order"}
               </Button>
             </form>
