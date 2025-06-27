@@ -56,6 +56,7 @@ const ProductManagement: React.FC = () => {
     price: "",
     quantity: "",
     low_stock_threshold: "5", // Default threshold
+    image: "", // Add image field
     status: "true", // Boolean string for form
   });
 
@@ -191,6 +192,7 @@ const ProductManagement: React.FC = () => {
       price: "",
       quantity: "",
       low_stock_threshold: "5",
+      image: "",
       status: "true",
     });
   };
@@ -245,6 +247,7 @@ const ProductManagement: React.FC = () => {
         price: formData.price, // Keep as string to match API expectation
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
+        image: formData.image.trim() || undefined, // Include image if provided
         status: formData.status === "true", // Convert to boolean
       };
 
@@ -387,6 +390,7 @@ const ProductManagement: React.FC = () => {
       price: product.price,
       quantity: product.quantity.toString(),
       low_stock_threshold: product.low_stock_threshold.toString(),
+      image: product.image || "",
       status: product.status ? "true" : "false",
     });
     setIsEditDialogOpen(true);
@@ -404,6 +408,7 @@ const ProductManagement: React.FC = () => {
         price: formData.price, // Keep as string to match API expectation
         quantity: parseInt(formData.quantity),
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
+        image: formData.image.trim() || undefined, // Include image if provided
         status: formData.status === "true", // Convert to boolean
       };
 
