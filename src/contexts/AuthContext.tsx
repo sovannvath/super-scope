@@ -61,10 +61,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (token) {
+        // If we have stored user data, use it immediately and verify in background
+        if (storedUser) {
+          try {
+            const parsedData = JSON.parse(storedUser);
+            const parsedUser = parsedData.user || parsedData;
+            setUser(parsedUser);
+            console.log("✅ User loaded from localStorage:", parsedUser.name);
+          } catch (e) {
+            console.log("❌ Stored user data is corrupted, clearing auth");
+            removeToken();
+            localStorage.removeItem("user_data");
+            setUser(null);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         try {
-          // Try to get fresh user data from server
+          // Try to get fresh user data from server with timeout
           console.log("🔄 AuthContext: Fetching user data from server...");
-          const response = await authApi.user();
+
+          // Create a timeout promise
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Auth API timeout")), 10000),
+          );
+
+          const response = await Promise.race([authApi.user(), timeoutPromise]);
 
           if (response.status === 200 && response.data) {
             let rawData = response.data;
