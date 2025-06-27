@@ -29,13 +29,12 @@ export interface Product {
 
 export interface CreateProductData {
   name: string;
-  description?: string;
-  price: string; // Changed to string to match API
-  category_id: number;
+  description: string; // Made required to match API validation
+  price: string; // API expects string
   quantity: number;
   low_stock_threshold: number;
-  image?: string; // Changed from image_url to image to match API
-  status: boolean;
+  image?: string; // Optional image field
+  status: boolean; // API expects boolean
 }
 
 export interface ProductFilters {
