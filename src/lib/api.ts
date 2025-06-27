@@ -1,4 +1,4 @@
-// API Configuration and functions for Laravel backend
+// lib/api.ts
 import axios, { AxiosResponse } from "axios";
 
 // Base API URL for Laravel backend
@@ -40,10 +40,9 @@ if (token) {
   apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 }
 
-// Request interceptor to add token
+// Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Ensure required headers are always present
     config.headers = config.headers || {};
     config.headers["Content-Type"] = "application/json";
     config.headers["Accept"] = "application/json";
@@ -54,7 +53,6 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Debug logging for API requests
     console.log(
       `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
       {
@@ -69,10 +67,9 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response interceptor for error handling
+// Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
-    // Debug logging for successful responses
     console.log(
       `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
       {
@@ -83,7 +80,6 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Debug logging for error responses
     console.error(
       `❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`,
       {
@@ -94,7 +90,6 @@ apiClient.interceptors.response.use(
       },
     );
 
-    // Also log the response data separately for better visibility
     if (error.response?.data) {
       console.error(
         "📋 Error Response Data:",
@@ -103,7 +98,6 @@ apiClient.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      // Token expired or invalid
       removeToken();
       window.location.href = "/login";
     }
@@ -119,7 +113,7 @@ export interface ApiResponse<T = any> {
   errors?: any;
 }
 
-// Category interface for products
+// Category interface
 export interface Category {
   id: number;
   name: string;
@@ -133,19 +127,19 @@ export interface Category {
   };
 }
 
-// Product interface - Updated to match API response format
+// Product interface
 export interface Product {
   id: number;
   name: string;
   description: string;
-  price: string; // API returns price as string
+  price: string;
   quantity: number;
   low_stock_threshold: number;
-  image: string; // Added image field
+  image: string;
   status: boolean;
   created_at: string;
   updated_at: string;
-  categories: Category[]; // Added categories field
+  categories: Category[];
 }
 
 // Cart item interface
@@ -154,6 +148,36 @@ export interface CartItem {
   product_id: number;
   quantity: number;
   product?: Product;
+}
+
+// Order item interface
+export interface OrderItem {
+  id: number;
+  product_id: number;
+  quantity: number;
+  price: number;
+  product: {
+    name: string;
+    description: string;
+  };
+}
+
+// Order interface
+export interface Order {
+  id: number;
+  user_id: number;
+  total_amount: number;
+  status: string;
+  payment_status: string;
+  payment_method: string;
+  shipping_address: string;
+  order_items: OrderItem[];
+  created_at: string;
+  updated_at: string;
+  customer: {
+    name: string;
+    email: string;
+  };
 }
 
 // User interface
@@ -173,9 +197,40 @@ export interface DashboardData {
   totalProducts?: number;
   totalOrders?: number;
   totalCustomers?: number;
-  pendingOrders?: any[];
-  lowStockAlerts?: any[];
-  recentOrders?: any[];
+  pendingOrders?: Order[];
+  lowStockAlerts?: Product[];
+  recentOrders?: Order[];
+}
+
+// Request order interface
+export interface RequestOrder {
+  id: number;
+  product_id: number;
+  quantity: number;
+  admin_notes?: string;
+  admin_approval_status?: string;
+  warehouse_approval_status?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Payment method interface
+export interface PaymentMethod {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+// Notification interface
+export interface Notification {
+  id: number;
+  type: string;
+  notifiable_id: number;
+  notifiable_type: string;
+  data: any;
+  read_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Generic API call wrapper
@@ -193,13 +248,11 @@ export async function makeApiCall<T>(
     console.error("API Error:", error);
 
     if (error.code === "ECONNABORTED" && error.message.includes("timeout")) {
-      // Timeout error - backend might be cold starting
       return {
         status: 0,
         message: "Server is starting up, please wait a moment and try again",
       };
     } else if (error.response) {
-      // Server responded with error status
       console.log("🔍 Processing server error response:", {
         status: error.response.status,
         data: error.response.data,
@@ -216,13 +269,11 @@ export async function makeApiCall<T>(
         errors: error.response.data?.errors || error.response.data?.error,
       };
     } else if (error.request) {
-      // Network error
       return {
         status: 0,
         message: "Network error - please check your connection",
       };
     } else {
-      // Other error
       return {
         status: -1,
         message: error.message || "An unexpected error occurred",
@@ -245,150 +296,143 @@ export const authApi = {
 
   logout: async () => makeApiCall(() => apiClient.post("/logout")),
 
-  user: async () => makeApiCall(() => apiClient.get("/user")),
+  user: async () => makeApiCall<User>(() => apiClient.get("/user")),
 
-  me: async () => makeApiCall(() => apiClient.get("/user")), // Alias for compatibility
+  me: async () => makeApiCall<User>(() => apiClient.get("/user")),
 };
 
-// Product API - Aligned with Laravel backend routes
+// Product API
 export const productApi = {
-  // GET /products - Get all products (public route)
-  index: async () => makeApiCall(() => apiClient.get("/products")),
+  index: async () => makeApiCall<Product[]>(() => apiClient.get("/products")),
 
-  // GET /products/{id} - Get single product (public route)
   show: async (id: number) =>
-    makeApiCall(() => apiClient.get(`/products/${id}`)),
+    makeApiCall<Product>(() => apiClient.get(`/products/${id}`)),
 
-  // POST /products - Create new product (protected route)
   create: async (productData: Partial<Product>) =>
     makeApiCall(() => apiClient.post("/products", productData)),
 
-  // PUT /products/{id} - Update product (protected route)
   update: async (id: number, productData: Partial<Product>) =>
     makeApiCall(() => apiClient.put(`/products/${id}`, productData)),
 
-  // DELETE /products/{id} - Delete product (protected route)
   delete: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/products/${id}`)),
 
-  // DELETE alias for destroy method
   destroy: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/products/${id}`)),
 
-  // Alternative list endpoint (alias for index)
-  list: async () => makeApiCall(() => apiClient.get("/products")),
+  list: async () => makeApiCall<Product[]>(() => apiClient.get("/products")),
 
-  // Search products (if backend supports it)
   search: async (query: string) =>
-    makeApiCall(() =>
+    makeApiCall<Product[]>(() =>
       apiClient.get(`/products/search?q=${encodeURIComponent(query)}`),
     ),
+
+  lowStock: async () =>
+    makeApiCall<Product[]>(() => apiClient.get("/products/low-stock")),
 };
 
 // Cart API
 export const cartApi = {
-  // Get cart items
-  index: async () => makeApiCall(() => apiClient.get("/cart")),
+  index: async () => makeApiCall<CartItem[]>(() => apiClient.get("/cart")),
 
-  // Add item to cart
   addItem: async (data: { product_id: number; quantity: number }) =>
     makeApiCall(() => apiClient.post("/cart/add", data)),
 
-  // Update cart item quantity
   updateItem: async (itemId: number, quantity: number) =>
     makeApiCall(() => apiClient.put(`/cart/items/${itemId}`, { quantity })),
 
-  // Remove item from cart
   removeItem: async (itemId: number) =>
     makeApiCall(() => apiClient.delete(`/cart/items/${itemId}`)),
 
-  // Clear entire cart
   clear: async () => makeApiCall(() => apiClient.delete("/cart/clear")),
-};
-
-// Dashboard API
-export const dashboardApi = {
-  // Role-specific dashboards
-  customer: async () => makeApiCall(() => apiClient.get("/dashboard/customer")),
-  admin: async () => makeApiCall(() => apiClient.get("/dashboard/admin")),
-  warehouse: async () =>
-    makeApiCall(() => apiClient.get("/dashboard/warehouse")),
-  staff: async () => makeApiCall(() => apiClient.get("/dashboard/staff")),
-
-  // Generic dashboard (for compatibility)
-  index: async () => makeApiCall(() => apiClient.get("/dashboard/customer")),
-};
-
-// Request Order API (for inventory requests)
-export const requestOrderApi = {
-  // Get all request orders
-  index: async () => makeApiCall(() => apiClient.get("/request-orders")),
-
-  // Get single request order
-  show: async (id: number) =>
-    makeApiCall(() => apiClient.get(`/request-orders/${id}`)),
-
-  // Create new request order
-  create: async (orderData: any) =>
-    makeApiCall(() => apiClient.post("/request-orders", orderData)),
-
-  // Alias for create method for backward compatibility
-  store: async (orderData: any) =>
-    makeApiCall(() => apiClient.post("/request-orders", orderData)),
-
-  // Admin approval
-  adminApproval: async (id: number, data: any) =>
-    makeApiCall(() =>
-      apiClient.put(`/request-orders/${id}/admin-approval`, data),
-    ),
-
-  // Warehouse approval
-  warehouseApproval: async (id: number, data: any) =>
-    makeApiCall(() =>
-      apiClient.put(`/request-orders/${id}/warehouse-approval`, data),
-    ),
 };
 
 // Order API
 export const orderApi = {
-  // Get all orders
-  index: async () => makeApiCall(() => apiClient.get("/orders")),
+  index: async () => makeApiCall<Order[]>(() => apiClient.get("/orders")),
 
-  // Get single order
-  show: async (id: number) => makeApiCall(() => apiClient.get(`/orders/${id}`)),
+  show: async (id: number) =>
+    makeApiCall<Order>(() => apiClient.get(`/orders/${id}`)),
 
-  // Create new order
-  store: async (orderData: any) =>
-    makeApiCall(() => apiClient.post("/orders", orderData)),
+  store: async (orderData: {
+    payment_method_id: number;
+    notes?: string;
+  }) => makeApiCall(() => apiClient.post("/orders", orderData)),
 
-  // Get payment methods
   getPaymentMethods: async () =>
-    makeApiCall(() => apiClient.get("/payment-methods")),
+    makeApiCall<PaymentMethod[]>(() => apiClient.get("/payment-methods")),
 
-  // Update order status
   updateStatus: async (id: number, status: string) =>
-    makeApiCall(() => apiClient.put(`/orders/${id}/status`, { status })),
+    makeApiCall(() =>
+      apiClient.put(`/orders/${id}/status`, { order_status: status.toLowerCase() }),
+    ),
 
-  // Update payment status
-  updatePaymentStatus: async (id: number, paymentData: any) =>
-    makeApiCall(() => apiClient.put(`/orders/${id}/payment`, paymentData)),
+  updatePaymentStatus: async (id: number, status: string) =>
+    makeApiCall(() =>
+      apiClient.put(`/orders/${id}/payment`, { payment_status: status.toLowerCase() }),
+    ),
+};
+
+// Request Order API
+export const requestOrderApi = {
+  index: async () => makeApiCall<RequestOrder[]>(() => apiClient.get("/request-orders")),
+
+  show: async (id: number) =>
+    makeApiCall<RequestOrder>(() => apiClient.get(`/request-orders/${id}`)),
+
+  create: async (orderData: {
+    product_id: number;
+    quantity: number;
+    admin_notes?: string;
+  }) => makeApiCall(() => apiClient.post("/request-orders", orderData)),
+
+  store: async (orderData: {
+    product_id: number;
+    quantity: number;
+    admin_notes?: string;
+  }) => makeApiCall(() => apiClient.post("/request-orders", orderData)),
+
+  adminApproval: async (
+    id: number,
+    data: { admin_approval_status: string; admin_notes?: string },
+  ) => makeApiCall(() => apiClient.put(`/request-orders/${id}/admin-approval`, data)),
+
+  warehouseApproval: async (
+    id: number,
+    data: { warehouse_approval_status: string; warehouse_notes?: string },
+  ) => makeApiCall(() => apiClient.put(`/request-orders/${id}/warehouse-approval`, data)),
 };
 
 // User API
 export const userApi = {
-  // Get all users (admin only)
-  index: async () => makeApiCall(() => apiClient.get("/users")),
+  index: async () => makeApiCall<User[]>(() => apiClient.get("/users")),
 
-  // Get single user
-  show: async (id: number) => makeApiCall(() => apiClient.get(`/users/${id}`)),
+  show: async (id: number) =>
+    makeApiCall<User>(() => apiClient.get(`/users/${id}`)),
 
-  // Update user profile
   update: async (id: number, userData: Partial<User>) =>
     makeApiCall(() => apiClient.put(`/users/${id}`, userData)),
 
-  // Delete user
   delete: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/users/${id}`)),
+};
+
+// Dashboard API
+export const dashboardApi = {
+  customer: async () =>
+    makeApiCall<DashboardData>(() => apiClient.get("/dashboard/customer")),
+
+  admin: async () =>
+    makeApiCall<DashboardData>(() => apiClient.get("/dashboard/admin")),
+
+  warehouse: async () =>
+    makeApiCall<DashboardData>(() => apiClient.get("/dashboard/warehouse")),
+
+  staff: async () =>
+    makeApiCall<DashboardData>(() => apiClient.get("/dashboard/staff")),
+
+  index: async () =>
+    makeApiCall<DashboardData>(() => apiClient.get("/dashboard/customer")),
 };
 
 // Health check API
@@ -400,28 +444,24 @@ export const healthApi = {
 
 // Notification API
 export const notificationApi = {
-  // Get all notifications
-  index: async () => makeApiCall(() => apiClient.get("/notifications")),
+  index: async () =>
+    makeApiCall<Notification[]>(() => apiClient.get("/notifications")),
 
-  // Get unread notifications
-  unread: async () => makeApiCall(() => apiClient.get("/notifications/unread")),
+  unread: async () =>
+    makeApiCall<Notification[]>(() => apiClient.get("/notifications/unread")),
 
-  // Mark notification as read
   markAsRead: async (id: number) =>
     makeApiCall(() => apiClient.put(`/notifications/${id}/read`)),
 
-  // Mark all notifications as read
   markAllAsRead: async () =>
     makeApiCall(() => apiClient.put("/notifications/read-all")),
 
-  // Delete notification
   destroy: async (id: number) =>
     makeApiCall(() => apiClient.delete(`/notifications/${id}`)),
 };
 
-// CSRF Token handling (in case Laravel requires it)
+// CSRF Token handling
 export const csrfApi = {
-  // Get CSRF cookie (for Laravel Sanctum)
   getCsrfCookie: async () =>
     makeApiCall(() =>
       axios.get(`${BASE_URL.replace("/api", "")}/sanctum/csrf-cookie`, {

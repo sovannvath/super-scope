@@ -32,7 +32,7 @@ interface Order {
   payment_status: "pending" | "paid" | "failed" | "refunded";
   payment_method: string;
   total_amount: number;
-  shipping_address: string;
+  shipping_address: string | { street: string; city: string; state: string; zipCode: string; country: string };
   billing_address: string;
   notes?: string;
   items: Array<{
@@ -41,7 +41,7 @@ interface Order {
     quantity: number;
     price: number;
     subtotal: number;
-    product: {
+    product?: {
       id: number;
       name: string;
       description: string;
@@ -56,7 +56,7 @@ const Orders: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -65,6 +65,7 @@ const Orders: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("🛒 Orders: User:", user); // Debug user
     if (!isAuthenticated) {
       navigate("/login");
       return;
@@ -76,12 +77,10 @@ const Orders: React.FC = () => {
       fetchOrders();
     }
 
-    // Show success message if coming from checkout
     if (location.state?.orderPlaced) {
       toast({
         title: "Order Placed Successfully! 🎉",
-        description:
-          "Thank you for your purchase. Your order is being processed.",
+        description: "Thank you for your purchase. Your order is being processed.",
       });
     }
   }, [isAuthenticated, id, navigate, location.state]);
@@ -91,15 +90,59 @@ const Orders: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await ordersApi.getAll();
+      console.log("🛒 Orders API response:", response);
+      console.log("🛒 Orders API response.data:", JSON.stringify(response.data, null, 2));
 
-      if (response.status === 200 && response.data) {
-        setOrders(response.data.data || response.data);
+      if (response.status === 200) {
+        const ordersData = Array.isArray(response.data.orders)
+          ? response.data.orders
+          : Array.isArray(response.data)
+          ? response.data
+          : [];
+        setOrders(
+          ordersData.map((order: any) => ({
+            id: order.id,
+            order_number: order.order_number || `ORD-${order.id}`,
+            status: order.order_status || "pending",
+            payment_status: order.payment_status || "pending",
+            payment_method: order.payment_method?.name || order.payment_method || "Unknown",
+            total_amount: parseFloat(order.total_amount || order.total || order.subtotal || "0"),
+            shipping_address: order.shipping_address || "",
+            billing_address: order.billing_address || order.shipping_address || "",
+            notes: order.notes,
+            items: (order.order_items || order.items || []).map((item: any) => ({
+              id: item.id,
+              product_id: item.product_id || item.productId,
+              quantity: item.quantity || 1,
+              price: parseFloat(item.price || item.unitPrice || "0"),
+              subtotal: parseFloat(item.subtotal || item.totalPrice || item.price * item.quantity || "0"),
+              product: item.product
+                ? {
+                    id: item.product.id,
+                    name: item.product.name || "Unknown Product",
+                    description: item.product.description || "",
+                    image: item.product.image,
+                  }
+                : { id: item.product_id, name: "Unknown Product", description: "" },
+            })),
+            created_at: order.created_at || new Date().toISOString(),
+            updated_at: order.updated_at || new Date().toISOString(),
+          })),
+        );
+        if (ordersData.length === 0) {
+          console.warn("🛒 No orders found in response");
+        }
       } else {
         throw new Error(response.message || "Failed to fetch orders");
       }
     } catch (error: any) {
       setError(error.message || "Failed to load orders");
-      console.error("Orders fetch error:", error);
+      console.error("🛒 Orders fetch error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load orders",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -110,15 +153,50 @@ const Orders: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await ordersApi.getById(orderId);
+      console.log("🛒 Single Order API response:", response);
+      console.log("🛒 Single Order API response.data:", JSON.stringify(response.data, null, 2));
 
       if (response.status === 200 && response.data) {
-        setSelectedOrder(response.data);
+        const order = response.data.order || response.data;
+        setSelectedOrder({
+          id: order.id,
+          order_number: order.order_number || `ORD-${order.id}`,
+          status: order.order_status || "pending",
+          payment_status: order.payment_status || "pending",
+          payment_method: order.payment_method?.name || order.payment_method || "Unknown",
+          total_amount: parseFloat(order.total_amount || order.total || order.subtotal || "0"),
+          shipping_address: order.shipping_address || "",
+          billing_address: order.billing_address || order.shipping_address || "",
+          notes: order.notes,
+          items: (order.order_items || order.items || []).map((item: any) => ({
+            id: item.id,
+            product_id: item.product_id || item.productId,
+            quantity: item.quantity || 1,
+            price: parseFloat(item.price || item.unitPrice || "0"),
+            subtotal: parseFloat(item.subtotal || item.totalPrice || item.price * item.quantity || "0"),
+            product: item.product
+              ? {
+                  id: item.product.id,
+                  name: item.product.name || "Unknown Product",
+                  description: item.product.description || "",
+                  image: item.product.image,
+                }
+              : { id: item.product_id, name: "Unknown Product", description: "" },
+          })),
+          created_at: order.created_at || new Date().toISOString(),
+          updated_at: order.updated_at || new Date().toISOString(),
+        });
       } else {
         throw new Error(response.message || "Order not found");
       }
     } catch (error: any) {
       setError(error.message || "Failed to load order");
-      console.error("Order fetch error:", error);
+      console.error("🛒 Order fetch error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load order",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -218,7 +296,6 @@ const Orders: React.FC = () => {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Order Details */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
@@ -271,46 +348,50 @@ const Orders: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Order Items */}
             <Card>
               <CardHeader>
                 <CardTitle>Order Items</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {selectedOrder.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center space-x-4 p-4 border rounded-lg"
-                  >
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                      {item.product.image ? (
-                        <img
-                          src={item.product.image}
-                          alt={item.product.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <Package className="h-6 w-6 text-gray-400" />
-                      )}
+                {selectedOrder.items.length === 0 ? (
+                  <p className="text-gray-600">No items found for this order.</p>
+                ) : (
+                  selectedOrder.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center space-x-4 p-4 border rounded-lg"
+                    >
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                        {item.product?.image ? (
+                          <img
+                            src={item.product.image}
+                            alt={item.product.name}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <Package className="h-6 w-6 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium">
+                          {item.product?.name || "Unknown Product"}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {item.product?.description || "No description available"}
+                        </p>
+                        <p className="text-sm">
+                          ${item.price.toFixed(2)} × {item.quantity}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">${item.subtotal.toFixed(2)}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{item.product.name}</h4>
-                      <p className="text-sm text-gray-600">
-                        {item.product.description}
-                      </p>
-                      <p className="text-sm">
-                        ${item.price.toFixed(2)} × {item.quantity}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">${item.subtotal.toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </CardContent>
             </Card>
 
-            {/* Addresses */}
             <div className="grid md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -318,7 +399,9 @@ const Orders: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="whitespace-pre-line">
-                    {selectedOrder.shipping_address}
+                    {typeof selectedOrder.shipping_address === "string"
+                      ? selectedOrder.shipping_address
+                      : `${selectedOrder.shipping_address.street}, ${selectedOrder.shipping_address.city}, ${selectedOrder.shipping_address.state} ${selectedOrder.shipping_address.zipCode}, ${selectedOrder.shipping_address.country}`}
                   </p>
                 </CardContent>
               </Card>
@@ -336,7 +419,6 @@ const Orders: React.FC = () => {
             </div>
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="sticky top-4">
               <CardHeader>
@@ -374,7 +456,6 @@ const Orders: React.FC = () => {
     );
   }
 
-  // Orders List View
   if (orders.length === 0) {
     return (
       <div className="container mx-auto py-8 px-4">

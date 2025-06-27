@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -21,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
-import { productApi, requestOrderApi, Product } from "@/lib/api";
+import { productApi, requestOrderApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertTriangle,
@@ -34,9 +33,17 @@ import {
   Clock,
 } from "lucide-react";
 
+interface Product {
+  id: number;
+  name: string;
+  quantity: number;
+  low_stock_threshold: number;
+  price: string;
+}
+
 interface RestockRequest {
   id: number;
-  productId: number;
+  product_id: number;
   productName: string;
   currentStock: number;
   requestedQuantity: number;
@@ -60,80 +67,108 @@ const LowStockAlerts: React.FC = () => {
   const [requestNotes, setRequestNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadLowStockData();
-  }, []);
-
   const loadLowStockData = async () => {
     try {
-      // Load low stock products
-      const lowStockResponse = await productApi.getLowStock();
-      if (lowStockResponse.status === 200) {
+      setIsLoading(true);
+      console.log("📦 LowStockAlerts: User:", user);
+      console.log("📦 Fetching low stock products from /products/low-stock...");
+      let lowStockResponse;
+      try {
+        lowStockResponse = await productApi.getLowStock();
+      } catch (error) {
+        console.warn("⚠️ productApi.getLowStock failed, falling back to productApi.index:", error);
+        lowStockResponse = await productApi.index();
+      }
+      console.log("📦 Low stock response:", JSON.stringify(lowStockResponse, null, 2));
+      if (lowStockResponse.status === 200 && lowStockResponse.data) {
         let lowStockArray: Product[] = [];
         if (Array.isArray(lowStockResponse.data)) {
           lowStockArray = lowStockResponse.data;
-        } else if (
-          lowStockResponse.data &&
-          Array.isArray(lowStockResponse.data.data)
-        ) {
+        } else if (lowStockResponse.data?.data && Array.isArray(lowStockResponse.data.data)) {
           lowStockArray = lowStockResponse.data.data;
+        } else {
+          console.warn("Unexpected low stock response format:", lowStockResponse.data);
         }
+        lowStockArray = lowStockArray.filter(
+          (p: Product) => p.quantity <= p.low_stock_threshold
+        );
         setLowStockProducts(lowStockArray);
+        if (lowStockArray.length === 0) {
+          console.log("📦 No low stock products found");
+        }
+      } else {
+        console.warn("Failed to fetch low stock products:", lowStockResponse);
+        setLowStockProducts([]);
+        toast({
+          title: "Warning",
+          description: "Failed to fetch low stock products",
+          variant: "destructive",
+        });
       }
 
-      // Load restock requests
-      const requestsResponse = await requestOrderApi.list();
-      if (requestsResponse.status === 200) {
+      console.log("🔄 Fetching restock requests from /request-orders...");
+      const requestsResponse = await requestOrderApi.index();
+      console.log("🔄 Restock requests response:", JSON.stringify(requestsResponse, null, 2));
+      if (requestsResponse.status === 200 && requestsResponse.data) {
         let requestsArray: any[] = [];
         if (Array.isArray(requestsResponse.data)) {
           requestsArray = requestsResponse.data;
-        } else if (
-          requestsResponse.data &&
-          Array.isArray(requestsResponse.data.data)
-        ) {
+        } else if (requestsResponse.data?.data && Array.isArray(requestsResponse.data.data)) {
           requestsArray = requestsResponse.data.data;
+        } else {
+          console.warn("Unexpected restock requests response format:", requestsResponse.data);
         }
-
-        // Format request data to match interface
-        const formattedRequests: RestockRequest[] = requestsArray.map(
-          (req: any) => ({
-            id: req.id,
-            productId: req.product_id,
-            productName: req.product?.name || "Unknown Product",
-            currentStock: req.product?.quantity || 0,
-            requestedQuantity: req.quantity,
-            status:
-              req.admin_approval_status === "approved" &&
-              req.warehouse_approval_status === "approved"
-                ? "approved"
-                : req.admin_approval_status === "rejected" ||
-                    req.warehouse_approval_status === "rejected"
-                  ? "rejected"
-                  : "pending",
-            requestedBy: req.user?.name || "Unknown User",
-            requestedAt: req.created_at,
-            approvedBy:
-              req.warehouse_approval_status !== "pending"
-                ? "Warehouse Manager"
-                : undefined,
-            approvedAt:
-              req.updated_at !== req.created_at ? req.updated_at : undefined,
-            notes: req.admin_notes || req.warehouse_notes || "",
-          }),
-        );
-
+        const formattedRequests: RestockRequest[] = requestsArray.map((req: any) => ({
+          id: req.id,
+          product_id: req.product_id,
+          productName: req.product?.name || "Unknown Product",
+          currentStock: req.product?.quantity || 0,
+          requestedQuantity: req.quantity,
+          status:
+            req.admin_approval_status === "approved" &&
+            req.warehouse_approval_status === "approved"
+              ? "approved"
+              : req.admin_approval_status === "rejected" ||
+                req.warehouse_approval_status === "rejected"
+              ? "rejected"
+              : "pending",
+          requestedBy: req.user?.name || "Unknown User",
+          requestedAt: req.created_at || new Date().toISOString(),
+          approvedBy:
+            req.warehouse_approval_status !== "pending" ? "Warehouse Manager" : undefined,
+          approvedAt: req.updated_at !== req.created_at ? req.updated_at : undefined,
+          notes: req.admin_notes || req.warehouse_notes || "",
+        }));
         setRestockRequests(formattedRequests);
+        if (formattedRequests.length === 0) {
+          console.log("🔄 No restock requests found");
+        }
+      } else {
+        console.warn("Failed to fetch restock requests:", requestsResponse);
+        setRestockRequests([]);
+        toast({
+          title: "Warning",
+          description: "Failed to fetch restock requests",
+          variant: "destructive",
+        });
       }
     } catch (error) {
+      console.error("❌ Error loading low stock data:", error);
       toast({
         title: "Error",
         description: "Failed to load low stock data",
         variant: "destructive",
       });
+      setLowStockProducts([]);
+      setRestockRequests([]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadLowStockData();
+  }, []);
 
   const handleRequestRestock = (product: Product) => {
     setSelectedProduct(product);
@@ -152,29 +187,29 @@ const LowStockAlerts: React.FC = () => {
         quantity: parseInt(requestQuantity),
         admin_notes: requestNotes,
       };
-
+      console.log("📤 Submitting restock request:", requestData);
       const response = await requestOrderApi.create(requestData);
+      console.log("📤 Restock request response:", JSON.stringify(response, null, 2));
 
       if (response.status === 200 || response.status === 201) {
         toast({
           title: "Restock Request Submitted",
           description: `Request for ${requestQuantity} units of ${selectedProduct.name} has been sent to the warehouse.`,
         });
-
         setIsRequestDialogOpen(false);
         setSelectedProduct(null);
         setRequestQuantity("");
         setRequestNotes("");
-        loadLowStockData(); // Reload data from server
+        await loadLowStockData();
       } else {
         toast({
           title: "Error",
-          description:
-            response.data?.message || "Failed to submit restock request",
+          description: response.data?.message || "Failed to submit restock request",
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error("❌ Error submitting restock request:", error);
       toast({
         title: "Error",
         description: "Failed to submit restock request",
@@ -234,7 +269,6 @@ const LowStockAlerts: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-metallic-primary">
@@ -254,7 +288,6 @@ const LowStockAlerts: React.FC = () => {
         </Button>
       </div>
 
-      {/* Alert Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-red-200 bg-red-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -267,7 +300,7 @@ const LowStockAlerts: React.FC = () => {
             <div className="text-2xl font-bold text-red-600">
               {
                 lowStockProducts.filter(
-                  (p) => (p.quantity / p.low_stock_threshold) * 100 <= 20,
+                  (p) => (p.quantity / p.low_stock_threshold) * 100 <= 20
                 ).length
               }
             </div>
@@ -288,7 +321,7 @@ const LowStockAlerts: React.FC = () => {
                 lowStockProducts.filter(
                   (p) =>
                     (p.quantity / p.low_stock_threshold) * 100 > 20 &&
-                    (p.quantity / p.low_stock_threshold) * 100 <= 50,
+                    (p.quantity / p.low_stock_threshold) * 100 <= 50
                 ).length
               }
             </div>
@@ -314,7 +347,6 @@ const LowStockAlerts: React.FC = () => {
         </Card>
       </div>
 
-      {/* Low Stock Products */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -351,8 +383,7 @@ const LowStockAlerts: React.FC = () => {
                 <TableBody>
                   {lowStockProducts.map((product) => {
                     const stockLevel = getStockLevel(product);
-                    const percentage =
-                      (product.quantity / product.low_stock_threshold) * 100;
+                    const percentage = (product.quantity / product.low_stock_threshold) * 100;
 
                     return (
                       <TableRow key={product.id}>
@@ -373,9 +404,7 @@ const LowStockAlerts: React.FC = () => {
                         <TableCell>
                           <Badge
                             variant={
-                              stockLevel.level === "critical"
-                                ? "destructive"
-                                : "secondary"
+                              stockLevel.level === "critical" ? "destructive" : "secondary"
                             }
                           >
                             {stockLevel.level.toUpperCase()}
@@ -386,9 +415,7 @@ const LowStockAlerts: React.FC = () => {
                             <div className="w-20 bg-gray-200 rounded-full h-2">
                               <div
                                 className={`h-2 rounded-full ${stockLevel.color}`}
-                                style={{
-                                  width: `${Math.min(percentage, 100)}%`,
-                                }}
+                                style={{ width: `${Math.min(percentage, 100)}%` }}
                               ></div>
                             </div>
                             <span className="text-xs text-metallic-tertiary">
@@ -417,7 +444,6 @@ const LowStockAlerts: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Restock Requests */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -440,41 +466,46 @@ const LowStockAlerts: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {restockRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium">
-                      {request.productName}
-                    </TableCell>
-                    <TableCell>{request.currentStock}</TableCell>
-                    <TableCell className="font-medium text-metallic-primary">
-                      {request.requestedQuantity}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(request.status)}
-                        <Badge variant={getStatusBadgeVariant(request.status)}>
-                          {request.status.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>{request.requestedBy}</TableCell>
-                    <TableCell>
-                      {new Date(request.requestedAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-metallic-tertiary">
-                        {request.notes || "No notes"}
-                      </span>
+                {restockRequests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center">
+                      No restock requests found
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  restockRequests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell className="font-medium">{request.productName}</TableCell>
+                      <TableCell>{request.currentStock}</TableCell>
+                      <TableCell className="font-medium text-metallic-primary">
+                        {request.requestedQuantity}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(request.status)}
+                          <Badge variant={getStatusBadgeVariant(request.status)}>
+                            {request.status.toUpperCase()}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>{request.requestedBy}</TableCell>
+                      <TableCell>
+                        {new Date(request.requestedAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-metallic-tertiary">
+                          {request.notes || "No notes"}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Request Restock Dialog */}
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
