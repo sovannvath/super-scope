@@ -23,31 +23,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-// Define interfaces to match API response
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: string; // API returns price as string
-  image: string; // Match field from /api/products and /api/products/:id
-}
-
-interface CartItem {
-  id: number;
-  product_id: number;
-  quantity: number;
-  price: number; // API returns price as number
-  subtotal: number; // API returns subtotal as number
-  product: Product;
-}
-
-interface Cart {
-  id: number;
-  user_id: number; // Added to match API response
-  cart_items: CartItem[]; // Backend uses cart_items
-  created_at: string; // Added to match API response
-  updated_at: string; // Added to match API response
-}
+// Import types from API
+import { Cart, CartItem } from "@/api/cart";
+import { Product } from "@/api/products";
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
