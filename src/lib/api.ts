@@ -167,6 +167,17 @@ export interface User {
   updated_at: string;
 }
 
+// Dashboard data interface
+export interface DashboardData {
+  totalIncome?: number;
+  totalProducts?: number;
+  totalOrders?: number;
+  totalCustomers?: number;
+  pendingOrders?: any[];
+  lowStockAlerts?: any[];
+  recentOrders?: any[];
+}
+
 // Generic API call wrapper
 export async function makeApiCall<T>(
   apiCall: () => Promise<AxiosResponse<T>>,
