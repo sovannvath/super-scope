@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { cartApi, Cart, CartItem, AddToCartData } from "@/api/cart";
+import {
+  cartApi,
+  Cart,
+  CartItem,
+  AddToCartData,
+  CartResponse,
+} from "@/api/cart";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
