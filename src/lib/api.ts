@@ -2,7 +2,7 @@
 import axios, { AxiosResponse } from "axios";
 
 // Base API URL for Laravel backend
-const BASE_URL = "http://127.0.0.1:8000/api";
+const BASE_URL = "https://laravel-wtc.onrender.com/api";
 
 // Create axios instance with default configuration
 const apiClient = axios.create({
