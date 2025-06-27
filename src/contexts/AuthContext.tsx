@@ -53,8 +53,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = getToken();
+      const storedUser = localStorage.getItem("user_data");
+
       if (token) {
         try {
+          // Try to get fresh user data from server
           const response = await authApi.user();
           if (response.status === 200 && response.data) {
             let userData = response.data;
@@ -70,23 +73,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               userData.role = roleMapping[userData.role_id] || "customer";
             }
 
+            // Store user data in localStorage for persistence
+            localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
             console.log(
-              "✅ User authenticated:",
+              "✅ User authenticated from server:",
               userData.name,
               "Role:",
               userData.role,
             );
           } else {
-            // Token is invalid, remove it
+            // Server response failed, but token exists - try stored user data
+            if (storedUser) {
+              try {
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+                console.log(
+                  "✅ User restored from localStorage:",
+                  parsedUser.name,
+                );
+              } catch (e) {
+                console.log("Stored user data is corrupted, clearing auth");
+                removeToken();
+                localStorage.removeItem("user_data");
+                setUser(null);
+              }
+            } else {
+              // No stored user data and server failed, clear auth
+              removeToken();
+              setUser(null);
+            }
+          }
+        } catch (error) {
+          console.log("Token validation failed, trying stored user data");
+          // If server is unreachable but we have stored user data, use it
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              setUser(parsedUser);
+              console.log(
+                "✅ User restored from localStorage (offline):",
+                parsedUser.name,
+              );
+            } catch (e) {
+              console.log("Stored user data is corrupted, clearing auth");
+              removeToken();
+              localStorage.removeItem("user_data");
+              setUser(null);
+            }
+          } else {
+            // No stored user data and server failed, clear auth
             removeToken();
             setUser(null);
           }
-        } catch (error) {
-          console.log("Token validation failed, clearing auth");
-          removeToken();
-          setUser(null);
         }
+      } else if (storedUser) {
+        // No token but we have stored user data - this shouldn't happen, clear it
+        localStorage.removeItem("user_data");
+        setUser(null);
       }
       setIsLoading(false);
     };
