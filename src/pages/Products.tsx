@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { productApi } from "@/lib/api";
 import { cartApi } from "@/api/cart";
+import { ProductImage } from "@/components/atoms/ProductImage";
 import {
   ShoppingCart,
   Search,
@@ -259,18 +260,15 @@ const Products: React.FC = () => {
                   className={`hover:shadow-lg transition-all duration-300 border-metallic-light/20 ${viewMode === "list" ? "flex flex-row" : ""}`}
                 >
                   <div
-                    className={`${viewMode === "list" ? "w-32 h-32" : "h-48"} bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center relative cursor-pointer`}
+                    className="relative cursor-pointer"
                     onClick={() => viewProduct(product.id)}
                   >
-                    {product.image ? (
-                      <img
-                        src={product?.image}
-                        alt={product.name}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <Package className="h-12 w-12 text-metallic-primary/30" />
-                    )}
+                    <ProductImage
+                      src={product.image}
+                      alt={product.name}
+                      className={viewMode === "list" ? "w-32 h-32" : "h-48"}
+                      fallbackClassName="bg-gradient-to-br from-metallic-light to-metallic-background"
+                    />
                     {product.quantity < product.low_stock_threshold && (
                       <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
                         Low Stock

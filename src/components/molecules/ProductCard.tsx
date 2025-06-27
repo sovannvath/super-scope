@@ -14,10 +14,10 @@ import { cartApi } from "@/api/cart";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { RoleGuard } from "@/components/atoms/RoleGuard";
+import { ProductImage } from "@/components/atoms/ProductImage";
 import {
   ShoppingCart,
   Heart,
-  Package,
   Star,
   AlertTriangle,
   Eye,
@@ -99,26 +99,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       )}
     >
       {/* Product Image */}
-      <div
-        className={cn(
-          "relative bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center",
-          {
+      <div className="relative">
+        <ProductImage
+          src={product.image}
+          alt={product.name}
+          className={cn({
             "h-48": variant === "default",
             "w-32 h-32": variant === "compact",
             "h-56": variant === "featured",
-          },
-        )}
-      >
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="object-cover w-full h-full"
-            loading="lazy"
-          />
-        ) : (
-          <Package className="h-12 w-12 text-muted-foreground/30" />
-        )}
+          })}
+        />
 
         {/* Badges */}
         <div className="absolute top-2 left-2 space-y-1">

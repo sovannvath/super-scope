@@ -607,6 +607,21 @@ const ProductManagement: React.FC = () => {
                 />
               </div>
               <div>
+                <Label htmlFor="image">Image URL</Label>
+                <Input
+                  id="image"
+                  type="url"
+                  value={formData.image}
+                  onChange={(e) =>
+                    setFormData({ ...formData, image: e.target.value })
+                  }
+                  placeholder="https://example.com/image.jpg"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Paste a direct image URL from the web
+                </p>
+              </div>
+              <div>
                 <Label htmlFor="status">Status</Label>
                 <select
                   id="status"
@@ -644,13 +659,13 @@ const ProductManagement: React.FC = () => {
           <TableHeader>
             <TableRow className="bg-gray-50">
               <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                Created At
+                Image
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                 Name
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
-                Weight
+                Stock
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-sm font-medium text-gray-600">
                 Price
@@ -679,8 +694,22 @@ const ProductManagement: React.FC = () => {
                   key={product.id}
                   className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
-                  <TableCell className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(product.created_at).toLocaleString()}
+                  <TableCell className="px-6 py-4">
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded-md border"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                        <Package className="h-6 w-6 text-gray-400" />
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="px-6 py-4 text-sm text-gray-900">
                     {product.name}
@@ -689,7 +718,7 @@ const ProductManagement: React.FC = () => {
                     {product.quantity}
                   </TableCell>
                   <TableCell className="px-6 py-4 text-sm text-gray-600">
-                    {product.price}
+                    ${parseFloat(product.price).toFixed(2)}
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <div className="flex space-x-2">
@@ -847,6 +876,21 @@ const ProductManagement: React.FC = () => {
               />
             </div>
             <div>
+              <Label htmlFor="edit-image">Image URL</Label>
+              <Input
+                id="edit-image"
+                type="url"
+                value={formData.image}
+                onChange={(e) =>
+                  setFormData({ ...formData, image: e.target.value })
+                }
+                placeholder="https://example.com/image.jpg"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Paste a direct image URL from the web
+              </p>
+            </div>
+            <div>
               <Label htmlFor="edit-status">Status</Label>
               <select
                 id="edit-status"
@@ -915,6 +959,25 @@ const ProductManagement: React.FC = () => {
                   {selectedProduct.status ? "Active" : "Inactive"}
                 </p>
               </div>
+              {selectedProduct.image && (
+                <div>
+                  <Label className="font-medium">Image:</Label>
+                  <div className="mt-2">
+                    <img
+                      src={selectedProduct.image}
+                      alt={selectedProduct.name}
+                      className="w-full h-32 object-cover rounded-md border"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                      }}
+                    />
+                    <p className="text-xs text-gray-500 mt-1 break-all">
+                      {selectedProduct.image}
+                    </p>
+                  </div>
+                </div>
+              )}
               <div>
                 <Label className="font-medium">Created:</Label>
                 <p className="text-gray-600">

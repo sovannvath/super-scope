@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { productApi, cartApi } from "@/lib/api";
+import { ProductImage } from "@/components/atoms/ProductImage";
 import {
   ShoppingCart,
   Star,
   Heart,
-  Package,
   ArrowLeft,
   Plus,
   Minus,
@@ -210,23 +210,18 @@ const ProductDetail: React.FC = () => {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Product Image */}
           <Card>
-            <CardContent className="p-0">
-              <div className="h-96 bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center relative rounded-lg">
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="object-cover w-full h-full rounded-lg"
-                  />
-                ) : (
-                  <Package className="h-24 w-24 text-metallic-primary/30" />
-                )}
-                {product.quantity < product.low_stock_threshold && (
-                  <Badge className="absolute top-4 left-4 bg-red-500 text-white">
-                    Low Stock
-                  </Badge>
-                )}
-              </div>
+            <CardContent className="p-0 relative">
+              <ProductImage
+                src={product.image}
+                alt={product.name}
+                className="h-96 rounded-lg"
+                fallbackClassName="bg-gradient-to-br from-metallic-light to-metallic-background rounded-lg"
+              />
+              {product.quantity < product.low_stock_threshold && (
+                <Badge className="absolute top-4 left-4 bg-red-500 text-white">
+                  Low Stock
+                </Badge>
+              )}
             </CardContent>
           </Card>
 
