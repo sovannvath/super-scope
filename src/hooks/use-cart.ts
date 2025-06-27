@@ -316,7 +316,10 @@ export function useCart(): UseCartReturn {
   }, [authLoading, isAuthenticated]); // Removed fetchCart from dependencies to prevent loops
 
   const itemCount =
-    cart?.cart_items?.reduce((total, item) => total + item.quantity, 0) || 0;
+    (cart?.cart_items || cart?.items || []).reduce(
+      (total, item) => total + item.quantity,
+      0,
+    ) || 0;
 
   return {
     cart,
