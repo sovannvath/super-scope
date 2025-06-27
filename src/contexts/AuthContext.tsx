@@ -228,23 +228,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       // Clear all authentication data
       removeToken();
+      localStorage.removeItem("user_data");
       setUser(null);
 
-      // Clear all localStorage
-      localStorage.clear();
-
-      // Clear all sessionStorage
-      sessionStorage.clear();
-
       // Clear any app-specific cached data
-      const keysToRemove = [
-        "auth_token",
-        "user_data",
-        "cart_data",
-        "app_state",
-        "theme",
-        "appSettings",
-      ];
+      const keysToRemove = ["cart_data", "app_state"];
 
       keysToRemove.forEach((key) => {
         localStorage.removeItem(key);
