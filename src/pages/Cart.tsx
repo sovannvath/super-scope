@@ -191,6 +191,8 @@ const Cart: React.FC = () => {
           <h2 className="text-xl font-semibold mb-2">Cart Debug Information</h2>
           <div className="text-sm text-gray-600 space-y-1">
             <p>Cart exists: {cart ? "Yes" : "No"}</p>
+            <p>Cart ID: {cart?.id || "None"}</p>
+            <p>User ID: {cart?.user_id || "None"}</p>
             <p>Cart items array: {cart?.items?.length || 0}</p>
             <p>Total items field: {cart?.total_items || 0}</p>
             <p>
@@ -199,28 +201,53 @@ const Cart: React.FC = () => {
             <p>Loading: {loading ? "Yes" : "No"}</p>
             <p>Error: {error || "None"}</p>
             <p>Authentication: {isAuthenticated ? "Yes" : "No"}</p>
+            <p>Cart created: {cart?.created_at || "Unknown"}</p>
+            <p>Cart updated: {cart?.updated_at || "Unknown"}</p>
+            <p>
+              Cache status:{" "}
+              {localStorage.getItem("cart_cache") ? "Present" : "None"}
+            </p>
+            <p>
+              Summary status:{" "}
+              {localStorage.getItem("cart_summary") ? "Present" : "None"}
+            </p>
             {cart?.total_amount > 0 && cart?.items?.length === 0 && (
               <p className="text-orange-600 font-medium">
                 ⚠️ Data inconsistency detected: Total amount without items
               </p>
             )}
+            {!loading && !error && cart?.items?.length === 0 && (
+              <p className="text-blue-600 font-medium">
+                ℹ️ Cart is genuinely empty - no saved items found
+              </p>
+            )}
           </div>
-          <Button
-            onClick={refetch}
-            className="mt-3 mr-2"
-            variant="outline"
-            size="sm"
-          >
-            Refresh Cart
-          </Button>
-          <Button
-            onClick={handleClearCart}
-            className="mt-3"
-            variant="outline"
-            size="sm"
-          >
-            Clear Cart Data
-          </Button>
+          <div className="flex justify-center space-x-2 mt-3">
+            <Button
+              onClick={async () => {
+                console.log("🛒 Debug: Force refresh cart");
+                await refetch();
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Refresh Cart
+            </Button>
+            <Button onClick={handleClearCart} variant="outline" size="sm">
+              Clear Cart Data
+            </Button>
+            <Button
+              onClick={() => {
+                localStorage.removeItem("cart_cache");
+                localStorage.removeItem("cart_summary");
+                refetch();
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Clear Cache & Refresh
+            </Button>
+          </div>
         </div>
         <EmptyCart />
         <div className="text-center mt-6">
