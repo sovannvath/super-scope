@@ -90,114 +90,20 @@ const Cart: React.FC = () => {
     });
   }, [cart, loading, error]);
 
-  const fetchCart = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      console.log("🛒 Fetching cart from API...");
-      console.log(
-        "📍 Full API URL:",
-        "https://laravel-wtc.onrender.com/api/cart",
-      );
-
-      const response = await cartApi.get();
-      console.log("📡 Cart API Response:", response);
-
-      if (response.status === 200 && response.data) {
-        console.log("✅ Cart data received:", response.data);
-        // Ensure items is an array, even if empty
-        const cartData: Cart = {
-          ...response.data,
-          items: Array.isArray(response.data.items) ? response.data.items : [],
-        };
-        setCart(cartData);
-        setLastUpdated(new Date());
-
-        // Store cart summary in localStorage for persistence
-        localStorage.setItem(
-          "cart_summary",
-          JSON.stringify({
-            itemCount: cartData.total_items,
-            totalAmount: cartData.total_amount,
-            lastUpdated: new Date().toISOString(),
-          }),
-        );
-      } else if (response.status === 404) {
-        // No cart exists yet
-        setCart({
-          id: 0,
-          user_id: 0,
-          items: [],
-          total_items: 0,
-          total_amount: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-        localStorage.removeItem("cart_summary");
-      } else {
-        throw new Error(response.message || "Failed to fetch cart");
-      }
-    } catch (error: any) {
-      console.error("❌ Cart fetch error:", error.message, error);
-      setError(error.message || "Failed to load cart");
-
-      // Try to load from localStorage as fallback
-      const cachedSummary = localStorage.getItem("cart_summary");
-      if (cachedSummary) {
-        try {
-          const summary = JSON.parse(cachedSummary);
-          toast({
-            title: "Working Offline",
-            description:
-              "Showing cached cart data. Some features may be limited.",
-            variant: "default",
-          });
-          setCart({
-            id: 0,
-            user_id: 0,
-            items: [],
-            total_items: summary.itemCount || 0,
-            total_amount: summary.totalAmount || 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        } catch (parseError) {
-          console.error("❌ Failed to parse cached cart:", parseError);
-          localStorage.removeItem("cart_summary");
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const updateQuantity = async (itemId: number, newQuantity: number) => {
     if (newQuantity < 1) {
-      removeItem(itemId);
+      handleRemoveItem(itemId);
       return;
     }
 
     try {
       setUpdatingItems((prev) => new Set(prev).add(itemId));
-      const response = await cartApi.updateItem(itemId, {
-        quantity: newQuantity,
-      });
+      const success = await updateItem(itemId, newQuantity);
 
-      if (response.status === 200) {
-        await fetchCart(); // Refresh cart
-        toast({
-          title: "Cart Updated",
-          description: "Item quantity has been updated",
-        });
-      } else {
-        throw new Error(response.message || "Failed to update item");
+      if (!success) {
+        // Error is already handled by the context
+        console.log("❌ Update quantity failed");
       }
-    } catch (error: any) {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update item quantity",
-        variant: "destructive",
-      });
     } finally {
       setUpdatingItems((prev) => {
         const newSet = new Set(prev);
@@ -207,26 +113,15 @@ const Cart: React.FC = () => {
     }
   };
 
-  const removeItem = async (itemId: number) => {
+  const handleRemoveItem = async (itemId: number) => {
     try {
       setUpdatingItems((prev) => new Set(prev).add(itemId));
-      const response = await cartApi.removeItem(itemId);
+      const success = await removeItem(itemId);
 
-      if (response.status === 200) {
-        await fetchCart(); // Refresh cart
-        toast({
-          title: "Item Removed",
-          description: "Item has been removed from your cart",
-        });
-      } else {
-        throw new Error(response.message || "Failed to remove item");
+      if (!success) {
+        // Error is already handled by the context
+        console.log("❌ Remove item failed");
       }
-    } catch (error: any) {
-      toast({
-        title: "Remove Failed",
-        description: error.message || "Failed to remove item",
-        variant: "destructive",
-      });
     } finally {
       setUpdatingItems((prev) => {
         const newSet = new Set(prev);
@@ -236,28 +131,12 @@ const Cart: React.FC = () => {
     }
   };
 
-  const clearCart = async () => {
-    try {
-      setLoading(true);
-      const response = await cartApi.clear();
+  const handleClearCart = async () => {
+    const success = await clearCart();
 
-      if (response.status === 200) {
-        await fetchCart(); // Refresh cart
-        toast({
-          title: "Cart Cleared",
-          description: "All items have been removed from your cart",
-        });
-      } else {
-        throw new Error(response.message || "Failed to clear cart");
-      }
-    } catch (error: any) {
-      toast({
-        title: "Clear Failed",
-        description: error.message || "Failed to clear cart",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (!success) {
+      // Error is already handled by the context
+      console.log("❌ Clear cart failed");
     }
   };
 
