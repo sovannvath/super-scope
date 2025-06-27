@@ -266,8 +266,10 @@ export function useCart(): UseCartReturn {
   useEffect(() => {
     if (!authLoading) {
       if (isAuthenticated) {
+        console.log("🛒 useCart: User authenticated, fetching cart...");
         fetchCart();
       } else {
+        console.log("🛒 useCart: User not authenticated, clearing cart state");
         // Clear cart state completely when not authenticated
         setCart({
           id: 0,
@@ -280,9 +282,26 @@ export function useCart(): UseCartReturn {
         });
         setLoading(false);
         setError(null);
+        // Clear cached cart data when user logs out
+        localStorage.removeItem("cart_cache");
+        localStorage.removeItem("cart_summary");
       }
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, fetchCart]);
+
+  // Additional effect to force cart refresh when component mounts and user is already authenticated
+  useEffect(() => {
+    const forceRefreshCart = async () => {
+      if (isAuthenticated && !authLoading && !loading) {
+        console.log("🛒 useCart: Force refresh cart on mount");
+        await fetchCart();
+      }
+    };
+
+    // Small delay to ensure auth context is fully initialized
+    const timer = setTimeout(forceRefreshCart, 100);
+    return () => clearTimeout(timer);
+  }, []); // Only run once on mount
 
   const itemCount = cart?.total_items || 0;
   const totalAmount = cart?.total_amount || 0;
