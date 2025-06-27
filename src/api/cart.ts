@@ -89,12 +89,12 @@ export const cartApi = {
   updateItem: async (
     itemId: number,
     data: UpdateCartItemData,
-  ): Promise<ApiResponse<CartItem>> => {
+  ): Promise<ApiResponse<CartResponse>> => {
     console.log("🛒 CartAPI: Updating cart item:", itemId, data);
     return cartApiWithRetry(() => apiClient.put(`/cart/items/${itemId}`, data));
   },
 
-  removeItem: async (itemId: number): Promise<ApiResponse<void>> => {
+  removeItem: async (itemId: number): Promise<ApiResponse<CartResponse>> => {
     console.log("🛒 CartAPI: Removing cart item:", itemId);
     return cartApiWithRetry(() => apiClient.delete(`/cart/items/${itemId}`));
   },
