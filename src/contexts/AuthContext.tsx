@@ -137,10 +137,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || "Login failed. Please try again.";
+      console.error("🚨 Login Error Details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        config: error.config,
+      });
+
+      let errorMessage = "Login failed. Please try again.";
+      let errorTitle = "Login Error";
+
+      if (error.response?.status === 422) {
+        errorTitle = "Validation Error";
+        if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data?.errors) {
+          // Handle Laravel validation errors
+          const errors = error.response.data.errors;
+          const errorMessages = Object.values(errors).flat().join(", ");
+          errorMessage = errorMessages;
+        } else {
+          errorMessage = "Please check your email and password format.";
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
       toast({
-        title: "Login Error",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
