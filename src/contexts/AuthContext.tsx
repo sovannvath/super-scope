@@ -235,8 +235,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = rawUserData.user || rawUserData;
         console.log("🔄 AuthContext: Extracted user data:", userData);
 
-        // Map role_id to role name if needed
-        if (userData.role_id && !userData.role) {
+        // Extract role name - handle both object and string formats
+        if (
+          userData.role &&
+          typeof userData.role === "object" &&
+          userData.role.name
+        ) {
+          // Role is an object with name property
+          userData.role = userData.role.name.toLowerCase();
+          console.log(
+            `🔄 AuthContext: Extracted role from object: ${userData.role}`,
+          );
+        } else if (
+          userData.role_id &&
+          (!userData.role || typeof userData.role === "object")
+        ) {
+          // Map role_id to role name if role is missing or an object
           const roleMapping: Record<number, string> = {
             1: "admin",
             2: "warehouse_manager",
@@ -248,7 +262,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             `🔄 AuthContext: Mapped role_id ${userData.role_id} to role: ${userData.role}`,
           );
         }
-
         setToken(token);
         localStorage.setItem("user_data", JSON.stringify(userData));
         setUser(userData);
