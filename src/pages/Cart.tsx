@@ -287,7 +287,7 @@ const Cart: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => handleRemoveItem(item.id)}
                       disabled={updatingItems.has(item.id)}
                       className="text-red-600 hover:text-red-800"
                     >
