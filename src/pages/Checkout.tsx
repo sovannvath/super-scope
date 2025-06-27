@@ -18,8 +18,10 @@ import { useAuth } from "@/contexts/AuthContext";
 const Checkout = () => {
   const { user } = useAuth();
   const [paymentMethodId, setPaymentMethodId] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
