@@ -30,6 +30,7 @@ interface CartState {
 
 export function useCart(): UseCartReturn {
   const [cart, setCart] = useState<Cart | null>(null);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
   const [loading, setLoading] = useState(false); // Start as false, only load when authenticated
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
