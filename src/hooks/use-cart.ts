@@ -137,13 +137,12 @@ export function useCart(): UseCartReturn {
       const fallbackCart = {
         id: 0,
         user_id: 0,
-        items: [],
-        total_items: 0,
-        total_amount: 0,
+        cart_items: [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       setCart(fallbackCart);
+      setTotalAmount(0);
       setError(null); // Don't show error state
     } finally {
       setLoading(false);
