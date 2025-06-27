@@ -296,12 +296,11 @@ export function useCart(): UseCartReturn {
         setCart({
           id: 0,
           user_id: 0,
-          items: [],
-          total_items: 0,
-          total_amount: 0,
+          cart_items: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
+        setTotalAmount(0);
         setLoading(false);
         setError(null);
         // Clear cached cart data when user logs out
