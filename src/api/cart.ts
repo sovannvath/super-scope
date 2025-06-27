@@ -126,13 +126,13 @@ export const cartApi = {
   },
 
   // Force refresh cart data (bypasses cache)
-  refresh: async (): Promise<ApiResponse<Cart>> => {
+  refresh: async (): Promise<ApiResponse<CartResponse>> => {
     console.log("🛒 CartAPI: Force refreshing cart data...");
     return cartApiWithRetry(() => apiClient.get("/cart?_t=" + Date.now()));
   },
 
   // Aliases for backward compatibility
-  index: async (): Promise<ApiResponse<Cart>> => {
+  index: async (): Promise<ApiResponse<CartResponse>> => {
     return cartApi.get();
   },
 };
