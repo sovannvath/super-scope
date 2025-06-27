@@ -10,6 +10,7 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest", // Required by Laravel for API validation
   },
   timeout: 30000, // 30 second timeout for cold starts
 });
