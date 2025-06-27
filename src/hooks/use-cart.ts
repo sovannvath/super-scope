@@ -54,26 +54,26 @@ export function useCart(): UseCartReturn {
 
       if (response.status === 200 && response.data) {
         console.log("✅ Cart data received:", response.data);
-        // Ensure items is an array even if empty
-        const cartData = {
-          ...response.data,
-          items: Array.isArray(response.data.items) ? response.data.items : [],
+
+        // Extract cart and total_amount from backend response
+        const { cart: cartData, total_amount } = response.data;
+
+        // Ensure cart_items is an array even if empty
+        const processedCart = {
+          ...cartData,
+          cart_items: Array.isArray(cartData.cart_items)
+            ? cartData.cart_items
+            : [],
         };
 
-        // Fix inconsistent cart data - if no items but has total_amount, reset totals
-        if (cartData.items.length === 0 && cartData.total_amount > 0) {
-          console.log("⚠️ Inconsistent cart data detected - fixing totals");
-          cartData.total_items = 0;
-          cartData.total_amount = 0;
-        }
-
-        setCart(cartData);
+        setCart(processedCart);
+        setTotalAmount(total_amount || 0);
 
         // Cache cart data for offline usage
         localStorage.setItem(
           "cart_cache",
           JSON.stringify({
-            data: cartData,
+            data: { cart: processedCart, total_amount },
             timestamp: Date.now(),
           }),
         );
