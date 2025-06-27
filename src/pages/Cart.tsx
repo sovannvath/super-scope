@@ -161,9 +161,30 @@ const Cart: React.FC = () => {
     );
   }
 
+  // Debug logging for cart state
+  console.log("🛒 Cart page render state:", {
+    hasCart: !!cart,
+    cartItems: cart?.items,
+    itemsLength: cart?.items?.length,
+    totalItems: cart?.total_items,
+    isEmptyByItems: !cart?.items || cart.items.length === 0,
+    isEmptyByTotalItems: cart?.total_items === 0,
+  });
+
   if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <div className="container mx-auto py-8 px-4">
+        <div className="text-center mb-4">
+          <h2 className="text-xl font-semibold mb-2">Cart Status</h2>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>Cart exists: {cart ? "Yes" : "No"}</p>
+            <p>Cart items: {cart?.items?.length || 0}</p>
+            <p>Total items: {cart?.total_items || 0}</p>
+            <p>Total amount: ${cart?.total_amount?.toFixed(2) || "0.00"}</p>
+            <p>Loading: {loading ? "Yes" : "No"}</p>
+            <p>Error: {error || "None"}</p>
+          </div>
+        </div>
         <EmptyCart />
         <div className="text-center mt-6">
           <Button onClick={() => navigate("/products")}>
