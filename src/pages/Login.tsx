@@ -64,40 +64,48 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">EC</span>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-rose-50 flex items-center justify-center p-6">
+      <Card className="w-full max-w-md shadow-lg border-0 bg-white/95 backdrop-blur-sm">
+        <CardHeader className="text-center pb-6">
+          <div className="flex items-center justify-center space-x-2 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 via-pink-400 to-rose-400 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg">EC</span>
             </div>
-            <span className="text-2xl font-bold text-gray-800">
+            <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-rose-600 bg-clip-text text-transparent">
               EcommerceHub
             </span>
           </div>
-          <CardTitle className="flex items-center justify-center text-gray-800">
-            <LogIn className="mr-2 h-5 w-5" />
-            Sign In
+          <CardTitle className="flex items-center justify-center text-slate-700 text-xl">
+            <LogIn className="mr-2 h-5 w-5 text-orange-500" />
+            Welcome Back
           </CardTitle>
+          <p className="text-sm text-slate-500 mt-2">
+            Sign in to your account to continue
+          </p>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="pt-0">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-slate-600 font-medium">
+                Email Address
+              </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your email address"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
                 disabled={isLoading}
+                className="border-slate-200 focus:border-orange-300 focus:ring-orange-200 bg-white/80 h-11"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-slate-600 font-medium">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -109,12 +117,13 @@ const Login: React.FC = () => {
                   }
                   required
                   disabled={isLoading}
+                  className="border-slate-200 focus:border-orange-300 focus:ring-orange-200 bg-white/80 h-11 pr-12"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-orange-50 text-slate-400 hover:text-orange-500"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
@@ -129,31 +138,38 @@ const Login: React.FC = () => {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white h-11 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
               disabled={isLoading}
             >
-              {isLoading ? "Signing In..." : "Sign In"}
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Signing In...</span>
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </Button>
 
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">
+            <div className="text-center space-y-3 pt-2">
+              <p className="text-sm text-slate-500">
                 Don't have an account?{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-blue-600"
+                  className="p-0 h-auto text-orange-600 hover:text-rose-600 font-medium"
                   onClick={() => navigate("/register")}
                   disabled={isLoading}
                 >
-                  Register here
+                  Create account
                 </Button>
               </p>
               <Button
                 variant="link"
-                className="p-0 h-auto text-gray-600"
+                className="p-0 h-auto text-slate-400 hover:text-slate-600 text-sm"
                 onClick={() => navigate("/")}
                 disabled={isLoading}
               >
-                Back to Homepage
+                ← Back to Homepage
               </Button>
             </div>
           </form>

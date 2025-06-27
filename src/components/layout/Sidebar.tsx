@@ -137,7 +137,8 @@ export const Sidebar: React.FC = () => {
       <div className="absolute bottom-4 left-4 right-4">
         <div className="bg-gradient-to-r from-metallic-secondary to-metallic-tertiary rounded-lg p-3 text-center">
           <p className="text-white text-sm font-medium">
-            {user?.role?.toUpperCase()} PANEL
+            {typeof user?.role === "string" ? user.role.toUpperCase() : "USER"}{" "}
+            PANEL
           </p>
         </div>
       </div>

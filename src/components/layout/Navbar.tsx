@@ -118,9 +118,9 @@ export const Navbar: React.FC = () => {
                     {user?.name || "User"}
                   </p>
                   <Badge
-                    className={`text-xs ${getRoleBadgeColor(user?.role || "customer")}`}
+                    className={`text-xs ${getRoleBadgeColor(typeof user?.role === "string" ? user.role : "customer")}`}
                   >
-                    {user?.role || "customer"}
+                    {typeof user?.role === "string" ? user.role : "customer"}
                   </Badge>
                 </div>
               </Button>

@@ -55,15 +55,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = getToken();
       const storedUser = localStorage.getItem("user_data");
 
+      console.log("🔄 AuthContext: Initializing auth...", {
+        hasToken: !!token,
+        hasStoredUser: !!storedUser,
+      });
+
       if (token) {
         try {
           // Try to get fresh user data from server
+          console.log("🔄 AuthContext: Fetching user data from server...");
           const response = await authApi.user();
-          if (response.status === 200 && response.data) {
-            let userData = response.data;
 
-            // Map role_id to role name if needed
-            if (userData.role_id && !userData.role) {
+          if (response.status === 200 && response.data) {
+            let rawData = response.data;
+            console.log("🔄 AuthContext: Raw user data from server:", rawData);
+
+            // Handle nested user structure - extract user data from nested object
+            let userData = rawData.user || rawData;
+            console.log("🔄 AuthContext: Extracted user data:", userData);
+
+            // Extract role name - handle both object and string formats
+            if (
+              userData.role &&
+              typeof userData.role === "object" &&
+              userData.role.name
+            ) {
+              // Role is an object with name property
+              userData.role = userData.role.name.toLowerCase();
+              console.log(
+                `🔄 AuthContext: Extracted role from object: ${userData.role}`,
+              );
+            } else if (
+              userData.role_id &&
+              (!userData.role || typeof userData.role === "object")
+            ) {
+              // Map role_id to role name if role is missing or an object
               const roleMapping: Record<number, string> = {
                 1: "admin",
                 2: "warehouse_manager",
@@ -71,8 +97,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 4: "staff",
               };
               userData.role = roleMapping[userData.role_id] || "customer";
+              console.log(
+                `🔄 AuthContext: Mapped role_id ${userData.role_id} to role: ${userData.role}`,
+              );
             }
-
             // Store user data in localStorage for persistence
             localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
@@ -81,58 +109,103 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               userData.name,
               "Role:",
               userData.role,
+              "Full user object:",
+              userData,
             );
           } else {
+            console.log(
+              "⚠️ AuthContext: Server response failed, status:",
+              response.status,
+            );
             // Server response failed, but token exists - try stored user data
             if (storedUser) {
               try {
-                const parsedUser = JSON.parse(storedUser);
+                const parsedData = JSON.parse(storedUser);
+                console.log(
+                  "🔄 AuthContext: Raw stored user data:",
+                  parsedData,
+                );
+
+                // Handle nested user structure
+                const parsedUser = parsedData.user || parsedData;
+                console.log(
+                  "🔄 AuthContext: Extracted stored user data:",
+                  parsedUser,
+                );
                 setUser(parsedUser);
                 console.log(
                   "✅ User restored from localStorage:",
                   parsedUser.name,
+                  "Role:",
+                  parsedUser.role,
                 );
               } catch (e) {
-                console.log("Stored user data is corrupted, clearing auth");
+                console.log("❌ Stored user data is corrupted, clearing auth");
                 removeToken();
                 localStorage.removeItem("user_data");
                 setUser(null);
               }
             } else {
-              // No stored user data and server failed, clear auth
+              console.log(
+                "❌ No stored user data and server failed, clearing auth",
+              );
               removeToken();
               setUser(null);
             }
           }
         } catch (error) {
-          console.log("Token validation failed, trying stored user data");
+          console.log("❌ Token validation failed:", error.message || error);
           // If server is unreachable but we have stored user data, use it
           if (storedUser) {
             try {
-              const parsedUser = JSON.parse(storedUser);
+              const parsedData = JSON.parse(storedUser);
+              console.log(
+                "🔄 AuthContext: Fallback to raw stored user data:",
+                parsedData,
+              );
+
+              // Handle nested user structure
+              const parsedUser = parsedData.user || parsedData;
+              console.log(
+                "🔄 AuthContext: Extracted fallback user data:",
+                parsedUser,
+              );
               setUser(parsedUser);
               console.log(
                 "✅ User restored from localStorage (offline):",
                 parsedUser.name,
+                "Role:",
+                parsedUser.role,
               );
             } catch (e) {
-              console.log("Stored user data is corrupted, clearing auth");
+              console.log("❌ Stored user data is corrupted, clearing auth");
               removeToken();
               localStorage.removeItem("user_data");
               setUser(null);
             }
           } else {
-            // No stored user data and server failed, clear auth
+            console.log(
+              "❌ No stored user data and server failed, clearing auth",
+            );
             removeToken();
             setUser(null);
           }
         }
       } else if (storedUser) {
         // No token but we have stored user data - this shouldn't happen, clear it
+        console.log(
+          "⚠️ AuthContext: No token but stored user exists, clearing stored data",
+        );
         localStorage.removeItem("user_data");
         setUser(null);
+      } else {
+        console.log(
+          "ℹ️ AuthContext: No token and no stored user, user not authenticated",
+        );
       }
+
       setIsLoading(false);
+      console.log("✅ AuthContext: Initialization complete");
     };
 
     initializeAuth();
@@ -141,13 +214,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log("🔄 AuthContext: Attempting login for:", email);
+
       const response = await authApi.login({ email, password });
+      console.log("🔄 AuthContext: Login API response:", {
+        status: response.status,
+        hasData: !!response.data,
+        data: response.data,
+      });
 
       if (response.status === 200 && response.data) {
-        const { user: userData, token } = response.data;
+        const { user: rawUserData, token } = response.data;
+        console.log(
+          "🔄 AuthContext: Login successful, raw user data:",
+          rawUserData,
+        );
+        console.log("🔄 AuthContext: Token received:", token ? "Yes" : "No");
 
-        // Map role_id to role name if needed
-        if (userData.role_id && !userData.role) {
+        // Handle nested user structure if it exists
+        const userData = rawUserData.user || rawUserData;
+        console.log("🔄 AuthContext: Extracted user data:", userData);
+
+        // Extract role name - handle both object and string formats
+        if (
+          userData.role &&
+          typeof userData.role === "object" &&
+          userData.role.name
+        ) {
+          // Role is an object with name property
+          userData.role = userData.role.name.toLowerCase();
+          console.log(
+            `🔄 AuthContext: Extracted role from object: ${userData.role}`,
+          );
+        } else if (
+          userData.role_id &&
+          (!userData.role || typeof userData.role === "object")
+        ) {
+          // Map role_id to role name if role is missing or an object
           const roleMapping: Record<number, string> = {
             1: "admin",
             2: "warehouse_manager",
@@ -155,8 +258,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             4: "staff",
           };
           userData.role = roleMapping[userData.role_id] || "customer";
+          console.log(
+            `🔄 AuthContext: Mapped role_id ${userData.role_id} to role: ${userData.role}`,
+          );
         }
-
         setToken(token);
         localStorage.setItem("user_data", JSON.stringify(userData));
         setUser(userData);
@@ -167,13 +272,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         console.log(
-          "✅ User logged in:",
+          "✅ User logged in successfully:",
           userData.name,
           "Role:",
           userData.role,
+          "ID:",
+          userData.id,
+          "Full user:",
+          userData,
         );
         return true;
       } else {
+        console.log("❌ Login failed, invalid response:", response);
         toast({
           title: "Login Failed",
           description: response.message || "Invalid credentials",
