@@ -353,7 +353,8 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-metallic-tertiary rounded-full"></div>
                 <p className="text-sm text-metallic-tertiary">
-                  User authenticated as {user?.role}
+                  User authenticated as{" "}
+                  {typeof user?.role === "string" ? user.role : "user"}
                 </p>
               </div>
               <div className="flex items-center space-x-3">
