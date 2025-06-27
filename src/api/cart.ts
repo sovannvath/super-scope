@@ -6,18 +6,18 @@ export interface CartItem {
   cart_id: number;
   product_id: number;
   quantity: number;
-  price?: number; // Price per item (API includes this)
-  subtotal?: number; // Total for this item (API includes this)
+  price?: number;
+  subtotal?: number;
   created_at: string;
   updated_at: string;
-  product: Product; // Make required since API includes it
+  product: Product;
 }
 
 export interface Cart {
   id: number;
   user_id: number;
-  cart_items: CartItem[]; // Backend uses "cart_items" not "items"
-  items?: CartItem[]; // Alias for backward compatibility
+  cart_items: CartItem[];
+  items?: CartItem[];
   created_at: string;
   updated_at: string;
 }
@@ -25,7 +25,31 @@ export interface Cart {
 export interface CartResponse {
   message?: string;
   cart: Cart;
-  total_amount: number; // This is at root level in backend response
+  total_amount: number;
+}
+
+export interface Order {
+  id: number;
+  user_id: number;
+  payment_method_id: number;
+  total: number;
+  order_status: string;
+  payment_status: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderResponse {
+  message?: string;
+  order: Order;
+}
+
+export interface PaymentMethod {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AddToCartData {
@@ -37,7 +61,11 @@ export interface UpdateCartItemData {
   quantity: number;
 }
 
-// Enhanced cart API with retry logic and better error handling
+export interface CheckoutData {
+  payment_method_id: number;
+  notes?: string;
+}
+
 const cartApiWithRetry = async <T>(
   apiCall: () => Promise<any>,
   retries: number = 2,
@@ -46,17 +74,15 @@ const cartApiWithRetry = async <T>(
     try {
       const result = await makeApiCall(apiCall);
 
-      // If successful, return the result
       if (result.status >= 200 && result.status < 300) {
         return result;
       }
 
-      // If it's a server error and we have retries left, try again
       if (result.status >= 500 && attempt <= retries) {
         console.log(
           `🔄 Cart API retry ${attempt}/${retries} due to server error`,
         );
-        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         continue;
       }
 
@@ -67,14 +93,13 @@ const cartApiWithRetry = async <T>(
           `🔄 Cart API retry ${attempt}/${retries} due to error:`,
           error,
         );
-        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         continue;
       }
       throw error;
     }
   }
 
-  // This should never be reached, but just in case
   return { status: 500, message: "Max retries exceeded" };
 };
 
@@ -105,15 +130,12 @@ export const cartApi = {
   clear: async (): Promise<ApiResponse<void>> => {
     console.log("🛒 CartAPI: Clearing entire cart");
     try {
-      // Try to use the clear endpoint if it exists
       return cartApiWithRetry(() => apiClient.delete("/cart/clear"));
     } catch (error: any) {
-      // If clear endpoint doesn't exist (404), clear items individually
       if (error.response?.status === 404) {
         console.log(
           "🛒 CartAPI: Clear endpoint not available, clearing items individually",
         );
-        // First get current cart to find all items
         const cartResponse = await cartApi.get();
         if (cartResponse.status === 200 && cartResponse.data?.cart) {
           const items =
@@ -121,7 +143,6 @@ export const cartApi = {
             cartResponse.data.cart.items ||
             [];
           if (items.length > 0) {
-            // Remove each item individually
             const removePromises = items.map((item) =>
               cartApi.removeItem(item.id),
             );
@@ -134,13 +155,44 @@ export const cartApi = {
     }
   },
 
-  // Force refresh cart data (bypasses cache)
+  checkout: async (data: CheckoutData): Promise<ApiResponse<OrderResponse>> => {
+    console.log("🛒 CartAPI: Initiating checkout:", data);
+    return cartApiWithRetry(async () => {
+      const cartResponse = await cartApi.get();
+      if (cartResponse.status === 200 && (!cartResponse.data.cart.cart_items || cartResponse.data.cart.cart_items.length === 0)) {
+        throw new Error("Cannot checkout with an empty cart");
+      }
+      try {
+        const response = await apiClient.post("/orders", data);
+        if (response.status >= 200 && response.status < 300) {
+          console.log("🛒 CartAPI: Checkout successful, clearing cart...");
+          await cartApi.clear();
+        }
+        return response;
+      } catch (error: any) {
+        console.error("Checkout API error:", error.response?.data || error.message);
+        throw error;
+      }
+    });
+  },
+
+  getPaymentMethods: async (): Promise<ApiResponse<PaymentMethod[]>> => {
+    console.log("🛒 CartAPI: Fetching payment methods...");
+    return cartApiWithRetry(async () => {
+      const response = await apiClient.get("/payment-methods");
+      if (response.status === 200 && (!response.data || response.data.length === 0)) {
+        console.warn("🛒 CartAPI: No payment methods available");
+        return { ...response, data: [], message: "No payment methods available" };
+      }
+      return response;
+    });
+  },
+
   refresh: async (): Promise<ApiResponse<CartResponse>> => {
     console.log("🛒 CartAPI: Force refreshing cart data...");
     return cartApiWithRetry(() => apiClient.get("/cart?_t=" + Date.now()));
   },
 
-  // Aliases for backward compatibility
   index: async (): Promise<ApiResponse<CartResponse>> => {
     return cartApi.get();
   },

@@ -1,98 +1,70 @@
 import { apiClient, makeApiCall, ApiResponse } from "@/lib/api";
-import { Product } from "./products";
-
-export interface OrderItem {
-  id: number;
-  order_id: number;
-  product_id: number;
-  quantity: number;
-  price: number;
-  subtotal: number;
-  product?: Product;
-}
 
 export interface Order {
   id: number;
-  user_id: number;
   order_number: string;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  payment_status: "pending" | "paid" | "failed" | "refunded";
-  payment_method?: string;
-  total_amount: number;
-  shipping_address: string;
-  billing_address: string;
-  notes?: string;
-  items: OrderItem[];
   created_at: string;
-  updated_at: string;
-}
-
-export interface CreateOrderData {
-  payment_method: string;
-  shipping_address: string;
+  order_status: string;
+  payment_status: string;
+  payment_method: { id: number; name: string } | string;
+  total_amount: string;
+  shipping_address: string | { street: string; city: string; state: string; zip_code: string; country: string };
   billing_address: string;
   notes?: string;
-}
-
-export interface OrderFilters {
-  status?: string;
-  payment_status?: string;
-  date_from?: string;
-  date_to?: string;
-  page?: number;
-  per_page?: number;
-}
-
-export interface OrdersResponse {
-  data: Order[];
-  meta: {
-    current_page: number;
-    total: number;
-    per_page: number;
-    last_page: number;
+  order_items: Array<{
+    id: number;
+    product_id: number;
+    quantity: number;
+    price: string;
+    subtotal: string;
+    product?: {
+      id: number;
+      name: string;
+      description: string;
+      image?: string;
+    };
+  }>;
+  user: {
+    id: number;
+    name: string;
+    email: string;
   };
 }
 
-export const ordersApi = {
-  getAll: async (
-    filters?: OrderFilters,
-  ): Promise<ApiResponse<OrdersResponse>> => {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, value.toString());
-        }
-      });
+const orderApiWithRetry = async <T>(
+  apiCall: () => Promise<any>,
+  retries: number = 2,
+): Promise<ApiResponse<T>> => {
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      const result = await makeApiCall(apiCall);
+      console.log("🛒 OrdersAPI: Raw response:", JSON.stringify(result, null, 2));
+      return result;
+    } catch (error) {
+      console.error(`🛒 OrdersAPI: Attempt ${attempt}/${retries} failed:`, error);
+      if (attempt <= retries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        continue;
+      }
+      throw error;
     }
-    const queryString = params.toString();
-    const url = queryString ? `/orders?${queryString}` : "/orders";
-    return makeApiCall(() => apiClient.get(url));
+  }
+  return { status: 500, message: "Max retries exceeded" };
+};
+
+export const ordersApi = {
+  getAll: async (): Promise<ApiResponse<Order[]>> => {
+    console.log("🛒 OrdersAPI: Fetching orders...");
+    return orderApiWithRetry(async () => {
+      const response = await apiClient.get("/orders");
+      return response;
+    });
   },
-
-  getById: async (id: number): Promise<ApiResponse<Order>> =>
-    makeApiCall(() => apiClient.get(`/orders/${id}`)),
-
-  create: async (orderData: CreateOrderData): Promise<ApiResponse<Order>> =>
-    makeApiCall(() => apiClient.post("/orders", orderData)),
-
-  updateStatus: async (
-    id: number,
-    status: string,
-  ): Promise<ApiResponse<Order>> =>
-    makeApiCall(() => apiClient.put(`/orders/${id}/status`, { status })),
-
-  updatePaymentStatus: async (
-    id: number,
-    paymentData: {
-      payment_status: string;
-      payment_method?: string;
-      transaction_id?: string;
-    },
-  ): Promise<ApiResponse<Order>> =>
-    makeApiCall(() => apiClient.put(`/orders/${id}/payment`, paymentData)),
-
-  getPaymentMethods: async (): Promise<
-    ApiResponse<{ id: string; name: string; description?: string }[]>
-  > => makeApiCall(() => apiClient.get("/payment-methods")),
+  getById: async (id: number): Promise<ApiResponse<Order>> => {
+    console.log(`🛒 OrdersAPI: Fetching order ${id}...`);
+    return orderApiWithRetry(async () => {
+      const response = await apiClient.get(`/orders/${id}`);
+      return response;
+    });
+  },
 };

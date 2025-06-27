@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { testApi } from "@/utils/api-test";
+import { Navbar } from "@/components/layout/Navbar";
 
 // Define interfaces to match API response
 interface Category {
@@ -191,6 +192,7 @@ const Products: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-metallic-background/30 to-white">
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
+       
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-metallic-primary mb-2">
