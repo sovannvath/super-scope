@@ -67,8 +67,21 @@ const Cart: React.FC = () => {
       navigate("/login");
       return;
     }
+    console.log("🛒 Cart page: User authenticated, fetching cart...");
     fetchCart();
   }, [isAuthenticated, navigate]);
+
+  // Debug logging for cart state changes
+  useEffect(() => {
+    console.log("🛒 Cart state updated:", {
+      cart,
+      loading,
+      error,
+      hasItems: cart?.items?.length > 0,
+      totalItems: cart?.total_items,
+      totalAmount: cart?.total_amount,
+    });
+  }, [cart, loading, error]);
 
   const fetchCart = async () => {
     try {
