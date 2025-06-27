@@ -44,9 +44,7 @@ interface CartItem {
 interface Cart {
   id: number;
   user_id: number; // Added to match API response
-  items: CartItem[];
-  total_items: number;
-  total_amount: number; // API returns total_amount as number
+  cart_items: CartItem[]; // Backend uses cart_items
   created_at: string; // Added to match API response
   updated_at: string; // Added to match API response
 }
