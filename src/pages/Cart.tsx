@@ -70,7 +70,7 @@ const Cart: React.FC = () => {
       "🛒 Cart page: User authenticated, cart will be fetched by context",
     );
 
-    // Force refresh cart when cart page is visited
+    // Force refresh cart when cart page is visited (only once)
     if (refetch && !loading) {
       console.log("🛒 Cart page: Force refreshing cart on page visit");
       const timer = setTimeout(() => {
@@ -79,7 +79,7 @@ const Cart: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, navigate, refetch, loading]);
+  }, [isAuthenticated, navigate]); // Removed refetch and loading from dependencies
 
   // Update last updated timestamp when cart changes
   useEffect(() => {
