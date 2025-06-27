@@ -120,7 +120,7 @@ export interface Product {
   price: number;
   quantity: number;
   low_stock_threshold: number;
-  status: string;
+  status: boolean; // Changed from string to boolean
   created_at: string;
   updated_at: string;
 }

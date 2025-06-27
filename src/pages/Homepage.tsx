@@ -10,6 +10,7 @@ import { cartApi } from "@/api/cart";
 
 interface Product {
   id: number;
+  image: string;
   name: string;
   description: string;
   price: number;
@@ -150,11 +151,11 @@ const Homepage: React.FC = () => {
           description: "Product has been added to your cart",
         });
       } else {
-        toast({
-          title: "Error",
-          description: response.data?.message || "Failed to add to cart",
-          variant: "destructive",
-        });
+        // toast({
+        //   title: "Error",
+        //   description: response.data?.message || "Failed to add to cart",
+        //   variant: "destructive",
+        // });
       }
     } catch (error) {
       toast({
@@ -286,7 +287,11 @@ const Homepage: React.FC = () => {
                 >
                   <div className="relative">
                     <div className="bg-gradient-to-br from-metallic-light to-metallic-background h-48 flex items-center justify-center">
-                      <Package className="h-16 w-16 text-metallic-primary/30" />
+                      <img
+                        src={product?.image}
+                        className="w-full h-full object-cover"
+                        alt=""
+                      />
                     </div>
                     <div className="absolute top-3 right-3">
                       <Button

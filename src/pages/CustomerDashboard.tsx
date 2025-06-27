@@ -1,352 +1,547 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { dashboardApi, orderApi } from "@/lib/api";
+import { productApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ShoppingCart,
+  Plus,
+  Edit,
+  Trash2,
   Package,
-  Clock,
-  CheckCircle,
   DollarSign,
-  TrendingUp,
-  Calendar,
-  Eye,
+  Tag,
+  Search,
+  RefreshCw,
+  X,
 } from "lucide-react";
 
-interface CustomerDashboardData {
-  total_orders?: number;
-  pending_orders?: number;
-  completed_orders?: number;
-  total_spent?: number;
-  recent_orders?: Array<{
-    id: number;
-    status: string;
-    total: number;
-    created_at: string;
-    items_count?: number;
-  }>;
-  favorite_categories?: Array<{
-    name: string;
-    count: number;
-  }>;
+interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  category?: string;
+  stock?: number;
+  image_url?: string;
+  status?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
-const CustomerDashboard: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+const ProductCRUD: React.FC = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [dashboardData, setDashboardData] =
-    useState<CustomerDashboardData | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState<Partial<Product>>({
+    name: "",
+    description: "",
+    price: 0,
+    category: "",
+    stock: 0,
+    image_url: "",
+    status: true,
+  });
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      loadDashboard();
-    } else {
-      setIsLoading(false);
-    }
-  }, [isAuthenticated, user]);
-
-  const loadDashboard = async () => {
-    // Check if user is authenticated before making API call
-    if (!isAuthenticated || !user) {
-      setIsLoading(false);
-      return;
-    }
-
+  // Load products
+  const loadProducts = async () => {
     try {
       setIsLoading(true);
-      const response = await dashboardApi.customer();
+      const response = await productApi.index();
 
       if (response.status === 200) {
-        setDashboardData(response.data);
+        setProducts(
+          Array.isArray(response.data)
+            ? response.data
+            : response.data.data || [],
+        );
       } else {
         toast({
           title: "Error",
-          description: "Failed to load dashboard data",
+          description: "Failed to load products",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Dashboard error:", error);
-
-      // Check if it's an authentication error
-      if (error instanceof Error && error.message.includes("Failed to fetch")) {
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to access your dashboard",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to connect to dashboard service",
-          variant: "destructive",
-        });
-      }
+      console.error("Error loading products:", error);
+      toast({
+        title: "Error",
+        description: "Failed to connect to product service",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      pending: { label: "Pending", variant: "destructive" as const },
-      processing: { label: "Processing", variant: "secondary" as const },
-      shipped: { label: "Shipped", variant: "default" as const },
-      delivered: { label: "Delivered", variant: "outline" as const },
-      cancelled: { label: "Cancelled", variant: "destructive" as const },
-    };
-
-    const statusInfo = statusMap[status as keyof typeof statusMap] || {
-      label: status,
-      variant: "default" as const,
-    };
-    return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
+  // Create or Update product
+  const saveProduct = async () => {
+    try {
+      if (editingProduct) {
+        // Update existing product
+        const response = await productApi.update(editingProduct.id, formData);
+        if (response.status === 200) {
+          toast({
+            title: "Success",
+            description: "Product updated successfully",
+          });
+          await loadProducts();
+          setIsDialogOpen(false);
+          setEditingProduct(null);
+          resetForm();
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to update product",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Create new product
+        const response = await productApi.create(formData);
+        if (response.status === 201 || response.status === 200) {
+          toast({
+            title: "Success",
+            description: "Product created successfully",
+          });
+          await loadProducts();
+          setIsDialogOpen(false);
+          resetForm();
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to create product",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save product",
+        variant: "destructive",
+      });
+    }
   };
 
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="text-center py-12">
-        <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
-        <h3 className="text-lg font-semibold text-metallic-primary mb-2">
-          Please Log In
-        </h3>
-        <p className="text-metallic-tertiary mb-4">
-          You need to be logged in to access your customer dashboard.
-        </p>
-        <Button onClick={() => navigate("/login")}>Go to Login</Button>
-      </div>
-    );
-  }
+  // Delete product
+  const handleDeleteProduct = async () => {
+    if (!deleteProduct) return;
 
-  if (user.role !== "customer") {
-    return (
-      <div className="text-center py-12">
-        <ShoppingCart className="mx-auto h-16 w-16 text-metallic-light mb-4" />
-        <h3 className="text-lg font-semibold text-metallic-primary mb-2">
-          Customer Access Only
-        </h3>
-        <p className="text-metallic-tertiary mb-4">
-          This dashboard is only available for customers.
-        </p>
-        <Button onClick={() => navigate("/")}>Go to Homepage</Button>
-      </div>
-    );
-  }
+    try {
+      const response = await productApi.delete(deleteProduct.id);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-metallic-primary"></div>
-      </div>
-    );
-  }
+      if (response.status === 200 || response.status === 204) {
+        toast({
+          title: "Success",
+          description: "Product deleted successfully",
+        });
+        await loadProducts();
+        setDeleteProduct(null);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete product",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      price: 0,
+      category: "",
+      stock: 0,
+      image_url: "",
+      status: true,
+    });
+  };
+
+  const openEditDialog = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      description: product.description || "",
+      price: product.price,
+      category: product.category || "",
+      stock: product.stock || 0,
+      image_url: product.image_url || "",
+      status: product.status || true,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const openCreateDialog = () => {
+    setEditingProduct(null);
+    resetForm();
+    setIsDialogOpen(true);
+  };
+
+  // Filter products based on search term
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.category &&
+        product.category.toLowerCase().includes(searchTerm.toLowerCase())),
+  );
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-metallic-primary">
-            Welcome back, {user.name}!
+          <h1 className="text-3xl font-bold text-blue-600">
+            Product Management
           </h1>
-          <p className="text-metallic-tertiary">
-            Here's what's happening with your orders
-          </p>
+          <p className="text-gray-600">Manage your product inventory</p>
         </div>
-        <Button
-          onClick={loadDashboard}
-          variant="outline"
-          className="border-metallic-light"
-        >
-          <TrendingUp className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={loadProducts}
+            variant="outline"
+            className="border-gray-300"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <Button
+            onClick={openCreateDialog}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData?.total_orders || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Orders
-            </CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {dashboardData?.pending_orders || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Completed Orders
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {dashboardData?.completed_orders || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${dashboardData?.total_spent?.toLocaleString() || "0"}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Orders */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="mr-2 h-5 w-5" />
-              Recent Orders
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {dashboardData?.recent_orders &&
-            dashboardData.recent_orders.length > 0 ? (
-              <div className="space-y-3">
-                {dashboardData.recent_orders.slice(0, 5).map((order) => (
-                  <div
-                    key={order.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Package className="h-8 w-8 text-metallic-secondary" />
-                      <div>
-                        <div className="font-medium">Order #{order.id}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </div>
-                        {order.items_count && (
-                          <div className="text-xs text-muted-foreground">
-                            {order.items_count} items
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      {getStatusBadge(order.status)}
-                      <div className="font-medium">${order.total}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Package className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">No orders yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Start shopping to see your orders here
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Favorite Categories */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="mr-2 h-5 w-5" />
-              Shopping Insights
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {dashboardData?.favorite_categories &&
-            dashboardData.favorite_categories.length > 0 ? (
-              <div className="space-y-3">
-                <h4 className="font-medium">Favorite Categories</h4>
-                {dashboardData.favorite_categories.map((category, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm">{category.name}</span>
-                    <Badge variant="outline">{category.count} orders</Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <TrendingUp className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">No insights yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Shop more to see your preferences
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
+      {/* Search Bar */}
       <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Button
-              className="h-auto p-4 flex-col space-y-2"
-              variant="outline"
-              onClick={() => (window.location.href = "/")}
-            >
-              <ShoppingCart className="h-6 w-6" />
-              <span>Continue Shopping</span>
-            </Button>
-            <Button
-              className="h-auto p-4 flex-col space-y-2"
-              variant="outline"
-              onClick={() => (window.location.href = "/orders")}
-            >
-              <Eye className="h-6 w-6" />
-              <span>View All Orders</span>
-            </Button>
-            <Button
-              className="h-auto p-4 flex-col space-y-2"
-              variant="outline"
-              onClick={() => (window.location.href = "/cart")}
-            >
-              <Package className="h-6 w-6" />
-              <span>View Cart</span>
-            </Button>
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search products by name or category..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </CardContent>
       </Card>
+
+      {/* Products Grid */}
+      {isLoading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProducts.map((product) => (
+            <Card
+              key={product.id}
+              className="relative hover:shadow-lg transition-shadow"
+            >
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <Badge
+                    variant={product.status === true ? "default" : "secondary"}
+                  >
+                    {product.status || "active"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {product.image_url && (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-32 object-cover rounded-md"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  )}
+
+                  {product.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {product.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="font-bold text-green-600">
+                        ${product.price?.toFixed(2) || "0.00"}
+                      </span>
+                    </div>
+                    {product.stock !== undefined && (
+                      <div className="flex items-center">
+                        <Package className="h-4 w-4 text-gray-500 mr-1" />
+                        <span className="text-sm">{product.stock}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {product.category && (
+                    <div className="flex items-center">
+                      <Tag className="h-4 w-4 text-gray-500 mr-1" />
+                      <span className="text-sm">{product.category}</span>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditDialog(product)}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setDeleteProduct(product)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {filteredProducts.length === 0 && !isLoading && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Package className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Products Found</h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm
+                ? "No products match your search."
+                : "Start by adding your first product."}
+            </p>
+            {!searchTerm && (
+              <Button
+                onClick={openCreateDialog}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Product
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create/Edit Modal */}
+      {isDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold">
+                {editingProduct ? "Edit Product" : "Create New Product"}
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Name *</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Product name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Description
+                </label>
+                <textarea
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Product description"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Price *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.price}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        price: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Stock
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.stock}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        stock: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.category}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
+                  placeholder="Product category"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Image URL
+                </label>
+                <input
+                  type="url"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.image_url}
+                  onChange={(e) =>
+                    setFormData({ ...formData, image_url: e.target.value })
+                  }
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <select
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={String(formData.status)}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      status: e.target.value === "true", // convert string to boolean
+                    })
+                  }
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={saveProduct}
+                  disabled={!formData.name || !formData.price}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {editingProduct ? "Update Product" : "Create Product"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Delete Product</h2>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete "{deleteProduct.name}"? This
+                action cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleDeleteProduct}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  Delete
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteProduct(null)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default CustomerDashboard;
+export default ProductCRUD;

@@ -8,11 +8,19 @@ export interface Product {
   quantity: number;
   low_stock_threshold: number;
   status: string;
-  category?: string;
-  image_url?: string;
-  sku?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface CreateProductData {
+  name: string;
+  description?: string;
+  price: number;
+  category_id: number;
+  quantity: number;
+  low_stock_threshold: number;
+  image_url?: string;
+  status: boolean;
 }
 
 export interface ProductFilters {
@@ -35,16 +43,6 @@ export interface ProductsResponse {
     per_page: number;
     last_page: number;
   };
-}
-
-export interface CreateProductData {
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  low_stock_threshold: number;
-  category?: string;
-  sku?: string;
 }
 
 export const productsApi = {

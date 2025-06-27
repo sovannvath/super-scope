@@ -21,15 +21,32 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Define interfaces to match API response
+interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  parent_id: number | null;
+  created_at: string;
+  updated_at: string;
+  pivot: {
+    product_id: number;
+    category_id: number;
+  };
+}
+
 interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: string; // API returns price as string
   quantity: number;
   low_stock_threshold: number;
+  image: string;
+  status: boolean;
   created_at: string;
   updated_at: string;
+  categories: Category[];
 }
 
 const ProductDetail: React.FC = () => {
@@ -50,37 +67,50 @@ const ProductDetail: React.FC = () => {
 
   const loadProduct = async (productId: number) => {
     console.log(`🔄 Loading product ${productId} from API...`);
+    console.log(
+      "📍 Full API URL:",
+      `https://laravel-wtc.onrender.com/api/products/${productId}`,
+    );
+
     try {
       const response = await productApi.show(productId);
       console.log("📡 API Response:", response);
 
       if (response.status === 200) {
-        setProduct(response.data);
-        console.log("✅ Product loaded:", response.data);
+        // Extract product from response.data.product
+        const productData = response.data.product || response.data;
+        if (!productData) {
+          throw new Error("No product data found in response");
+        }
+
+        setProduct(productData);
+        console.log("✅ Product loaded:", productData);
 
         toast({
           title: "Product Loaded",
           description: `Product details loaded successfully`,
         });
       } else {
-        console.error("❌ API Error:", response.status);
+        console.error("❌ API Error:", response.status, response.statusText);
         toast({
           title: "Failed to Load Product",
-          description: `API Error: ${response.status}`,
+          description: `API Error: ${response.status} ${response.statusText}`,
           variant: "destructive",
         });
         navigate("/products");
       }
-    } catch (error) {
-      console.error("❌ API connection failed:", error);
+    } catch (error: any) {
+      console.error("❌ API connection failed:", error.message, error);
       toast({
         title: "Backend Connection Error",
-        description: "Cannot connect to Laravel API",
+        description: error.message || "Cannot connect to Laravel API",
         variant: "destructive",
       });
       navigate("/products");
     } finally {
-      setIsLoading(false);
+      setregistry: {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -116,10 +146,13 @@ const ProductDetail: React.FC = () => {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to add item to cart",
+        description:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to add item to cart",
         variant: "destructive",
       });
     } finally {
@@ -184,7 +217,15 @@ const ProductDetail: React.FC = () => {
           <Card>
             <CardContent className="p-0">
               <div className="h-96 bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center relative rounded-lg">
-                <Package className="h-24 w-24 text-metallic-primary/30" />
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="object-cover w-full h-full rounded-lg"
+                  />
+                ) : (
+                  <Package className="h-24 w-24 text-metallic-primary/30" />
+                )}
                 {product.quantity < product.low_stock_threshold && (
                   <Badge className="absolute top-4 left-4 bg-red-500 text-white">
                     Low Stock
@@ -223,7 +264,7 @@ const ProductDetail: React.FC = () => {
                 </Badge>
               </div>
               <p className="text-4xl font-bold text-metallic-primary mb-4">
-                ${product.price}
+                ${parseFloat(product.price).toFixed(2)}
               </p>
               <p className="text-metallic-tertiary text-lg leading-relaxed">
                 {product.description}
@@ -297,7 +338,7 @@ const ProductDetail: React.FC = () => {
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   {isAddingToCart
                     ? "Adding..."
-                    : `Add ${quantity} to Cart - $${(product.price * quantity).toFixed(2)}`}
+                    : `Add ${quantity} to Cart - $${(parseFloat(product.price) * quantity).toFixed(2)}`}
                 </Button>
                 <Button variant="outline" size="sm">
                   <Heart className="h-4 w-4" />

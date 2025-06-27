@@ -23,26 +23,32 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+// Define interfaces to match API response
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number; // API returns price as number
+  image: string; // Match field from /api/products and /api/products/:id
+}
+
 interface CartItem {
   id: number;
   product_id: number;
   quantity: number;
-  price: number;
-  subtotal: number;
-  product: {
-    id: number;
-    name: string;
-    description: string;
-    price: number;
-    image_url?: string;
-  };
+  price: number; // API returns price as number
+  subtotal: number; // API returns subtotal as number
+  product: Product;
 }
 
 interface Cart {
   id: number;
+  user_id: number; // Added to match API response
   items: CartItem[];
   total_items: number;
-  total_amount: number;
+  total_amount: number; // API returns total_amount as number
+  created_at: string; // Added to match API response
+  updated_at: string; // Added to match API response
 }
 
 const Cart: React.FC = () => {
@@ -69,23 +75,30 @@ const Cart: React.FC = () => {
       setLoading(true);
       setError(null);
       console.log("🛒 Fetching cart from API...");
+      console.log(
+        "📍 Full API URL:",
+        "https://laravel-wtc.onrender.com/api/cart",
+      );
+
       const response = await cartApi.get();
       console.log("📡 Cart API Response:", response);
 
       if (response.status === 200 && response.data) {
         console.log("✅ Cart data received:", response.data);
-        setCart({
+        // Ensure items is an array, even if empty
+        const cartData: Cart = {
           ...response.data,
-          items: response.data.items || [],
-        });
+          items: Array.isArray(response.data.items) ? response.data.items : [],
+        };
+        setCart(cartData);
         setLastUpdated(new Date());
 
         // Store cart summary in localStorage for persistence
         localStorage.setItem(
           "cart_summary",
           JSON.stringify({
-            itemCount: response.data.total_items,
-            totalAmount: response.data.total_amount,
+            itemCount: cartData.total_items,
+            totalAmount: cartData.total_amount,
             lastUpdated: new Date().toISOString(),
           }),
         );
@@ -93,16 +106,20 @@ const Cart: React.FC = () => {
         // No cart exists yet
         setCart({
           id: 0,
+          user_id: 0,
           items: [],
           total_items: 0,
           total_amount: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
         localStorage.removeItem("cart_summary");
       } else {
         throw new Error(response.message || "Failed to fetch cart");
       }
     } catch (error: any) {
-      console.error("Cart fetch error:", error);
+      console.error("❌ Cart fetch error:", error.message, error);
+      setError(error.message || "Failed to load cart");
 
       // Try to load from localStorage as fallback
       const cachedSummary = localStorage.getItem("cart_summary");
@@ -115,12 +132,20 @@ const Cart: React.FC = () => {
               "Showing cached cart data. Some features may be limited.",
             variant: "default",
           });
+          setCart({
+            id: 0,
+            user_id: 0,
+            items: [],
+            total_items: summary.itemCount || 0,
+            total_amount: summary.totalAmount || 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
         } catch (parseError) {
+          console.error("❌ Failed to parse cached cart:", parseError);
           localStorage.removeItem("cart_summary");
         }
       }
-
-      setError(error.message || "Failed to load cart");
     } finally {
       setLoading(false);
     }
@@ -295,16 +320,16 @@ const Cart: React.FC = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {(cart.items || []).map((item) => (
+              {cart.items.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center space-x-4 p-4 border rounded-lg"
                 >
                   {/* Product Image */}
                   <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                    {item.product.image_url ? (
+                    {item.product.image ? (
                       <img
-                        src={item.product.image_url}
+                        src={item.product.image}
                         alt={item.product.name}
                         className="w-full h-full object-cover rounded-lg"
                       />

@@ -21,15 +21,32 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { testApi } from "@/utils/api-test";
 
+// Define interfaces to match API response
+interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  parent_id: number | null;
+  created_at: string;
+  updated_at: string;
+  pivot: {
+    product_id: number;
+    category_id: number;
+  };
+}
+
 interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: string; // API returns price as string
   quantity: number;
   low_stock_threshold: number;
+  image: string;
+  status: boolean;
   created_at: string;
   updated_at: string;
+  categories: Category[];
 }
 
 const Products: React.FC = () => {
@@ -66,10 +83,11 @@ const Products: React.FC = () => {
         // Handle Laravel API response structure
         let productsArray: Product[] = [];
 
-        if (Array.isArray(response.data)) {
+        // Check for the `products` key in the response
+        if (response.data && Array.isArray(response.data.products)) {
+          productsArray = response.data.products;
+        } else if (Array.isArray(response.data)) {
           productsArray = response.data;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          productsArray = response.data.data;
         } else {
           console.warn("⚠️ Unexpected API response structure:", response.data);
           productsArray = [];
@@ -96,17 +114,15 @@ const Products: React.FC = () => {
       console.error("❌ API connection failed:", error);
       setProducts([]);
 
-      // Show more helpful error message
       toast({
         title: "Backend Connection Error",
         description:
-          "Cannot connect to Laravel API. Please check if your backend server is running on localhost:8000",
+          "Cannot connect to Laravel API. Please check if your backend server is running.",
         variant: "destructive",
       });
 
-      // Optional: Set some demo data so the UI isn't completely broken
       console.log(
-        "💡 Tip: Start your Laravel backend with 'php artisan serve' on port 8000",
+        "💡 Tip: Ensure your Laravel backend is running and accessible at https://laravel-wtc.onrender.com/api",
       );
     } finally {
       setIsLoading(false);
@@ -153,14 +169,14 @@ const Products: React.FC = () => {
         console.log("✅ Item added to cart successfully");
       } else {
         console.error("❌ Cart API Error:", response);
-        toast({
-          title: "Error",
-          description:
-            response.data?.message ||
-            response.message ||
-            "Failed to add to cart",
-          variant: "destructive",
-        });
+        // toast({
+        //   title: "Error",
+        //   description:
+        //     response.data?.message ||
+        //     response.message ||
+        //     "Failed to add to cart",
+        //   variant: "destructive",
+        // });
       }
     } catch (error: any) {
       console.error("❌ Cart add error:", error);
@@ -252,7 +268,15 @@ const Products: React.FC = () => {
                     className={`${viewMode === "list" ? "w-32 h-32" : "h-48"} bg-gradient-to-br from-metallic-light to-metallic-background flex items-center justify-center relative cursor-pointer`}
                     onClick={() => viewProduct(product.id)}
                   >
-                    <Package className="h-12 w-12 text-metallic-primary/30" />
+                    {product.image ? (
+                      <img
+                        src={product?.image}
+                        alt={product.name}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <Package className="h-12 w-12 text-metallic-primary/30" />
+                    )}
                     {product.quantity < product.low_stock_threshold && (
                       <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
                         Low Stock
@@ -271,10 +295,10 @@ const Products: React.FC = () => {
                         {product.description}
                       </p>
                       <div
-                        className={`flex items-center ${viewMode === "list" ? "justify-between" : "justify-between"} mb-3`}
+                        className={`flex items-center ${viewMode === "list" ? "justify-between" : "justifyრ჌justify-between"} mb-3`}
                       >
                         <span className="text-lg font-bold text-metallic-primary">
-                          ${product.price}
+                          ${parseFloat(product.price).toFixed(2)}
                         </span>
                         <div className="flex items-center space-x-2">
                           <Star className="h-4 w-4 text-yellow-400 fill-current" />
@@ -299,7 +323,7 @@ const Products: React.FC = () => {
                       </div>
                       <Button
                         size="sm"
-                        className={`${viewMode === "list" ? "w-auto" : "w-full"} bg-metallic-secondary hover:bg-metallic-secondary/90`}
+                        className={`${viewMode === "list" ? "w-32" : "w-full"} bg-metallic-secondary hover:bg-metallic-secondary/90`}
                         onClick={() => handleAddToCart(product.id)}
                       >
                         <ShoppingCart className="mr-1 h-3 w-3" />
