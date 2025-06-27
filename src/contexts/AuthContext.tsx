@@ -106,9 +106,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Server response failed, but token exists - try stored user data
             if (storedUser) {
               try {
-                const parsedUser = JSON.parse(storedUser);
+                const parsedData = JSON.parse(storedUser);
                 console.log(
-                  "🔄 AuthContext: Using stored user data:",
+                  "🔄 AuthContext: Raw stored user data:",
+                  parsedData,
+                );
+
+                // Handle nested user structure
+                const parsedUser = parsedData.user || parsedData;
+                console.log(
+                  "🔄 AuthContext: Extracted stored user data:",
                   parsedUser,
                 );
                 setUser(parsedUser);
