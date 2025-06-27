@@ -151,25 +151,25 @@ const Login: React.FC = () => {
               )}
             </Button>
 
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">
+            <div className="text-center space-y-3 pt-2">
+              <p className="text-sm text-slate-500">
                 Don't have an account?{" "}
                 <Button
                   variant="link"
-                  className="p-0 h-auto text-blue-600"
+                  className="p-0 h-auto text-orange-600 hover:text-rose-600 font-medium"
                   onClick={() => navigate("/register")}
                   disabled={isLoading}
                 >
-                  Register here
+                  Create account
                 </Button>
               </p>
               <Button
                 variant="link"
-                className="p-0 h-auto text-gray-600"
+                className="p-0 h-auto text-slate-400 hover:text-slate-600 text-sm"
                 onClick={() => navigate("/")}
                 disabled={isLoading}
               >
-                Back to Homepage
+                ← Back to Homepage
               </Button>
             </div>
           </form>
