@@ -49,4 +49,8 @@ export const cartApi = {
 
   clear: async (): Promise<ApiResponse<void>> =>
     makeApiCall(() => apiClient.delete("/cart/clear")),
+
+  // Aliases for backward compatibility
+  index: async (): Promise<ApiResponse<Cart>> =>
+    makeApiCall(() => apiClient.get("/cart")),
 };
