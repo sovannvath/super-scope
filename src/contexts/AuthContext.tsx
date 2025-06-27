@@ -55,12 +55,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = getToken();
       const storedUser = localStorage.getItem("user_data");
 
+      console.log("🔄 AuthContext: Initializing auth...", {
+        hasToken: !!token,
+        hasStoredUser: !!storedUser,
+      });
+
       if (token) {
         try {
           // Try to get fresh user data from server
+          console.log("🔄 AuthContext: Fetching user data from server...");
           const response = await authApi.user();
+
           if (response.status === 200 && response.data) {
             let userData = response.data;
+            console.log("🔄 AuthContext: Raw user data from server:", userData);
 
             // Map role_id to role name if needed
             if (userData.role_id && !userData.role) {
@@ -71,6 +79,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 4: "staff",
               };
               userData.role = roleMapping[userData.role_id] || "customer";
+              console.log(
+                `🔄 AuthContext: Mapped role_id ${userData.role_id} to role: ${userData.role}`,
+              );
             }
 
             // Store user data in localStorage for persistence
@@ -81,58 +92,89 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               userData.name,
               "Role:",
               userData.role,
+              "Full user object:",
+              userData,
             );
           } else {
+            console.log(
+              "⚠️ AuthContext: Server response failed, status:",
+              response.status,
+            );
             // Server response failed, but token exists - try stored user data
             if (storedUser) {
               try {
                 const parsedUser = JSON.parse(storedUser);
+                console.log(
+                  "🔄 AuthContext: Using stored user data:",
+                  parsedUser,
+                );
                 setUser(parsedUser);
                 console.log(
                   "✅ User restored from localStorage:",
                   parsedUser.name,
+                  "Role:",
+                  parsedUser.role,
                 );
               } catch (e) {
-                console.log("Stored user data is corrupted, clearing auth");
+                console.log("❌ Stored user data is corrupted, clearing auth");
                 removeToken();
                 localStorage.removeItem("user_data");
                 setUser(null);
               }
             } else {
-              // No stored user data and server failed, clear auth
+              console.log(
+                "❌ No stored user data and server failed, clearing auth",
+              );
               removeToken();
               setUser(null);
             }
           }
         } catch (error) {
-          console.log("Token validation failed, trying stored user data");
+          console.log("❌ Token validation failed:", error.message || error);
           // If server is unreachable but we have stored user data, use it
           if (storedUser) {
             try {
               const parsedUser = JSON.parse(storedUser);
+              console.log(
+                "🔄 AuthContext: Fallback to stored user data:",
+                parsedUser,
+              );
               setUser(parsedUser);
               console.log(
                 "✅ User restored from localStorage (offline):",
                 parsedUser.name,
+                "Role:",
+                parsedUser.role,
               );
             } catch (e) {
-              console.log("Stored user data is corrupted, clearing auth");
+              console.log("❌ Stored user data is corrupted, clearing auth");
               removeToken();
               localStorage.removeItem("user_data");
               setUser(null);
             }
           } else {
-            // No stored user data and server failed, clear auth
+            console.log(
+              "❌ No stored user data and server failed, clearing auth",
+            );
             removeToken();
             setUser(null);
           }
         }
       } else if (storedUser) {
         // No token but we have stored user data - this shouldn't happen, clear it
+        console.log(
+          "⚠️ AuthContext: No token but stored user exists, clearing stored data",
+        );
         localStorage.removeItem("user_data");
         setUser(null);
+      } else {
+        console.log(
+          "ℹ️ AuthContext: No token and no stored user, user not authenticated",
+        );
       }
+
       setIsLoading(false);
+      console.log("✅ AuthContext: Initialization complete");
     };
 
     initializeAuth();
