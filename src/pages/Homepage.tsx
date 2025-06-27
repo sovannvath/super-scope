@@ -13,7 +13,7 @@ interface Product {
   image: string;
   name: string;
   description: string;
-  price: number;
+  price: string; // API returns price as string
   quantity: number;
   low_stock_threshold: number;
   created_at: string;
