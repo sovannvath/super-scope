@@ -110,19 +110,43 @@ const Checkout = () => {
             <form onSubmit={handleCheckout} className="space-y-4">
               <div>
                 <label
-                  htmlFor="payment-method-id"
-                  className="block text-sm font-medium"
+                  htmlFor="payment-method"
+                  className="block text-sm font-medium mb-2"
                 >
-                  Payment Method ID
+                  Payment Method
                 </label>
-                <Input
-                  id="payment-method-id"
-                  type="number"
-                  value={paymentMethodId}
-                  onChange={(e) => setPaymentMethodId(e.target.value)}
-                  placeholder="Enter payment method ID"
-                  required
-                />
+                {loadingPaymentMethods ? (
+                  <div className="text-sm text-muted-foreground">
+                    Loading payment methods...
+                  </div>
+                ) : paymentMethods.length === 0 ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="w-4 h-4" />
+                    <AlertDescription>
+                      No payment methods available
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Select
+                    value={paymentMethodId}
+                    onValueChange={setPaymentMethodId}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentMethods.map((method) => (
+                        <SelectItem
+                          key={method.id}
+                          value={method.id.toString()}
+                        >
+                          {method.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div>
                 <label htmlFor="notes" className="block text-sm font-medium">
