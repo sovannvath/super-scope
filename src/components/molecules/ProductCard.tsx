@@ -245,11 +245,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </Badge>
         </div>
 
-        {product.sku && variant === "featured" && (
-          <p className="text-xs text-muted-foreground mb-2">
-            SKU: {product.sku}
-          </p>
-        )}
+        {/* Categories */}
+        {product.categories &&
+          product.categories.length > 0 &&
+          variant !== "compact" && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {product.categories.slice(0, 2).map((category) => (
+                <Badge
+                  key={category.id}
+                  variant="secondary"
+                  className="text-xs"
+                >
+                  {category.name}
+                </Badge>
+              ))}
+              {product.categories.length > 2 && (
+                <Badge variant="outline" className="text-xs">
+                  +{product.categories.length - 2} more
+                </Badge>
+              )}
+            </div>
+          )}
       </CardContent>
 
       {/* Actions */}
