@@ -144,9 +144,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // If server is unreachable but we have stored user data, use it
           if (storedUser) {
             try {
-              const parsedUser = JSON.parse(storedUser);
+              const parsedData = JSON.parse(storedUser);
               console.log(
-                "🔄 AuthContext: Fallback to stored user data:",
+                "🔄 AuthContext: Fallback to raw stored user data:",
+                parsedData,
+              );
+
+              // Handle nested user structure
+              const parsedUser = parsedData.user || parsedData;
+              console.log(
+                "🔄 AuthContext: Extracted fallback user data:",
                 parsedUser,
               );
               setUser(parsedUser);
