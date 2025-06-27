@@ -54,11 +54,10 @@ interface Cart {
 const Cart: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { cart, loading, error, updateItem, removeItem, clearCart, refetch } =
+    useCartContext();
   const { toast } = useToast();
 
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
