@@ -164,19 +164,19 @@ const StaffDashboard: React.FC = () => {
   };
 
   const handleApproveOrder = async (orderId: number) => {
-    await updateOrderStatus(orderId, "processing");
+    await updateOrderStatus(orderId, "Processing");
   };
 
   const handleShipOrder = async (orderId: number) => {
-    await updateOrderStatus(orderId, "shipped");
+    await updateOrderStatus(orderId, "Shipped");
   };
 
   const handleCompleteOrder = async (orderId: number) => {
-    await updateOrderStatus(orderId, "completed");
+    await updateOrderStatus(orderId, "Delivered");
   };
 
   const handleRejectOrder = async (orderId: number) => {
-    await updateOrderStatus(orderId, "cancelled");
+    await updateOrderStatus(orderId, "Rejected");
   };
 
   const handleUpdatePaymentStatus = async (orderId: number) => {
