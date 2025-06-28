@@ -234,15 +234,20 @@ const StaffDashboard: React.FC = () => {
         Icon: Truck,
         label: "Shipped",
       },
-      completed: {
+      delivered: {
         color: "bg-green-100 text-green-800",
         Icon: CheckCircle,
-        label: "Completed",
+        label: "Delivered",
       },
-      cancelled: {
+      rejected: {
         color: "bg-red-100 text-red-800",
         Icon: XCircle,
-        label: "Cancelled",
+        label: "Rejected",
+      },
+      approved: {
+        color: "bg-green-100 text-green-800",
+        Icon: CheckCircle,
+        label: "Approved",
       },
     };
 
