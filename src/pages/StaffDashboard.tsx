@@ -539,8 +539,9 @@ const StaffDashboard: React.FC = () => {
                                       <span>Total</span>
                                       <span>
                                         $
-                                        {order.total_amount?.toFixed(2) ||
-                                          "0.00"}
+                                        {parseFloat(
+                                          order.total_amount || "0",
+                                        ).toFixed(2)}
                                       </span>
                                     </div>
                                   </div>
