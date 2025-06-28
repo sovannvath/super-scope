@@ -453,7 +453,7 @@ const StaffDashboard: React.FC = () => {
                     </TableRow>
                   ) : (
                     filteredOrders.map((order) => (
-                      <TableRow key={order.id}>
+                      <TableRow key={`${order.id}-${order._source}`}>
                         <TableCell>
                           <div className="font-semibold">#{order.id}</div>
                         </TableCell>
