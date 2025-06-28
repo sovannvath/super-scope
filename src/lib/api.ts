@@ -354,28 +354,29 @@ export const orderApi = {
   show: async (id: number) =>
     makeApiCall<Order>(() => apiClient.get(`/orders/${id}`)),
 
-  store: async (orderData: {
-    payment_method_id: number;
-    notes?: string;
-  }) => makeApiCall(() => apiClient.post("/orders", orderData)),
+  store: async (orderData: { payment_method_id: number; notes?: string }) =>
+    makeApiCall(() => apiClient.post("/orders", orderData)),
 
   getPaymentMethods: async () =>
     makeApiCall<PaymentMethod[]>(() => apiClient.get("/payment-methods")),
 
   updateStatus: async (id: number, status: string) =>
     makeApiCall(() =>
-      apiClient.put(`/orders/${id}/status`, { order_status: status.toLowerCase() }),
+      apiClient.put(`/orders/${id}/status`, { order_status: status }),
     ),
 
   updatePaymentStatus: async (id: number, status: string) =>
     makeApiCall(() =>
-      apiClient.put(`/orders/${id}/payment`, { payment_status: status.toLowerCase() }),
+      apiClient.put(`/orders/${id}/payment`, {
+        payment_status: status.toLowerCase(),
+      }),
     ),
 };
 
 // Request Order API
 export const requestOrderApi = {
-  index: async () => makeApiCall<RequestOrder[]>(() => apiClient.get("/request-orders")),
+  index: async () =>
+    makeApiCall<RequestOrder[]>(() => apiClient.get("/request-orders")),
 
   show: async (id: number) =>
     makeApiCall<RequestOrder>(() => apiClient.get(`/request-orders/${id}`)),
@@ -395,12 +396,18 @@ export const requestOrderApi = {
   adminApproval: async (
     id: number,
     data: { admin_approval_status: string; admin_notes?: string },
-  ) => makeApiCall(() => apiClient.put(`/request-orders/${id}/admin-approval`, data)),
+  ) =>
+    makeApiCall(() =>
+      apiClient.put(`/request-orders/${id}/admin-approval`, data),
+    ),
 
   warehouseApproval: async (
     id: number,
     data: { warehouse_approval_status: string; warehouse_notes?: string },
-  ) => makeApiCall(() => apiClient.put(`/request-orders/${id}/warehouse-approval`, data)),
+  ) =>
+    makeApiCall(() =>
+      apiClient.put(`/request-orders/${id}/warehouse-approval`, data),
+    ),
 };
 
 // User API
