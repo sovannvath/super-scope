@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { orderApi, Order } from "@/lib/api";
+import { dashboardApi, orderApi, Order } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,6 +24,7 @@ import {
   Truck,
   CreditCard,
   ShoppingCart,
+  User,
 } from "lucide-react";
 import {
   Select,
@@ -45,68 +41,57 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+interface StaffDashboardData {
+  pending_orders: Order[];
+  processed_orders: Order[];
+  ready_for_delivery: Order[];
+}
+
 const StaffDashboard: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [dashboardData, setDashboardData] = useState<StaffDashboardData>({
+    pending_orders: [],
+    processed_orders: [],
+    ready_for_delivery: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<string>("");
-  const [stats, setStats] = useState({
-    total_orders: 0,
-    pending_orders: 0,
-    processing_orders: 0,
-    shipped_orders: 0,
-    completed_orders: 0,
-  });
+  const [selectedPaymentStatus, setSelectedPaymentStatus] =
+    useState<string>("");
 
   useEffect(() => {
-    loadOrders();
+    loadDashboardData();
   }, []);
 
-  const loadOrders = async () => {
+  const loadDashboardData = async () => {
     try {
       setIsLoading(true);
-      const response = await orderApi.index();
-      console.log("API Response from /orders:", response);
+      const response = await dashboardApi.staff();
+      console.log("Staff Dashboard API Response:", response);
 
-      // Handle Laravel-style response with nested data or fallback to empty array
-      const ordersList = Array.isArray(response.data?.data)
-        ? response.data.data
-        : Array.isArray(response.data)
-        ? response.data
-        : [];
-
-      if (response.status === 200) {
-        setOrders(ordersList);
-
-        // Calculate stats
-        const stats = {
-          total_orders: ordersList.length,
-          pending_orders: ordersList.filter((o: Order) => o.status.toLowerCase() === "pending").length,
-          processing_orders: ordersList.filter((o: Order) => o.status.toLowerCase() === "processing").length,
-          shipped_orders: ordersList.filter((o: Order) => o.status.toLowerCase() === "shipped").length,
-          completed_orders: ordersList.filter((o: Order) => o.status.toLowerCase() === "completed").length,
-        };
-        setStats(stats);
+      if (response.status === 200 && response.data) {
+        setDashboardData({
+          pending_orders: response.data.pending_orders || [],
+          processed_orders: response.data.processed_orders || [],
+          ready_for_delivery: response.data.ready_for_delivery || [],
+        });
       } else {
         toast({
           title: "Error",
-          description: response.message || "Failed to load orders",
+          description: response.message || "Failed to load dashboard data",
           variant: "destructive",
         });
-        setOrders([]);
       }
     } catch (error: any) {
-      console.error("Failed to load orders:", error);
+      console.error("Failed to load dashboard data:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to load orders",
+        description: error.message || "Failed to load dashboard data",
         variant: "destructive",
       });
-      setOrders([]);
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +106,7 @@ const StaffDashboard: React.FC = () => {
           title: "Order Updated",
           description: `Order status changed to ${newStatus}`,
         });
-        loadOrders();
+        loadDashboardData();
       } else {
         toast({
           title: "Error",
@@ -147,7 +132,7 @@ const StaffDashboard: React.FC = () => {
           title: "Payment Status Updated",
           description: `Payment status changed to ${newStatus}`,
         });
-        loadOrders();
+        loadDashboardData();
         setSelectedPaymentStatus("");
       } else {
         toast({
@@ -193,22 +178,34 @@ const StaffDashboard: React.FC = () => {
     await updatePaymentStatus(orderId, selectedPaymentStatus);
   };
 
-  const filteredOrders = Array.isArray(orders)
-    ? orders.filter((order) => {
-        const matchesSearch =
-          order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.id.toString().includes(searchTerm) ||
-          order.customer.email.toLowerCase().includes(searchTerm.toLowerCase());
+  // Combine all orders for filtering
+  const allOrders = [
+    ...dashboardData.pending_orders,
+    ...dashboardData.processed_orders,
+    ...dashboardData.ready_for_delivery,
+  ];
 
-        const matchesStatus =
-          statusFilter === "all" || order.status.toLowerCase() === statusFilter;
+  const filteredOrders = allOrders.filter((order) => {
+    const matchesSearch =
+      order.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.id.toString().includes(searchTerm) ||
+      order.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        return matchesSearch && matchesStatus;
-      })
-    : [];
+    const matchesStatus =
+      statusFilter === "all" || order.status.toLowerCase() === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { color: string; Icon: React.ComponentType<{ className?: string }>; label: string }> = {
+    const statusConfig: Record<
+      string,
+      {
+        color: string;
+        Icon: React.ComponentType<{ className?: string }>;
+        label: string;
+      }
+    > = {
       pending: {
         color: "bg-yellow-100 text-yellow-800",
         Icon: Clock,
@@ -271,10 +268,17 @@ const StaffDashboard: React.FC = () => {
     );
   };
 
-  const canApprove = (order: Order) =>
-    order.status.toLowerCase() === "pending" && order.payment_status.toLowerCase() === "paid";
+  const canApprove = (order: Order) => order.status.toLowerCase() === "pending";
   const canShip = (order: Order) => order.status.toLowerCase() === "processing";
-  const canComplete = (order: Order) => order.status.toLowerCase() === "shipped";
+  const canComplete = (order: Order) =>
+    order.status.toLowerCase() === "shipped";
+
+  const stats = {
+    pending_orders: dashboardData.pending_orders.length,
+    processed_orders: dashboardData.processed_orders.length,
+    ready_for_delivery: dashboardData.ready_for_delivery.length,
+    total_orders: allOrders.length,
+  };
 
   if (isLoading) {
     return (
@@ -288,61 +292,72 @@ const StaffDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Staff Dashboard
+          </h1>
           <p className="text-gray-600">
-            Welcome back, {user?.name || "Staff"}! Process customer orders and manage deliveries.
+            Welcome back, {user?.name || "Staff"}! Process customer orders and
+            manage deliveries.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total_orders}</div>
-              <p className="text-xs text-muted-foreground">All orders</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Pending Orders
+              </CardTitle>
               <Clock className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending_orders}</div>
-              <p className="text-xs text-muted-foreground">Need approval</p>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pending_orders}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Need staff approval
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Processing</CardTitle>
-              <RefreshCw className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium">
+                Processed Orders
+              </CardTitle>
+              <CheckCircle className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.processing_orders}</div>
-              <p className="text-xs text-muted-foreground">Ready for shipping</p>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.processed_orders}
+              </div>
+              <p className="text-xs text-muted-foreground">Processed by you</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Shipped</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Ready for Delivery
+              </CardTitle>
               <Truck className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{stats.shipped_orders}</div>
-              <p className="text-xs text-muted-foreground">In delivery</p>
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.ready_for_delivery}
+              </div>
+              <p className="text-xs text-muted-foreground">Ready to ship</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium">
+                Total Orders
+              </CardTitle>
+              <ShoppingCart className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.completed_orders}</div>
-              <p className="text-xs text-muted-foreground">Delivered</p>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.total_orders}
+              </div>
+              <p className="text-xs text-muted-foreground">All orders</p>
             </CardContent>
           </Card>
         </div>
@@ -351,7 +366,7 @@ const StaffDashboard: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Package className="mr-2 h-5 w-5" />
-              Customer Orders
+              Customer Orders - Approval & Processing
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -380,7 +395,7 @@ const StaffDashboard: React.FC = () => {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={loadOrders} variant="outline">
+              <Button onClick={loadDashboardData} variant="outline">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
               </Button>
@@ -416,74 +431,123 @@ const StaffDashboard: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-semibold">{order.customer.name}</div>
-                            <div className="text-sm text-gray-500">{order.customer.email}</div>
+                            <div className="font-semibold">
+                              {order.customer?.name || "N/A"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {order.customer?.email || "N/A"}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">{order.order_items.length} item(s)</div>
+                          <div className="text-sm">
+                            {order.order_items?.length || 0} item(s)
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-semibold">${order.total_amount.toFixed(2)}</div>
-                          <div className="text-xs text-gray-500">{order.payment_method}</div>
+                          <div className="font-semibold">
+                            ${order.total_amount?.toFixed(2) || "0.00"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {order.payment_method || "N/A"}
+                          </div>
                         </TableCell>
-                        <TableCell>{getPaymentStatusBadge(order.payment_status)}</TableCell>
-                        <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {getPaymentStatusBadge(
+                            order.payment_status || "pending",
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(order.status || "pending")}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Dialog>
                               <DialogTrigger asChild>
-                                <Button size="sm" variant="outline" onClick={() => setSelectedOrder(order)}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setSelectedOrder(order)}
+                                >
                                   <Package className="h-3 w-3" />
                                   View
                                 </Button>
                               </DialogTrigger>
                               <DialogContent className="max-w-2xl">
                                 <DialogHeader>
-                                  <DialogTitle>Order Details #{order.id}</DialogTitle>
+                                  <DialogTitle>
+                                    Order Details #{order.id}
+                                  </DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <h4 className="font-semibold">Customer</h4>
-                                      <p>{order.customer.name}</p>
-                                      <p className="text-sm text-gray-500">{order.customer.email}</p>
+                                      <h4 className="font-semibold">
+                                        Customer
+                                      </h4>
+                                      <p>{order.customer?.name || "N/A"}</p>
+                                      <p className="text-sm text-gray-500">
+                                        {order.customer?.email || "N/A"}
+                                      </p>
                                     </div>
                                     <div>
-                                      <h4 className="font-semibold">Shipping Address</h4>
-                                      <p className="text-sm">{order.shipping_address}</p>
+                                      <h4 className="font-semibold">
+                                        Shipping Address
+                                      </h4>
+                                      <p className="text-sm">
+                                        {order.shipping_address || "N/A"}
+                                      </p>
                                     </div>
                                   </div>
-                                  <div>
-                                    <h4 className="font-semibold mb-2">Order Items</h4>
-                                    <div className="space-y-2">
-                                      {order.order_items.map((item) => (
-                                        <div
-                                          key={item.id}
-                                          className="flex justify-between items-center p-2 bg-gray-50 rounded"
-                                        >
-                                          <div>
-                                            <div className="font-semibold">{item.product.name}</div>
-                                            <div className="text-sm text-gray-500">
-                                              Qty: {item.quantity} × ${item.price}
+                                  {order.order_items &&
+                                    order.order_items.length > 0 && (
+                                      <div>
+                                        <h4 className="font-semibold mb-2">
+                                          Order Items
+                                        </h4>
+                                        <div className="space-y-2">
+                                          {order.order_items.map((item) => (
+                                            <div
+                                              key={item.id}
+                                              className="flex justify-between items-center p-2 bg-gray-50 rounded"
+                                            >
+                                              <div>
+                                                <div className="font-semibold">
+                                                  {item.product?.name || "N/A"}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                  Qty: {item.quantity} × $
+                                                  {item.price}
+                                                </div>
+                                              </div>
+                                              <div className="font-semibold">
+                                                $
+                                                {(
+                                                  item.quantity * item.price
+                                                ).toFixed(2)}
+                                              </div>
                                             </div>
-                                          </div>
-                                          <div className="font-semibold">
-                                            ${(item.quantity * item.price).toFixed(2)}
-                                          </div>
+                                          ))}
                                         </div>
-                                      ))}
-                                    </div>
-                                  </div>
+                                      </div>
+                                    )}
                                   <div className="border-t pt-4">
                                     <div className="flex justify-between font-semibold text-lg">
                                       <span>Total</span>
-                                      <span>${order.total_amount.toFixed(2)}</span>
+                                      <span>
+                                        $
+                                        {order.total_amount?.toFixed(2) ||
+                                          "0.00"}
+                                      </span>
                                     </div>
                                   </div>
                                   <div className="border-t pt-4">
-                                    <h4 className="font-semibold mb-2">Update Payment Status</h4>
+                                    <h4 className="font-semibold mb-2">
+                                      Update Payment Status
+                                    </h4>
                                     <div className="flex gap-4">
                                       <Select
                                         value={selectedPaymentStatus}
@@ -493,57 +557,78 @@ const StaffDashboard: React.FC = () => {
                                           <SelectValue placeholder="Select payment status" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="pending">Pending</SelectItem>
-                                          <SelectItem value="paid">Paid</SelectItem>
-                                          <SelectItem value="failed">Failed</SelectItem>
-                                          <SelectItem value="refunded">Refunded</SelectItem>
+                                          <SelectItem value="pending">
+                                            Pending
+                                          </SelectItem>
+                                          <SelectItem value="paid">
+                                            Paid
+                                          </SelectItem>
+                                          <SelectItem value="failed">
+                                            Failed
+                                          </SelectItem>
+                                          <SelectItem value="refunded">
+                                            Refunded
+                                          </SelectItem>
                                         </SelectContent>
                                       </Select>
                                       <Button
-                                        onClick={() => handleUpdatePaymentStatus(order.id)}
+                                        onClick={() =>
+                                          handleUpdatePaymentStatus(order.id)
+                                        }
                                         className="bg-blue-600 hover:bg-blue-700"
                                       >
                                         Update Payment Status
                                       </Button>
                                     </div>
                                   </div>
-                                  {canApprove(order) && (
-                                    <Button
-                                      onClick={() => handleApproveOrder(order.id)}
-                                      className="bg-blue-600 hover:bg-blue-700"
-                                    >
-                                      <CheckCircle className="mr-1 h-3 w-3" />
-                                      Approve Order
-                                    </Button>
-                                  )}
-                                  {canShip(order) && (
-                                    <Button
-                                      onClick={() => handleShipOrder(order.id)}
-                                      className="bg-purple-600 hover:bg-purple-700"
-                                    >
-                                      <Truck className="mr-1 h-3 w-3" />
-                                      Ship Order
-                                    </Button>
-                                  )}
-                                  {canComplete(order) && (
-                                    <Button
-                                      onClick={() => handleCompleteOrder(order.id)}
-                                      className="bg-green-600 hover:bg-green-700"
-                                    >
-                                      <CheckCircle className="mr-1 h-3 w-3" />
-                                      Complete Order
-                                    </Button>
-                                  )}
-                                  {order.status.toLowerCase() === "pending" && (
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => handleRejectOrder(order.id)}
-                                      className="border-red-600 text-red-600 hover:bg-red-50"
-                                    >
-                                      <XCircle className="mr-1 h-3 w-3" />
-                                      Cancel Order
-                                    </Button>
-                                  )}
+                                  <div className="flex gap-2 pt-4">
+                                    {canApprove(order) && (
+                                      <Button
+                                        onClick={() =>
+                                          handleApproveOrder(order.id)
+                                        }
+                                        className="bg-blue-600 hover:bg-blue-700"
+                                      >
+                                        <CheckCircle className="mr-1 h-3 w-3" />
+                                        Approve Order
+                                      </Button>
+                                    )}
+                                    {canShip(order) && (
+                                      <Button
+                                        onClick={() =>
+                                          handleShipOrder(order.id)
+                                        }
+                                        className="bg-purple-600 hover:bg-purple-700"
+                                      >
+                                        <Truck className="mr-1 h-3 w-3" />
+                                        Ship Order
+                                      </Button>
+                                    )}
+                                    {canComplete(order) && (
+                                      <Button
+                                        onClick={() =>
+                                          handleCompleteOrder(order.id)
+                                        }
+                                        className="bg-green-600 hover:bg-green-700"
+                                      >
+                                        <CheckCircle className="mr-1 h-3 w-3" />
+                                        Complete Order
+                                      </Button>
+                                    )}
+                                    {order.status.toLowerCase() ===
+                                      "pending" && (
+                                      <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                          handleRejectOrder(order.id)
+                                        }
+                                        className="border-red-600 text-red-600 hover:bg-red-50"
+                                      >
+                                        <XCircle className="mr-1 h-3 w-3" />
+                                        Cancel Order
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                               </DialogContent>
                             </Dialog>
