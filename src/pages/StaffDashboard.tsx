@@ -191,11 +191,20 @@ const StaffDashboard: React.FC = () => {
     await updatePaymentStatus(orderId, selectedPaymentStatus);
   };
 
-  // Combine all orders for filtering
+  // Combine all orders for filtering with source tracking
   const allOrders = [
-    ...dashboardData.pending_orders,
-    ...dashboardData.processed_orders,
-    ...dashboardData.ready_for_delivery,
+    ...dashboardData.pending_orders.map((order) => ({
+      ...order,
+      _source: "pending",
+    })),
+    ...dashboardData.processed_orders.map((order) => ({
+      ...order,
+      _source: "processed",
+    })),
+    ...dashboardData.ready_for_delivery.map((order) => ({
+      ...order,
+      _source: "ready",
+    })),
   ];
 
   const filteredOrders = allOrders.filter((order) => {
