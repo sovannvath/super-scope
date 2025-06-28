@@ -84,10 +84,13 @@ const StaffDashboard: React.FC = () => {
 
         setDashboardData({
           pending_orders: (response.data.pending_orders || []).map(mapOrder),
-          processed_orders: (response.data.processed_orders || []).map(mapOrder),
-          ready_for_delivery: (response.data.ready_for_delivery || []).map(mapOrder),
+          processed_orders: (response.data.processed_orders || []).map(
+            mapOrder,
+          ),
+          ready_for_delivery: (response.data.ready_for_delivery || []).map(
+            mapOrder,
+          ),
         });
-      }
       } else {
         toast({
           title: "Error",
@@ -278,8 +281,10 @@ const StaffDashboard: React.FC = () => {
     );
   };
 
-  const canApprove = (order: Order) => order.status?.toLowerCase() === "pending";
-  const canShip = (order: Order) => order.status?.toLowerCase() === "processing";
+  const canApprove = (order: Order) =>
+    order.status?.toLowerCase() === "pending";
+  const canShip = (order: Order) =>
+    order.status?.toLowerCase() === "processing";
   const canComplete = (order: Order) =>
     order.status?.toLowerCase() === "shipped";
 
@@ -549,7 +554,9 @@ const StaffDashboard: React.FC = () => {
                                       <span>Total</span>
                                       <span>
                                         $
-                                        {parseFloat(order.total_amount || "0").toFixed(2)}
+                                        {parseFloat(
+                                          order.total_amount || "0",
+                                        ).toFixed(2)}
                                       </span>
                                     </div>
                                   </div>
