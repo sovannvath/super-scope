@@ -287,7 +287,6 @@ const StaffDashboard: React.FC = () => {
     order.status?.toLowerCase() === "processing";
   const canComplete = (order: Order) =>
     order.status?.toLowerCase() === "shipped";
-
   const stats = {
     pending_orders: dashboardData.pending_orders.length,
     processed_orders: dashboardData.processed_orders.length,
