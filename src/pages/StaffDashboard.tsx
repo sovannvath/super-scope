@@ -446,7 +446,7 @@ const StaffDashboard: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <div className="font-semibold">
-                            ${order.total_amount?.toFixed(2) || "0.00"}
+                            ${parseFloat(order.total_amount || "0").toFixed(2)}
                           </div>
                           <div className="text-xs text-gray-500">
                             {order.payment_method || "N/A"}
