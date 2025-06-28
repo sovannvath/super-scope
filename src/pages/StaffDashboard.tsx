@@ -192,7 +192,7 @@ const StaffDashboard: React.FC = () => {
       order.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" || order.status.toLowerCase() === statusFilter;
+      statusFilter === "all" || order.status?.toLowerCase() === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
