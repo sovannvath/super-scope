@@ -665,7 +665,7 @@ const StaffDashboard: React.FC = () => {
                                 Complete
                               </Button>
                             )}
-                            {order.status.toLowerCase() === "pending" && (
+                            {order.status?.toLowerCase() === "pending" && (
                               <Button
                                 size="sm"
                                 variant="outline"
