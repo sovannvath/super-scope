@@ -73,11 +73,21 @@ const StaffDashboard: React.FC = () => {
       console.log("Staff Dashboard API Response:", response);
 
       if (response.status === 200 && response.data) {
-        setDashboardData({
-          pending_orders: response.data.pending_orders || [],
-          processed_orders: response.data.processed_orders || [],
-          ready_for_delivery: response.data.ready_for_delivery || [],
+        // Map backend field names to frontend expectations
+        const mapOrder = (order: any) => ({
+          ...order,
+          status: order.order_status || order.status,
+          customer: order.user || order.customer,
+          order_items: order.orderItems || order.order_items || [],
+          total_amount: order.total_amount || order.total || "0",
         });
+
+        setDashboardData({
+          pending_orders: (response.data.pending_orders || []).map(mapOrder),
+          processed_orders: (response.data.processed_orders || []).map(mapOrder),
+          ready_for_delivery: (response.data.ready_for_delivery || []).map(mapOrder),
+        });
+      }
       } else {
         toast({
           title: "Error",
@@ -268,10 +278,8 @@ const StaffDashboard: React.FC = () => {
     );
   };
 
-  const canApprove = (order: Order) =>
-    order.status?.toLowerCase() === "pending";
-  const canShip = (order: Order) =>
-    order.status?.toLowerCase() === "processing";
+  const canApprove = (order: Order) => order.status?.toLowerCase() === "pending";
+  const canShip = (order: Order) => order.status?.toLowerCase() === "processing";
   const canComplete = (order: Order) =>
     order.status?.toLowerCase() === "shipped";
 
@@ -541,9 +549,7 @@ const StaffDashboard: React.FC = () => {
                                       <span>Total</span>
                                       <span>
                                         $
-                                        {parseFloat(
-                                          order.total_amount || "0",
-                                        ).toFixed(2)}
+                                        {parseFloat(order.total_amount || "0").toFixed(2)}
                                       </span>
                                     </div>
                                   </div>
