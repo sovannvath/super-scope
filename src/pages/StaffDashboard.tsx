@@ -79,9 +79,7 @@ const StaffDashboard: React.FC = () => {
           status: order.order_status || order.status,
           customer: order.user || order.customer,
           order_items: order.order_items || [],
-          payment_method: order.payment_method_id
-            ? `Payment Method ${order.payment_method_id}`
-            : "Unknown",
+          payment_method: order.payment_method?.name || "Unknown",
         });
 
         setDashboardData({
