@@ -1,32 +1,67 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
-import { cartApi } from '@/api/cart';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlertTriangle } from "lucide-react";
+import { cartApi, PaymentMethod } from "@/api/cart";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Checkout = () => {
   const { user } = useAuth();
-  const [paymentMethodId, setPaymentMethodId] = useState('');
-  const [notes, setNotes] = useState('');
+  const [paymentMethodId, setPaymentMethodId] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      try {
+        setLoadingPaymentMethods(true);
+        const response = await cartApi.getPaymentMethods();
+        if (response.status === 200 && response.data) {
+          // Handle both direct array and object with payment_methods key
+          const methods = Array.isArray(response.data)
+            ? response.data
+            : response.data.payment_methods || [];
+          setPaymentMethods(methods);
+        } else {
+          setError("Failed to load payment methods");
+        }
+      } catch (error: any) {
+        console.error("Error fetching payment methods:", error);
+        setError("Failed to load payment methods");
+      } finally {
+        setLoadingPaymentMethods(false);
+      }
+    };
+
+    if (user) {
+      fetchPaymentMethods();
+    }
+  }, [user]);
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!paymentMethodId) {
-      setError('Payment method ID is required');
+      setError("Payment method ID is required");
       return;
     }
 
     setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       const response = await cartApi.checkout({
@@ -36,14 +71,16 @@ const Checkout = () => {
 
       if (response.status >= 200 && response.status < 300) {
         setSuccess(`Order #${response.data.order.id} created successfully!`);
-        setPaymentMethodId('');
-        setNotes('');
+        setPaymentMethodId("");
+        setNotes("");
       } else {
-        setError(response.data.message || 'Failed to create order');
+        setError(response.data.message || "Failed to create order");
       }
     } catch (error: any) {
-      console.error('Checkout error:', error.response?.data || error.message);
-      setError(error.response?.data?.message || 'An error occurred during checkout');
+      console.error("Checkout error:", error.response?.data || error.message);
+      setError(
+        error.response?.data?.message || "An error occurred during checkout",
+      );
     } finally {
       setLoading(false);
     }
@@ -56,7 +93,8 @@ const Checkout = () => {
           <Alert variant="destructive">
             <AlertTriangle className="w-4 h-4" />
             <AlertDescription>
-              You must be logged in to checkout. Please <Link to="/login">log in</Link>.
+              You must be logged in to checkout. Please{" "}
+              <Link to="/login">log in</Link>.
             </AlertDescription>
           </Alert>
         </div>
@@ -75,17 +113,44 @@ const Checkout = () => {
           <CardContent>
             <form onSubmit={handleCheckout} className="space-y-4">
               <div>
-                <label htmlFor="payment-method-id" className="block text-sm font-medium">
-                  Payment Method ID
+                <label
+                  htmlFor="payment-method"
+                  className="block text-sm font-medium mb-2"
+                >
+                  Payment Method
                 </label>
-                <Input
-                  id="payment-method-id"
-                  type="number"
-                  value={paymentMethodId}
-                  onChange={(e) => setPaymentMethodId(e.target.value)}
-                  placeholder="Enter payment method ID"
-                  required
-                />
+                {loadingPaymentMethods ? (
+                  <div className="text-sm text-muted-foreground">
+                    Loading payment methods...
+                  </div>
+                ) : paymentMethods.length === 0 ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="w-4 h-4" />
+                    <AlertDescription>
+                      No payment methods available
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Select
+                    value={paymentMethodId}
+                    onValueChange={setPaymentMethodId}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentMethods.map((method) => (
+                        <SelectItem
+                          key={method.id}
+                          value={method.id.toString()}
+                        >
+                          {method.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div>
                 <label htmlFor="notes" className="block text-sm font-medium">
@@ -109,8 +174,16 @@ const Checkout = () => {
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? 'Processing...' : 'Place Order'}
+              <Button
+                type="submit"
+                disabled={
+                  loading ||
+                  loadingPaymentMethods ||
+                  paymentMethods.length === 0
+                }
+                className="w-full"
+              >
+                {loading ? "Processing..." : "Place Order"}
               </Button>
             </form>
           </CardContent>

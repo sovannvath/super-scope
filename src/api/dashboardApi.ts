@@ -18,10 +18,16 @@ const dashboardApiWithRetry = async <T>(
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
     try {
       const result = await makeApiCall(apiCall);
-      console.log("📊 DashboardAPI: Raw response:", JSON.stringify(result, null, 2));
+      console.log(
+        "📊 DashboardAPI: Raw response:",
+        JSON.stringify(result, null, 2),
+      );
       return result;
     } catch (error) {
-      console.error(`📊 DashboardAPI: Attempt ${attempt}/${retries} failed:`, error);
+      console.error(
+        `📊 DashboardAPI: Attempt ${attempt}/${retries} failed:`,
+        error,
+      );
       if (attempt <= retries) {
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         continue;
@@ -43,8 +49,8 @@ export const dashboardApi = {
       const orders = Array.isArray(ordersResponse.data.orders)
         ? ordersResponse.data.orders
         : Array.isArray(ordersResponse.data)
-        ? ordersResponse.data
-        : [];
+          ? ordersResponse.data
+          : [];
       const stats = statsResponse.data || {};
       return {
         ...statsResponse,
@@ -59,5 +65,15 @@ export const dashboardApi = {
         },
       };
     });
+  },
+
+  warehouse: async (): Promise<ApiResponse<any>> => {
+    console.log("📊 DashboardAPI: Fetching warehouse dashboard data...");
+    return dashboardApiWithRetry(() => apiClient.get("/dashboard/warehouse"));
+  },
+
+  staff: async (): Promise<ApiResponse<any>> => {
+    console.log("📊 DashboardAPI: Fetching staff dashboard data...");
+    return dashboardApiWithRetry(() => apiClient.get("/dashboard/staff"));
   },
 };
