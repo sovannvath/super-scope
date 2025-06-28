@@ -268,10 +268,12 @@ const StaffDashboard: React.FC = () => {
     );
   };
 
-  const canApprove = (order: Order) => order.status.toLowerCase() === "pending";
-  const canShip = (order: Order) => order.status.toLowerCase() === "processing";
+  const canApprove = (order: Order) =>
+    order.status?.toLowerCase() === "pending";
+  const canShip = (order: Order) =>
+    order.status?.toLowerCase() === "processing";
   const canComplete = (order: Order) =>
-    order.status.toLowerCase() === "shipped";
+    order.status?.toLowerCase() === "shipped";
 
   const stats = {
     pending_orders: dashboardData.pending_orders.length,
